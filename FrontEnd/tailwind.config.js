@@ -5,7 +5,11 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        barlow: ['"Barlow Condensed"', 'sans-serif'],// add font chữ 
+      }
+    },
   },
   plugins: [],
 }
