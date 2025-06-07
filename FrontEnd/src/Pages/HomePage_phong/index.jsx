@@ -51,7 +51,7 @@ const Hero = () => { // Nền chuyển màu với các hình tròn nổi bật v
             <div>
                 <div
                     className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('https://images.pexels.com/photos/2757549/pexels-photo-2757549.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')" }} // Thêm ảnh nền nếu cần
+                    style={{ backgroundImage: "url('https://i.pinimg.com/736x/75/de/07/75de0749aa17d31912274fc15ba4545e.jpg')" }} // Thêm ảnh nền nếu cần
                 >
                     <div className="absolute inset-0 bg-black opacity-20"></div> {/* lớp mờ phủ lên ảnh */}
                 </div>
@@ -111,21 +111,21 @@ const Services = () => {
     const services = [
         {
             icon: Home,
-            title: "Chuyển Nhà Trọn Gói",
-            description: "Dịch vụ chuyển nhà toàn diện từ đóng gói đến sắp xếp tại nơi mới",
-            features: ["Đóng gói chuyên nghiệp", "Vận chuyển an toàn", "Sắp xếp lại đồ đạc", "Bảo hiểm hàng hóa"]
+            title: "Quản Lý Hệ Thống",
+            description: "Giải pháp quản lý hệ thống toàn diện với công nghệ tiên tiến",
+            features: ["Giám sát và điều hành hệ thống vận hành 24/7", "Tích hợp dữ liệu thời gian thực", "Giám sát hiệu suất máy chủ", "Giảm thiểu thời gian chết"]
         },
         {
             icon: Users,
-            title: "Tháo Lắp Đồ Đạc",
-            description: "Đội ngũ thợ lành nghề tháo lắp các thiết bị, nội thất phức tạp",
-            features: ["Tháo lắp nội thất", "Lắp đặt điện tử", "Bảo quản cẩn thận", "Đảm bảo nguyên vẹn"]
+            title: "Tối Ưu Hiệu Suất",
+            description: "Đội ngũ chuyên gia phân tích và tối ưu hóa quy trình làm việc",
+            features: ["Phân tích dữ liệu hiệu suất", "Tối ưu hóa quy trình làm việc", "Giảm thiểu lãng phí", "Tăng cường hiệu quả"]
         },
         {
             icon: Shield,
-            title: "Vận Chuyển An Toàn",
-            description: "Cam kết vận chuyển đồ đạc nhanh chóng và không hư hỏng",
-            features: ["Xe chuyên dụng", "Đội ngũ có kinh nghiệm", "Theo dõi hành trình", "Hỗ trợ 24/7"]
+            title: "Hỗ Trợ Kỹ Thuật",
+            description: "Cam kết hỗ trợ kỹ thuật nhanh chóng và hiệu quả",
+            features: ["Đội ngũ kỹ thuật viên chuyên nghiệp", "Hỗ trợ 24/7", "Giải quyết sự cố nhanh chóng", "Bảo trì định kỳ"]
         }
     ];
 
@@ -134,10 +134,10 @@ const Services = () => {
             <div className="container mx-auto px-4">
                 <div className="text-center mb-16">
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-                        Dịch Vụ Của Chúng Tôi
+                        Hệ Thống Của Chúng Tôi
                     </h2>
                     <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Chúng tôi cung cấp các dịch vụ chuyển nhà chuyên nghiệp với chất lượng hàng đầu
+                        Chúng tôi cung cấp các giải pháp quản lý hệ thống tối ưu, đảm bảo vận hành hiệu quả và an toàn hàng đầu.
                     </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -155,7 +155,7 @@ const About = () => {
     const stats = [
         { number: "1000+", label: "Khách Hàng Hài Lòng" },
         { number: "5+", label: "Năm Kinh Nghiệm" },
-        { number: "24/7", label: "Hỗ Trợ Khách Hàng" },
+        { number: "24/7", label: "Hỗ Trợ Kỹ Thuật" },
         { number: "100%", label: "Cam Kết Chất Lượng" }
     ];
 
@@ -168,10 +168,10 @@ const About = () => {
                             Về Chúng Tôi
                         </h2>
                         <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                            Với hơn 5 năm kinh nghiệm trong lĩnh vực vận chuyển nhà, chúng tôi đã phục vụ
-                            hàng nghìn khách hàng với sự chuyên nghiệp và tận tâm. Đội ngũ của chúng tôi
-                            được đào tạo bài bản, sử dụng thiết bị hiện đại để đảm bảo an toàn tuyệt đối
-                            cho tài sản của bạn.
+                            "Chúng tôi có hơn 5 năm kinh nghiệm trong lĩnh vực quản lý hệ thống,
+                            mang đến giải pháp tối ưu cho vận hành doanh nghiệp.
+                            Với đội ngũ chuyên gia giàu kinh nghiệm và công nghệ tiên tiến,
+                            chúng tôi cam kết hỗ trợ khách hàng đạt hiệu quả cao nhất."
                         </p>
                         <div className="grid grid-cols-2 gap-4 mb-8">
                             {stats.map((stat, index) => (
@@ -190,8 +190,8 @@ const About = () => {
                                 ))}
                             </div>
                             <p className="text-lg mb-4 italic">
-                                "Dịch vụ tuyệt vời! Đội ngũ chuyên nghiệp, nhanh chóng và cẩn thận.
-                                Tôi rất hài lòng với chất lượng dịch vụ."
+                                "Hệ thống vận hành ổn định, hỗ trợ kỹ thuật chuyên nghiệp. Rất hài lòng với dịch vụ!"
+
                             </p>
                             <div className="flex items-center">
                                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 font-bold mr-3">
@@ -276,8 +276,8 @@ const Contact = () => {
                             </div>
                             <div>
                                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Địa Chỉ</h3>
-                                <p className="text-gray-600">123 Đường ABC, Quận 1</p>
-                                <p className="text-gray-600">TP. Hồ Chí Minh, Việt Nam</p>
+                                <p className="text-gray-600">123 Đường ABC, Phố 1</p>
+                                <p className="text-gray-600">TP. Hà Nội, Việt Nam</p>
                             </div>
                         </div>
                     </div>
@@ -367,16 +367,16 @@ const Footer = () => {
                             <h3 className="text-xl font-bold">Vận Chuyển Nhà</h3>
                         </div>
                         <p className="text-gray-400 mb-4">
-                            Dịch vụ chuyển nhà chuyên nghiệp, an toàn và đáng tin cậy.
+                            Dịch vụ quản lý hệ thống chuyên sâu, an toàn và hiệu quả. Chúng tôi cam kết mang đến giải pháp tối ưu cho mọi nhu cầu vận hành của bạn.
                         </p>
                     </div>
 
                     <div>
                         <h4 className="text-lg font-semibold mb-4">Dịch Vụ</h4>
                         <ul className="space-y-2 text-gray-400">
-                            <li>Chuyển nhà trọn gói</li>
-                            <li>Tháo lắp đồ đạc</li>
-                            <li>Vận chuyển an toàn</li>
+                            <li>Quản lý hệ thống trọn gói</li>
+                            <li>Tối ưu hóa hiệu suất</li>
+                            <li>Vận hành an toàn</li>
                             <li>Tư vấn miễn phí</li>
                         </ul>
                     </div>
@@ -386,8 +386,8 @@ const Footer = () => {
                         <ul className="space-y-2 text-gray-400">
                             <li>+84 901 234 567</li>
                             <li>info@vanchuyennha.com</li>
-                            <li>123 Đường ABC, Quận 1</li>
-                            <li>TP. Hồ Chí Minh</li>
+                            <li>123 Đường ABC, Phố 1</li>
+                            <li>TP. Hà Nội</li>
                         </ul>
                     </div>
 
