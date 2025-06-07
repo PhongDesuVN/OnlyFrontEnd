@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle } from 'lucide-react';
+import { Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle } from 'lucide-react'; // Các biểu tượng từ thư viện Lucide React
 
 // Thành phần tiêu đề với hình ảnh động mượt mà và trải nghiệm người dùng tốt hơn
 const Header = () => {
@@ -25,9 +25,9 @@ const Header = () => {
                     </div>
                     <nav className="hidden md:flex space-x-8"> {/* Các liên kết đến các phần của trang như Trang Chủ, Dịch Vụ, Giới Thiệu, Liên Hệ. */}
                         <a href="#home" className="hover:text-blue-600 transition-colors">Trang Chủ</a>
-                        <a href="#services" className="hover:text-blue-600 transition-colors">Dịch Vụ</a>
+                        <a href="#services" className="hover:text-blue-600 transition-colors">Hệ Thống</a>
                         <a href="#about" className="hover:text-blue-600 transition-colors">Giới Thiệu</a>
-                        <a href="#contact" className="hover:text-blue-600 transition-colors">Liên Hệ</a>
+                        <a href="#contact" className="hover:text-blue-600 transition-colors">Hỗ Trợ</a>
                     </nav>
                     <div className="flex space-x-3">  {/* Nút đăng nhập và đăng ký với hiệu ứng hover */}
                         <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
@@ -48,10 +48,10 @@ const Hero = () => { // Nền chuyển màu với các hình tròn nổi bật v
     return (
         <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
             {/* Nền gradient với các hình tròn hoạt ảnh */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-800">
+            <div>
                 <div
                     className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('https://wallpapercat.com/w/full/3/b/1/1658222-1920x1200-desktop-hd-porsche-panamera-background-image.jpg')" }} // Thêm ảnh nền nếu cần
+                    style={{ backgroundImage: "url('https://images.pexels.com/photos/2757549/pexels-photo-2757549.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')" }} // Thêm ảnh nền nếu cần
                 >
                     <div className="absolute inset-0 bg-black opacity-20"></div> {/* lớp mờ phủ lên ảnh */}
                 </div>
@@ -63,21 +63,21 @@ const Hero = () => { // Nền chuyển màu với các hình tròn nổi bật v
             {/* Nội dung Hero với tiêu đề, mô tả và nút hành động */}
             <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
                 <h2 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in"> {/* Tiêu đề chính với hiệu ứng hoạt ảnh */}
-                    Chuyển Nhà
+                    Hệ Thống
                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                        Chuyên Nghiệp
+                        Quản Lý Chuyên Sâu
                     </span>
                 </h2>
                 <p className="text-xl md:text-2xl mb-8 opacity-90 animate-fade-in-delay">
-                    Giải pháp nhanh chóng, an toàn và đáng tin cậy cho mọi nhu cầu chuyển nhà của bạn
+                    "Giải pháp quản lý tối ưu, an toàn và hiệu quả cho hệ thống vận hành."
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-delay-2">
                     {/*phóng to khi hover, và chuyển động mượt.*/}
                     <button className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-semibold rounded-lg hover:shadow-lg transform hover:scale-105 transition-all">
-                        Đặt Dịch Vụ Ngay
+                        Bắt Đầu Quản Lý
                     </button>
                     <button className="px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-600 transition-all">
-                        Tư Vấn Miễn Phí
+                        Tư Vấn Hệ Thống
                     </button>
                 </div>
             </div>
