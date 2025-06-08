@@ -4,7 +4,8 @@ import { Routes, Route } from "react-router-dom";
 
 import Signin from "../Pages/Login_Register_yen/Signin.jsx";
 import ForgotPassword from "../Pages/Login_Register_yen/ForgotPassword.jsx";
-import HomePage from "../Pages/HomePage_phong/index.jsx";  // Đổi tên import cho rõ ràng
+import HomePage from "../Pages/HomePage_phong/homepage.jsx";  // Đổi tên import cho rõ ràng
+import Staff from "../Pages/Staff_phong/Staff.jsx";  // Đổi tên import cho rõ ràng
 
 export default function AppRoutes() {
     return (
@@ -12,6 +13,7 @@ export default function AppRoutes() {
             <Route path="/" element={<HomePage />} />  {/* Trang chủ */}
             <Route path="/signin" element={<Signin />} />
             <Route path="/forgot" element={<ForgotPassword />} />
+            <Route path="/staff" element={<Staff />} />
         </Routes>
     );
 }
