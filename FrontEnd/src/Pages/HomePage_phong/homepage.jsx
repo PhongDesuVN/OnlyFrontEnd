@@ -55,7 +55,7 @@ const Hero = () => { // Nền chuyển màu với các hình tròn nổi bật v
             <div>
                 <div
                     className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('https://i.pinimg.com/736x/75/de/07/75de0749aa17d31912274fc15ba4545e.jpg')" }} // Thêm ảnh nền nếu cần
+                    style={{ backgroundImage: "url('https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')" }} // Thêm ảnh nền nếu cần
                 >
                     <div className="absolute inset-0 bg-black opacity-20"></div> {/* lớp mờ phủ lên ảnh */}
                 </div>
@@ -78,7 +78,7 @@ const Hero = () => { // Nền chuyển màu với các hình tròn nổi bật v
                 <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-delay-2">
                     {/*phóng to khi hover, và chuyển động mượt.*/}
                     <button className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-semibold rounded-lg hover:shadow-lg transform hover:scale-105 transition-all">
-                        Bắt Đầu Quản Lý
+                        Hệ thống
                     </button>
                     <button className="px-8 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-600 transition-all">
                         Tư Vấn Hệ Thống
