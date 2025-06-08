@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle } from 'lucide-react'; // Các biểu tượng từ thư viện Lucide React
-
+import { Link } from "react-router-dom";
 // Thành phần tiêu đề với hình ảnh động mượt mà và trải nghiệm người dùng tốt hơn
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -30,9 +30,13 @@ const Header = () => {
                         <a href="#contact" className="hover:text-blue-600 transition-colors">Hỗ Trợ</a>
                     </nav>
                     <div className="flex space-x-3">  {/* Nút đăng nhập và đăng ký với hiệu ứng hover */}
-                        <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                            Đăng Nhập
-                        </button>
+
+                        <Link to="/signin">
+                            <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                                Đăng Nhập
+                            </button>
+                        </Link>
+
                         <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
                             Đăng Ký
                         </button>
