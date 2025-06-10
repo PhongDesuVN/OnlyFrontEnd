@@ -1,37 +1,85 @@
-import React, { useState } from "react";
-import Layout from "../../Components/FormLogin_yen/Layout";
-import Input from "../../Components/FormLogin_yen/Input";
+import React, { useState } from 'react';
+import Header from '../../Components/FormLogin_yen/Header.jsx';
+import Footer from '../../Components/FormLogin_yen/Footer.jsx';
 
-export default function ForgotPassword() {
-    const [emailOrPhone, setEmailOrPhone] = useState("");
+const ForgotPassword = () => {
+    const [email, setEmail] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log('Send reset link to:', email);
+        setSubmitted(true);
+    };
 
     return (
-        <Layout>
-            <img src="/logo.svg" alt="Logo" className="mb-4 w-24 mx-auto" />
+        <div className="min-h-screen flex flex-col relative">
+            <Header />
 
-            <h2 className="text-xl font-semibold text-center mb-4">Quên mật khẩu</h2>
-            <p className="text-gray-600 text-sm text-center mb-6">
-                Nhập email hoặc số điện thoại của bạn để đặt lại mật khẩu
-            </p>
-
-            <Input
-                label="Email hoặc Số điện thoại"
-                type="text"
-                value={emailOrPhone}
-                onChange={(e) => setEmailOrPhone(e.target.value)}
-            />
-
-            <button
-                className="w-full bg-orange-500 text-white py-2 rounded mt-4 transition duration-200 hover:bg-orange-600 hover:shadow-md"
+            {/* Background image */}
+            <div
+                className="absolute inset-0 bg-cover bg-center z-[-1]"
+                style={{
+                    backgroundImage:
+                        "url('https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+                }}
             >
-                Gửi mã xác nhận
-            </button>
-
-            <div className="text-center mt-4">
-                <a href="/signin" className="text-sm text-orange-500 hover:underline">
-                    Quay lại đăng nhập
-                </a>
+                <div className="absolute inset-0 bg-black opacity-30"></div>
             </div>
-        </Layout>
+
+            <main className="flex-grow flex items-center justify-center px-4 min-h-[calc(100vh-80px)]">
+                <div className="w-full max-w-md bg-white bg-opacity-90 backdrop-blur-md p-6 rounded-2xl shadow-lg my-6 text-sm">
+                    <h2 className="text-xl font-bold mb-4 text-center text-gray-800">Quên mật khẩu?</h2>
+                    <p className="text-center text-gray-600 mb-6">
+                        Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu.
+                    </p>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-1">Email</label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                placeholder="Nhập email của bạn"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 transition-all"
+                        >
+                            Gửi liên kết đặt lại
+                        </button>
+                    </form>
+
+                    {submitted && (
+                        <p className="mt-4 text-green-600 text-center">
+                            ✅ Liên kết khôi phục đã được gửi! Vui lòng kiểm tra hộp thư.
+                        </p>
+                    )}
+
+                    <div className="mt-6 text-center text-gray-600">
+                        Chưa nhận được email?{' '}
+                        <button
+                            onClick={() => {
+                                console.log('Resend clicked');
+                            }}
+                            className="text-blue-600 font-medium hover:underline"
+                        >
+                            Gửi lại
+                        </button>
+                    </div>
+
+                </div>
+            </main>
+
+            <Footer />
+        </div>
     );
-}
+};
+
+export default ForgotPassword;

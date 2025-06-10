@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle } from 'lucide-react'; // Các biểu tượng từ thư viện Lucide React
 import { Link } from "react-router-dom";
+
 // Thành phần tiêu đề với hình ảnh động mượt mà và trải nghiệm người dùng tốt hơn
 const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -20,6 +21,7 @@ const Header = () => {
             <div className="container mx-auto px-4 py-4"> {/* Thêm padding và căn giữa nội dung */}
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
+
                         <Truck className="w-8 h-8 text-blue-600" /> {/* Biểu tượng xe tải */}
                         <h1 className="text-xl font-bold">Vận Chuyển Nhà</h1>
                     </div>
@@ -36,10 +38,11 @@ const Header = () => {
                                 Đăng Nhập
                             </button>
                         </Link>
-
-                        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
-                            Đăng Ký
-                        </button>
+                        <Link to="/Register">
+                            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                                Đăng Ký
+                            </button>
+                        </Link>
                     </div>
                 </div>
             </div>
