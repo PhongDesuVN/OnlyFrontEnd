@@ -62,6 +62,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
                     >
                         {page === 'overview' && <BarChart className="mr-2" size={20} />}
                         {page === 'view' && <List className="mr-2" size={20} />}
+                        {page === 'track' && <Package className="mr-2" size={20} />}
                         {page === 'payment' && <CreditCard className="mr-2" size={20} />}
                         {page === 'search' && <Search className="mr-2" size={20} />}
                         {pageLabels[page]}
