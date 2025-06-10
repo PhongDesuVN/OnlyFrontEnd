@@ -14,7 +14,7 @@ const Header = ({ dashboardHideHome }) => {
     }, []);
 
     return (
-        <header 
+        <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
                 isScrolled 
                     ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm' 
@@ -24,8 +24,8 @@ const Header = ({ dashboardHideHome }) => {
             <div className="max-w-7xl mx-auto px-6 lg:px-8" style={{position: 'relative'}}>
                 <div className="flex items-center justify-between h-16 lg:h-20">
                     {/* Logo + Brand */}
-                    <Link 
-                        to="/" 
+                    <Link
+                        to="/"
                         className="flex items-center space-x-3 group transition-all duration-300 hover:scale-105"
                     >
                         <div className={`p-2.5 rounded-xl transition-all duration-300 ${
@@ -33,11 +33,11 @@ const Header = ({ dashboardHideHome }) => {
                                 ? 'bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/25' 
                                 : 'bg-white/20 backdrop-blur-sm border border-white/30'
                         }`}>
-                            <Truck 
-                                size={24} 
+                            <Truck
+                                size={24}
                                 className={`transition-colors duration-300 ${
                                     isScrolled ? 'text-white' : 'text-white'
-                                }`} 
+                                }`}
                             />
                         </div>
                         <div className="flex flex-col">
