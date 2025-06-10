@@ -7,6 +7,7 @@ import {
     CheckCheck, AlertCircle, User, Briefcase, Receipt, Headphones,
     PieChart, Plus, Eye
 } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 // Component chính quản lý thông tin chức vụ
 const Staff = () => {
@@ -115,7 +116,7 @@ const Staff = () => {
         { name: 'Quản Lý Biên Lai', icon: Receipt, hasLink: false },
         { name: 'Quản Lý Đơn Vị Lưu Trữ', icon: Package, hasLink: false },
         { name: 'Quản Lý Đơn Vị Vận Chuyển', icon: Truck, hasLink: false },
-        { name: 'Quản Lý Đơn Hàng', icon: ShoppingCart, hasLink: false },
+        { name: 'Quản Lý Đơn Hàng', icon: ShoppingCart, path: '/manageorder', hasLink: true },
         { name: 'Quản Lý Khách Hàng', icon: Users, hasLink: false },
         { name: 'Hỗ Trợ Khách Hàng', icon: Headphones, hasLink: false },
         { name: 'Báo Cáo', icon: TrendingUp, hasLink: false },
@@ -242,10 +243,7 @@ const Staff = () => {
                                 <a href="/" className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
                                     Trang Chủ
                                 </a>
-                                <span className="text-gray-400">•</span>
-                                <span className="text-gray-600 font-medium">Bảng Điều Khiển</span>
-                                <span className="text-gray-400">•</span>
-                                <span className="text-gray-600 font-medium">Quản Lý Chức Vụ</span>
+
                             </nav>
                         </div>
 

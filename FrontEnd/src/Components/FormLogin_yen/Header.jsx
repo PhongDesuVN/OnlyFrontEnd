@@ -27,9 +27,9 @@ const Header = () => {
 
                 {/* Menu */}
                 <nav className="hidden md:flex space-x-6 text-sm font-medium">
-                    <Link to="/">
-                        <a href="#home" className="hover:text-blue-600 transition-colors">Trang Chủ</a>
-                    </Link>
+                    <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                        <Link to="/" className="text-black hover:text-blue-600 transition-colors">Trang Chủ</Link>
+                    </button>
 
                 </nav>
             </div>
