@@ -36,6 +36,7 @@ export default function AppRoutes() {
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Thêm các route khác nếu cần */}
             <Route path="/staff" element={<Staff />} />
+            <Route path="/dashboard" element={<Dashboard />} />  {/* Trang Dashboard, có thể là trang chủ hoặc một trang khác */}
             <Route path="/manageorder" element={<ManageOrder />} />  {/* Quản lý đơn hàng */}
             <Route path="/manageuser" element={<ManageUser />} />  {/* Quản lý user */}
             <Route path="/managerevenue" element={<ManageRevenue />} />  {/* Quản lý doanh thu */}
