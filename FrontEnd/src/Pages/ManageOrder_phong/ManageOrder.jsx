@@ -6,6 +6,7 @@ import {
     Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle
 } from 'lucide-react';
 
+
 // Dữ liệu đơn hàng mẫu
 const initialOrders = [
     { id: 'ORD001', customer: 'Nguyễn Văn A', total: 1500000, status: 'Đang giao', payment: 'Chưa thanh toán', deliveryProgress: 'Đã rời kho' },
@@ -107,7 +108,10 @@ const OverviewOrders = ({ orders }) => (
                     <p className="text-2xl font-bold text-blue-600">{item.value}</p>
                 </motion.div>
             ))}
+
         </div>
+
+
     </motion.div>
 );
 
