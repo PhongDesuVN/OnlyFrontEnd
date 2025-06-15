@@ -9,11 +9,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/api": {
-        target: "http://localhost:8083", // ← Sửa từ 8080 thành 8083
+      '/api': {
+        target: 'http://localhost:8083', // Spring Boot backend
         changeOrigin: true,
         secure: false,
-      },
-    },
-  },
+      }
+    }
+  }
 })
