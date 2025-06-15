@@ -79,7 +79,7 @@ const Register = () => {
                     </form>
 
                     <div className="mt-4 text-center text-gray-600 text-sm">
-                        Đã có tài khoản? <a href="/login" className="text-blue-600 hover:underline">Đăng nhập</a>
+                        Đã có tài khoản? <a href="/signin" className="text-blue-600 hover:underline">Đăng nhập</a>
                     </div>
                 </div>
             </main>
