@@ -26,12 +26,14 @@ const Otp = () => {
     )
 
     useEffect(() => {
+        const email = localStorage.getItem("loginEmail")
         const email = Cookies.get("loginEmail")
         if (!email) {
             navigate("/login")
             return
         }
         setUserEmail(email)
+        // Delay focus để tránh lag
         setTimeout(() => inputRefs.current[0]?.focus(), 100)
     }, [navigate])
 
@@ -105,6 +107,9 @@ const Otp = () => {
                     const authResponse = await response.json()
                     console.log("✅ OTP Success Response:", authResponse)
 
+                    localStorage.setItem("authToken", authResponse.token)
+                    localStorage.setItem("userRole", authResponse.role)
+                    localStorage.removeItem("loginEmail")
                     Cookies.set("authToken", authResponse.accessToken, { expires: 7 })
                     Cookies.set("userRole", authResponse.role, { expires: 7 })
                     if (authResponse.accessToken) {
@@ -131,6 +136,7 @@ const Otp = () => {
 
                     setIsSuccess(true)
                     setTimeout(() => {
+                        navigate(authResponse.role === "MANAGER" ? "/manager-dashboard" : "/staff")
                         if (authResponse.role && authResponse.role.toUpperCase() === "MANAGER") {
                             navigate("/manager-dashboard")
                         } else {
@@ -138,6 +144,7 @@ const Otp = () => {
                         }
                     }, 1000)
                 } else {
+                    // Xử lý lỗi chi tiết hơn, bao gồm 403
                     let errorMessage = "Mã OTP không đúng"
 
                     try {
@@ -168,6 +175,18 @@ const Otp = () => {
                             errorMessage = "Không có quyền truy cập. Vui lòng liên hệ quản trị viên."
                             setTimeout(() => navigate("/login"), 2000)
                             return
+                            // Xử lý lỗi 403 Forbidden
+                            if (errorText.includes("session") || errorText.includes("phiên")) {
+                                errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+                                setTimeout(() => {
+                                    localStorage.removeItem("loginEmail")
+                                    navigate("/login")
+                                }, 2000)
+                            } else if (errorText.includes("permission") || errorText.includes("quyền")) {
+                                errorMessage = "Không có quyền truy cập. Vui lòng liên hệ quản trị viên."
+                            } else {
+                                errorMessage = errorText || "Không có quyền thực hiện thao tác này"
+                            }
                         } else if (response.status === 404) {
                             errorMessage = "Không tìm thấy endpoint. Vui lòng kiểm tra cấu hình server."
                         } else if (response.status >= 500) {
@@ -230,7 +249,6 @@ const Otp = () => {
 
     // Optimize handleBackToLogin
     const handleBackToLogin = useCallback(() => {
-        Cookies.remove("loginEmail")
         navigate("/login")
     }, [navigate])
 

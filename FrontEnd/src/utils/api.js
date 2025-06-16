@@ -9,6 +9,12 @@ export const apiCall = async (endpoint, options = {}) => {
     const headers = {
         "Content-Type": "application/json",
         ...(options.headers || {}),
+    const config = {
+        headers: {
+            "Content-Type": "application/json",
+            ...options.headers,
+        },
+        ...options,
     }
 
     if (options.auth) {
@@ -25,13 +31,19 @@ export const apiCall = async (endpoint, options = {}) => {
         headers,
         body: options.body,
         ...options,
+    const token = localStorage.getItem("authToken")
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`
     }
 
     try {
         const response = await fetch(url, config)
         return response
     } catch (error) {
-        console.error(" API call failed:", { url, error: error.message })
+        console.error("API call failed:", {
+            url,
+            error: error.message,
+        })
         throw error
     }
 }

@@ -7,6 +7,7 @@ const ForgotPassword = () => {
     const [submitted, setSubmitted] = useState(false);
 
     const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         try {
             const res = await fetch("http://localhost:8083/api/auth/forgot-password", {
@@ -20,6 +21,8 @@ const ForgotPassword = () => {
         } catch (err) {
             alert("Có lỗi xảy ra, vui lòng thử lại!");
         }
+        console.log('Send reset link to:', email);
+        setSubmitted(true);
     };
 
     return (

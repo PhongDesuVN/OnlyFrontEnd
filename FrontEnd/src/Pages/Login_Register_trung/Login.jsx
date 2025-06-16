@@ -12,6 +12,7 @@ const Login = () => {
     const [formData, setFormData] = useState({ email: "", password: "" })
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState("")
+    const [showStatusRequest, setShowStatusRequest] = useState(false)
     const [statusMessage, setStatusMessage] = useState("")
     const [showStatusRequest, setShowStatusRequest] = useState(false)
     const navigate = useNavigate()
@@ -48,11 +49,18 @@ const Login = () => {
                 })
 
                 const message = await response.text()
+
                 if (response.ok) {
+                    localStorage.setItem("loginEmail", formData.email)
                     Cookies.set("loginEmail", formData.email, { expires: 7 })
                     setStatusMessage(message)
                     setTimeout(() => navigate("/otp"), 1000)
                 } else {
+                    if (response.status === 401 && message.includes("inactive")) {
+                        setError(message)
+                        setShowStatusRequest(true)
+                    } else {
+                        setError("Email hoặc mật khẩu không đúng")
                     setIsLoading(false)                // mở lại form
                     const m = message.toUpperCase()
 
@@ -71,6 +79,9 @@ const Login = () => {
                         setError("Email hoặc mật khẩu không đúng.");
                     }
                 }
+            } catch (error) {
+                setError("Không thể kết nối đến server")
+            } finally {
             } catch (_err) {                       // _err -> không bị ESLint cảnh báo
                 console.error(_err)
                 setIsLoading(false)
@@ -84,21 +95,27 @@ const Login = () => {
     const handleRequestStatusChange = useCallback(async () => {
         setIsLoading(true)
         try {
+            const response = await apiCall("/api/auth/request-status-change", {
             const res = await apiCall("/api/auth/request-status-change", {
                 method: "POST",
                 body: JSON.stringify({ email: formData.email }),
             })
 
+            if (response.ok) {
+                setStatusMessage("Yêu cầu kích hoạt đã được gửi")
             if (res.ok) {
                 setStatusMessage("Yêu cầu kích hoạt đã được gửi!")
                 setShowStatusRequest(false)
                 setError("")
             } else {
+                setError("Không thể gửi yêu cầu")
                 setError("Không thể gửi yêu cầu.")
             }
         } catch (_err) {
             console.error(_err)
             setError("Lỗi kết nối.")
+        } catch (error) {
+            setError("Lỗi kết nối")
         } finally {
             setIsLoading(false)
         }
@@ -106,21 +123,26 @@ const Login = () => {
 
     /* ----------------------------- UI --------------------------------- */
     return (
+        <div className="min-h-screen flex flex-col">
         <div className="relative min-h-screen h-screen w-screen flex flex-col overflow-x-hidden">
             <Header />
 
+            <div className="absolute inset-0 bg-cover bg-center z-[-1]" style={backgroundStyle}>
+                <div className="absolute inset-0 bg-black/30"></div>
             {/* bg */}
             <div className="fixed inset-0 bg-cover bg-center -z-10" style={backgroundStyle}>
                 <div className="absolute inset-0 bg-black/30" />
             </div>
 
+            <main className="flex-grow flex items-center justify-center py-20 px-4">
             {/* form */}
             <main className="flex-1 flex items-center justify-center">
                 <div className="w-full max-w-md bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-lg">
-
                     <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Đăng Nhập</h2>
 
                     {statusMessage && (
+                        <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg">
+                            <p className="text-green-700 text-sm">{statusMessage}</p>
                         <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg text-green-700 text-sm">
                             {statusMessage}
                         </div>
@@ -129,14 +151,18 @@ const Login = () => {
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-lg text-red-600 text-sm">
                             {error}
+                        <div className="mb-4 p-3 bg-red-50 border border-red-300 rounded-lg">
+                            <p className="text-red-600 text-sm">{error}</p>
                         </div>
                     )}
 
                     {showStatusRequest && (
                         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+                            <p className="text-yellow-800 text-sm mb-3">Tài khoản chưa kích hoạt. Gửi yêu cầu?</p>
                             <button
                                 onClick={handleRequestStatusChange}
                                 disabled={isLoading}
+                                className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition-colors duration-200"
                                 className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50"
                             >
                                 {isLoading ? "Đang gửi..." : "Gửi yêu cầu kích hoạt"}
@@ -154,6 +180,7 @@ const Login = () => {
                                 onChange={handleChange}
                                 required
                                 disabled={isLoading}
+                                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200"
                                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                                 placeholder="Nhập email"
                             />
@@ -169,6 +196,7 @@ const Login = () => {
                                 required
                                 disabled={isLoading}
                                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200"
                                 placeholder="Nhập mật khẩu"
                             />
                             <div className="text-right mt-2">
@@ -182,6 +210,7 @@ const Login = () => {
                             type="submit"
                             disabled={isLoading}
                             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50"
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition-all duration-200"
                         >
                             {isLoading ? "Đang đăng nhập..." : "Đăng Nhập"}
                         </button>
