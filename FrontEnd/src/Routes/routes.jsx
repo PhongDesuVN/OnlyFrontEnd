@@ -8,7 +8,7 @@ import ForgotPassword from "../Pages/Login_Register_yen/ForgotPassword.jsx";
 import HomePage from "../Pages/HomePage_phong/homepage.jsx";  // Đổi tên import cho rõ ràng
 import Staff from "../Pages/Staff_phong/staff.jsx";  // Đổi tên import cho rõ ràng
 import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx";
-import ManageUser from "../Pages/ManageUser_phong/manageuser.jsx";  // Import trang quản lý user mới
+import ManageUser from "../Pages/ManageUser_trung/manageuser.jsx";  // Import trang quản lý user mới
 
 import Signin from "../Pages/Login_Register_trung/Login.jsx";
 import Register from "../Pages/Login_Register_trung/Register.jsx";
