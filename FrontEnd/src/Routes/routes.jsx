@@ -2,14 +2,14 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
-import Signin from "../Pages/Login_Register_yen/Login.jsx";
-import Register from "../Pages/Login_Register_yen/Register.jsx";
-import ForgotPassword from "../Pages/Login_Register_yen/ForgotPassword.jsx";
-import HomePage from "../Pages/HomePage_phong/homepage.jsx";  // Đổi tên import cho rõ ràng
-import Staff from "../Pages/Staff_phong/staff.jsx";  // Đổi tên import cho rõ ràng
-
+import Signin from "../Pages/Login_Register_trung/Login.jsx";
+import Register from "../Pages/Login_Register_trung/Register.jsx";
+import ForgotPassword from "../Pages/Login_Register_trung/ForgotPassword.jsx";
+import HomePage from "../Pages/HomePage_phong/homepage.jsx";
+import Staff from "../Pages/Staff_phong/staff.jsx";
 import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx";
-import Dashboard from "../Pages/Staff_phong/DashBoard.jsx";
+import Otp from "../Pages/Login_Register_trung/Otp.jsx";
+
 export default function AppRoutes() {
     return (
         <Routes>
@@ -18,9 +18,9 @@ export default function AppRoutes() {
             <Route path="/login" element={<Signin />} />
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/otp" element={<Otp />} />  {/* Route cho trang OTP */}
             {/* Thêm các route khác nếu cần */}
             <Route path="/staff" element={<Staff />} />
-            <Route path="/dashboard" element={<Dashboard />} />  {/* Trang Dashboard, có thể là trang chủ hoặc một trang khác */}
             <Route path="/manageorder" element={<ManageOrder />} />  {/* Quản lý đơn hàng */}
         </Routes>
     );
