@@ -15,7 +15,7 @@ export default function AppRoutes() {
         <Routes>
             <Route path="/" element={<HomePage />} />  {/* Trang chủ */}
 
-            <Route path="/signin" element={<Signin />} />
+            <Route path="/login" element={<Signin />} />
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
             {/* Thêm các route khác nếu cần */}
