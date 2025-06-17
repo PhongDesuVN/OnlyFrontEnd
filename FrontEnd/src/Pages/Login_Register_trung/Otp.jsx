@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { apiCall } from "../../utils/api.js"
+import Cookies from "js-cookie"
+import { jwtDecode } from "jwt-decode"
 
 const Otp = () => {
     const [otp, setOtp] = useState(["", "", "", "", "", ""])
@@ -24,13 +26,12 @@ const Otp = () => {
     )
 
     useEffect(() => {
-        const email = localStorage.getItem("loginEmail")
+        const email = Cookies.get("loginEmail")
         if (!email) {
             navigate("/login")
             return
         }
         setUserEmail(email)
-        // Delay focus để tránh lag
         setTimeout(() => inputRefs.current[0]?.focus(), 100)
     }, [navigate])
 
@@ -104,16 +105,35 @@ const Otp = () => {
                     const authResponse = await response.json()
                     console.log("✅ OTP Success Response:", authResponse)
 
-                    localStorage.setItem("authToken", authResponse.token)
-                    localStorage.setItem("userRole", authResponse.role)
-                    localStorage.removeItem("loginEmail")
+                    Cookies.set("authToken", authResponse.accessToken, { expires: 7 })
+                    Cookies.set("userRole", authResponse.role, { expires: 7 })
+                    if (authResponse.accessToken) {
+                        try {
+                            const decoded = jwtDecode(authResponse.accessToken)
+                            console.log("DECODED TOKEN:", decoded)
+                            if (decoded.username) {
+                                Cookies.set("username", decoded.username, {
+                                    expires: 7,
+                                    path: '/',
+                                    secure: true,
+                                    sameSite: 'strict'
+                                })
+                                console.log("USERNAME LƯU VÀO COOKIES:", decoded.username)
+                                console.log("USERNAME TRONG COOKIES:", Cookies.get("username"))
+                            } else {
+                                console.log("No username found in token")
+                            }
+                        } catch (decodeErr) {
+                            console.error("Lỗi decode JWT:", decodeErr)
+                        }
+                    }
+                    Cookies.remove("loginEmail")
 
                     setIsSuccess(true)
                     setTimeout(() => {
                         navigate(authResponse.role === "MANAGER" ? "/manager-dashboard" : "/staff")
                     }, 1000)
                 } else {
-                    // Xử lý lỗi chi tiết hơn, bao gồm 403
                     let errorMessage = "Mã OTP không đúng"
 
                     try {
@@ -127,24 +147,23 @@ const Otp = () => {
                         if (response.status === 401) {
                             if (errorText.includes("expired") || errorText.includes("hết hạn")) {
                                 errorMessage = "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới."
+                                // Clear the OTP input and reset countdown
+                                setOtp(["", "", "", "", "", ""])
+                                setCountdown(0)
                             } else if (errorText.includes("invalid") || errorText.includes("không đúng")) {
                                 errorMessage = "Mã OTP không đúng. Vui lòng kiểm tra lại."
+                            } else if (errorText.includes("session") || errorText.includes("phiên")) {
+                                errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+                                Cookies.remove("loginEmail")
+                                setTimeout(() => navigate("/login"), 2000)
+                                return
                             } else {
                                 errorMessage = errorText || "Mã OTP không hợp lệ"
                             }
                         } else if (response.status === 403) {
-                            // Xử lý lỗi 403 Forbidden
-                            if (errorText.includes("session") || errorText.includes("phiên")) {
-                                errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
-                                setTimeout(() => {
-                                    localStorage.removeItem("loginEmail")
-                                    navigate("/login")
-                                }, 2000)
-                            } else if (errorText.includes("permission") || errorText.includes("quyền")) {
-                                errorMessage = "Không có quyền truy cập. Vui lòng liên hệ quản trị viên."
-                            } else {
-                                errorMessage = errorText || "Không có quyền thực hiện thao tác này"
-                            }
+                            errorMessage = "Không có quyền truy cập. Vui lòng liên hệ quản trị viên."
+                            setTimeout(() => navigate("/login"), 2000)
+                            return
                         } else if (response.status === 404) {
                             errorMessage = "Không tìm thấy endpoint. Vui lòng kiểm tra cấu hình server."
                         } else if (response.status >= 500) {
@@ -207,7 +226,7 @@ const Otp = () => {
 
     // Optimize handleBackToLogin
     const handleBackToLogin = useCallback(() => {
-        localStorage.removeItem("loginEmail")
+        Cookies.remove("loginEmail")
         navigate("/login")
     }, [navigate])
 

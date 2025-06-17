@@ -9,6 +9,7 @@ import HomePage from "../Pages/HomePage_phong/homepage.jsx";
 import Staff from "../Pages/Staff_phong/staff.jsx";
 import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
+import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
 export default function AppRoutes() {
     return (
@@ -19,6 +20,7 @@ export default function AppRoutes() {
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
             <Route path="/otp" element={<Otp />} />  {/* Route cho trang OTP */}
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* Thêm các route khác nếu cần */}
             <Route path="/staff" element={<Staff />} />
             <Route path="/manageorder" element={<ManageOrder />} />  {/* Quản lý đơn hàng */}

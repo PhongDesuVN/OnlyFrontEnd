@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import Cookies from "js-cookie"
+import { useNavigate } from "react-router-dom"
 import {
     TrendingUp,
     TrendingDown,
@@ -12,6 +14,7 @@ import {
     Medal,
     Award,
     Crown,
+    Settings,
 } from "lucide-react"
 
 const Dashboard = () => {
@@ -20,8 +23,14 @@ const Dashboard = () => {
     const [selectedUnit, setSelectedUnit] = useState("Tất cả")
     const [selectedPeriod, setSelectedPeriod] = useState("month")
     const [selectedMetric, setSelectedMetric] = useState("revenue")
+    
     const [hoveredCard, setHoveredCard] = useState(null)
     const [pressedButton, setPressedButton] = useState(null)
+    const [showMenu, setShowMenu] = useState(false)
+    const navigate = useNavigate()
+
+    // Lấy username từ cookies
+    const username = Cookies.get("username") || "Staff User"
 
     // Dữ liệu mẫu cho biểu đồ hiệu suất
     const monthlyRevenue = [
@@ -101,14 +110,19 @@ const Dashboard = () => {
     const rankingData = [
         {
             rank: 1,
-            name: "Nguyễn Văn An",
+            name: username,
             unit: "Chuyển Nhà Minh Anh",
             revenue: "245.800.000 đ",
             trips: 156,
             successRate: 94.2,
             change: "+12%",
             trend: "up",
-            avatar: "NA",
+            avatar: username
+                .split(" ")
+                .map((w) => w[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2),
         },
         {
             rank: 2,
@@ -230,6 +244,25 @@ const Dashboard = () => {
     const handleButtonPress = (buttonId) => {
         setPressedButton(buttonId)
         setTimeout(() => setPressedButton(null), 150)
+    }
+
+    const handleLogout = async () => {
+        try {
+            const token = Cookies.get("authToken")
+            if (token) {
+                await fetch("http://localhost:8083/api/auth/logout", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    credentials: "include",
+                })
+            }
+        } catch (e) {}
+        Cookies.remove("authToken")
+        Cookies.remove("userRole")
+        Cookies.remove("username")
+        navigate("/login")
     }
 
     return (
@@ -1110,6 +1143,25 @@ const Dashboard = () => {
                         </div>
                     </div>
                 )}
+            </div>
+            <div className="flex flex-col items-center gap-2 mt-8 p-4 bg-blue-50 rounded-xl">
+                <button
+                    className="w-full px-4 py-2 rounded-lg bg-white text-blue-600 font-semibold hover:bg-blue-100 transition"
+                    onClick={() => navigate("/profile")}
+                >
+                    View Profile
+                </button>
+                <button
+                    className="w-full px-4 py-2 rounded-lg bg-white text-red-600 font-semibold hover:bg-red-100 transition"
+                    onClick={() => {
+                        Cookies.remove("authToken")
+                        Cookies.remove("userRole")
+                        Cookies.remove("username")
+                        navigate("/login")
+                    }}
+                >
+                    Logout
+                </button>
             </div>
         </div>
     )

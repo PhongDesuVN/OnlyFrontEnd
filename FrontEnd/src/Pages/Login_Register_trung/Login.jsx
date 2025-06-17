@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { apiCall } from "../../utils/api.js"
 import Header from "../../Components/FormLogin_yen/Header.jsx"
 import Footer from "../../Components/FormLogin_yen/Footer.jsx"
+import Cookies from "js-cookie"
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: "", password: "" })
@@ -44,7 +45,7 @@ const Login = () => {
                 const message = await response.text()
 
                 if (response.ok) {
-                    localStorage.setItem("loginEmail", formData.email)
+                    Cookies.set("loginEmail", formData.email, { expires: 7 })
                     setStatusMessage(message)
                     setTimeout(() => navigate("/otp"), 1000)
                 } else {
@@ -87,14 +88,19 @@ const Login = () => {
     }, [formData.email])
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="relative min-h-screen h-screen w-screen flex flex-col overflow-x-hidden">
             <Header />
 
-            <div className="absolute inset-0 bg-cover bg-center z-[-1]" style={backgroundStyle}>
+            {/* Background */}
+            <div
+                className="fixed inset-0 bg-cover bg-center z-[-1]"
+                style={backgroundStyle}
+            >
                 <div className="absolute inset-0 bg-black/30"></div>
             </div>
 
-            <main className="flex-grow flex items-center justify-center py-20 px-4">
+            {/* Centered Login Form */}
+            <main className="flex-1 flex items-center justify-center">
                 <div className="w-full max-w-md bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-lg">
                     <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Đăng Nhập</h2>
 

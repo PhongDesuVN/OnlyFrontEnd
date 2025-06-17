@@ -6,10 +6,20 @@ const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Send reset link to:', email);
-        setSubmitted(true);
+        try {
+            const res = await fetch("http://localhost:8083/api/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const data = await res.text();
+            setSubmitted(true);
+            // Có thể hiển thị data nếu muốn
+        } catch (err) {
+            alert("Có lỗi xảy ra, vui lòng thử lại!");
+        }
     };
 
     return (
