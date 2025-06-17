@@ -20,12 +20,5 @@ export default defineConfig({
         },
       },
     },
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8083', // Spring Boot backend
-        changeOrigin: true,
-        secure: false,
-      }
-    }
-  }
+
 })
