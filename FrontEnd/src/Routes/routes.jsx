@@ -15,7 +15,7 @@ import Dashboard from "../Pages/Staff_phong/DashBoard.jsx";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
 import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
-import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard.jsx";
+import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard";
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx";
 export default function AppRoutes() {
     return (
@@ -32,6 +32,7 @@ export default function AppRoutes() {
             <Route path="/manageorder" element={<ManageOrder />} />  {/* Quản lý đơn hàng */}
             <Route path="/manager" element={<ManagerDashboard />} />
             <Route path="/managestaff" element={<StaffManagement />} />
+            <Route path="/manager-dashboard" element={<ManagerDashboard />} />
         </Routes>
     );
 }

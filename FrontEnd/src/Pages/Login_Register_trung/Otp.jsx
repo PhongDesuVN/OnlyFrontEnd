@@ -131,7 +131,11 @@ const Otp = () => {
 
                     setIsSuccess(true)
                     setTimeout(() => {
-                        navigate(authResponse.role === "MANAGER" ? "/manager-dashboard" : "/staff")
+                        if (authResponse.role && authResponse.role.toUpperCase() === "MANAGER") {
+                            navigate("/manager-dashboard")
+                        } else {
+                            navigate("/staff")
+                        }
                     }, 1000)
                 } else {
                     let errorMessage = "Mã OTP không đúng"
