@@ -46,6 +46,13 @@ import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.js
 import TransportUnitManagement from '../Pages/TransportUnit_TrungTran/TransportUnitManagement.jsx';
 import TransportUnitOverview from '../Pages/TransportUnit_TrungTran/TransportUnitOverview.jsx';
 
+import Signin from "../Pages/Login_Register_yen/Login.jsx";
+import Register from "../Pages/Login_Register_yen/Register.jsx";
+import ForgotPassword from "../Pages/Login_Register_yen/ForgotPassword.jsx";
+import HomePage from "../Pages/HomePage_phong/homepage.jsx";  // Đổi tên import cho rõ ràng
+import Staff from "../Pages/Staff_phong/staff.jsx";  // Đổi tên import cho rõ ràng
+import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx";
+import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
 import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
