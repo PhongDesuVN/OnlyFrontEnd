@@ -28,6 +28,7 @@ const Otp = () => {
     useEffect(() => {
         const email = localStorage.getItem("loginEmail")
         const email = Cookies.get("loginEmail")
+        const email = Cookies.get("loginEmail")
         if (!email) {
             navigate("/login")
             return
@@ -133,6 +134,29 @@ const Otp = () => {
                         }
                     }
                     Cookies.remove("loginEmail")
+                    Cookies.set("authToken", authResponse.accessToken, { expires: 7 })
+                    Cookies.set("userRole", authResponse.role, { expires: 7 })
+                    if (authResponse.accessToken) {
+                        try {
+                            const decoded = jwtDecode(authResponse.accessToken)
+                            console.log("DECODED TOKEN:", decoded)
+                            if (decoded.username) {
+                                Cookies.set("username", decoded.username, {
+                                    expires: 7,
+                                    path: '/',
+                                    secure: true,
+                                    sameSite: 'strict'
+                                })
+                                console.log("USERNAME LƯU VÀO COOKIES:", decoded.username)
+                                console.log("USERNAME TRONG COOKIES:", Cookies.get("username"))
+                            } else {
+                                console.log("No username found in token")
+                            }
+                        } catch (decodeErr) {
+                            console.error("Lỗi decode JWT:", decodeErr)
+                        }
+                    }
+                    Cookies.remove("loginEmail")
 
                     setIsSuccess(true)
                     setTimeout(() => {
@@ -187,6 +211,9 @@ const Otp = () => {
                             } else {
                                 errorMessage = errorText || "Không có quyền thực hiện thao tác này"
                             }
+                            errorMessage = "Không có quyền truy cập. Vui lòng liên hệ quản trị viên."
+                            setTimeout(() => navigate("/login"), 2000)
+                            return
                         } else if (response.status === 404) {
                             errorMessage = "Không tìm thấy endpoint. Vui lòng kiểm tra cấu hình server."
                         } else if (response.status >= 500) {
@@ -249,6 +276,7 @@ const Otp = () => {
 
     // Optimize handleBackToLogin
     const handleBackToLogin = useCallback(() => {
+        Cookies.remove("loginEmail")
         navigate("/login")
     }, [navigate])
 

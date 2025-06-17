@@ -29,6 +29,10 @@ const Register = () => {
             [name]: name === 'gender' ? value.toUpperCase() : value
         }))
         setFormData((prev) => ({ ...prev, [name]: value }))
+        setFormData((prev) => ({
+            ...prev,
+            [name]: name === 'gender' ? value.toUpperCase() : value
+        }))
         setError("")
     }
 
@@ -74,6 +78,7 @@ const Register = () => {
                     phone: formData.phone,
                     address: formData.address,
                     password: formData.password,
+                    gender: formData.gender ? formData.gender.toUpperCase() : "",
                     gender: formData.gender,
                     gender: formData.gender ? formData.gender.toUpperCase() : "",
                 }),
@@ -103,6 +108,7 @@ const Register = () => {
                 }, 3000)
             } else if (response.status === 403) {
                 setError("❌ Lỗi 403: Backend từ chối kết nối. Vui lòng kiểm tra cấu hình CORS hoặc dữ liệu gửi lên.")
+                setError("❌ Lỗi 403: Backend từ chối kết nối. Vui lòng kiểm tra cấu hình CORS hoặc dữ liệu gửi lên.")
                 setError("❌ Lỗi 403: Backend từ chối kết nối. Vui lòng kiểm tra cấu hình CORS.")
             } else if (response.status === 409) {
                 setError("❌ Email đã được sử dụng. Vui lòng chọn email khác.")
@@ -119,13 +125,16 @@ const Register = () => {
     }
 
     return (
+        <div className="relative min-h-screen flex flex-col overflow-y-auto" style={{overflowX: 'hidden'}}>
         <div className="min-h-screen flex flex-col relative">
         <div className="relative min-h-screen flex flex-col overflow-y-auto" style={{overflowX: 'hidden'}}>
             <Header />
             {/* Background */}
+            {/* Background */}
 
             <div
                 className="absolute inset-0 bg-cover bg-center z-[-1]"
+                className="fixed inset-0 bg-cover bg-center z-[-1]"
                 className="fixed inset-0 bg-cover bg-center z-[-1]"
                 style={{
                     backgroundImage:
@@ -133,8 +142,26 @@ const Register = () => {
                 }}
             >
                 <div className="absolute inset-0 bg-black/30"></div>
+                <div className="absolute inset-0 bg-black/30"></div>
                 <div className="absolute inset-0 bg-black opacity-30"></div>
             </div>
+            {/* Centered Register Form, always below header and above footer */}
+            <main className="flex-1 flex items-center justify-center pt-24 pb-8 px-2">
+                <div className="w-full max-w-2xl bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-gray-100 flex flex-col justify-center">
+                    {/* Notification Area - fixed height, always present */}
+                    <div className="mb-2 min-h-[48px] flex items-center justify-center">
+                        {success && (
+                            <div className="w-full bg-green-50 border border-green-300 rounded-lg px-3 py-2 text-green-700 text-sm text-center">
+                                {success}
+                            </div>
+                        )}
+                        {error && (
+                            <div className="w-full bg-red-50 border border-red-300 rounded-lg px-3 py-2 text-red-600 text-sm text-center">
+                                {error}
+                            </div>
+                        )}
+                    </div>
+                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 tracking-tight">Đăng Ký</h2>
 
             <main className="flex-grow flex items-center justify-center px-4 min-h-[calc(100vh-80px)]">
                 <div className="w-full max-w-md bg-white bg-opacity-90 backdrop-blur-md p-6 rounded-2xl shadow-lg my-6">
@@ -170,6 +197,101 @@ const Register = () => {
                     </div>
                     <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 tracking-tight">Đăng Ký</h2>
                     <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <InputField
+                                label="Tên đăng nhập"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleChange}
+                                placeholder="Nhập tên đăng nhập"
+                                required
+                                minLength={4}
+                                maxLength={20}
+                                disabled={isLoading}
+                            />
+                            <InputField
+                                label="Họ tên"
+                                name="fullName"
+                                value={formData.fullName}
+                                onChange={handleChange}
+                                placeholder="Nhập họ và tên"
+                                required
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <InputField
+                                label="Email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="Nhập email"
+                                required
+                                type="email"
+                                disabled={isLoading}
+                            />
+                            <InputField
+                                label="Số điện thoại"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                placeholder="Nhập số điện thoại"
+                                required
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <InputField
+                                label="Địa chỉ"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                placeholder="Nhập địa chỉ"
+                                required
+                                disabled={isLoading}
+                            />
+                            <InputField
+                                label="Mật khẩu"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="Nhập mật khẩu (ít nhất 6 ký tự, chữ hoa, thường, số)"
+                                required
+                                type="password"
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <InputField
+                                label="Xác nhận mật khẩu"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                placeholder="Nhập lại mật khẩu"
+                                required
+                                type="password"
+                                disabled={isLoading}
+                            />
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-1">Giới tính</label>
+                                <div className="flex items-center gap-6 mt-2">
+                                    <Radio
+                                        name="gender"
+                                        label="Nam"
+                                        value="MALE"
+                                        checked={formData.gender === "MALE"}
+                                        onChange={handleChange}
+                                        disabled={isLoading}
+                                    />
+                                    <Radio
+                                        name="gender"
+                                        label="Nữ"
+                                        value="FEMALE"
+                                        checked={formData.gender === "FEMALE"}
+                                        onChange={handleChange}
+                                        disabled={isLoading}
+                                    />
+                                </div>
                         <InputField
                             label="Họ tên"
                             name="fullName"
@@ -349,10 +471,14 @@ const Register = () => {
                             disabled={isLoading}
                             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition-all"
                             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all text-base mt-2"
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all text-base mt-2"
                         >
                             {isLoading ? "Đang đăng ký..." : "Đăng ký"}
                         </button>
                     </form>
+                    <div className="mt-6 text-center text-gray-600 text-sm">
+                        Đã có tài khoản?{' '}
+                        <a href="/login" className="text-blue-600 hover:underline font-medium">
 
                     <div className="mt-4 text-center text-gray-600 text-sm">
                         Đã có tài khoản?{" "}

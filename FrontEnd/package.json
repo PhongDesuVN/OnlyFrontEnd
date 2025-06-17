@@ -17,6 +17,8 @@
     "antd": "^5.25.4",
     "framer-motion": "^12.16.0",
     "install": "^0.13.0",
+    "js-cookie": "^3.0.5",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.513.0",
     "npm": "^11.4.1",
     "@emotion/react": "^11.14.0",

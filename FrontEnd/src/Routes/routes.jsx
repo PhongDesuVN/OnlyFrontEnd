@@ -30,6 +30,7 @@ import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard";
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
+import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
 export default function AppRoutes() {
     return (
@@ -40,6 +41,7 @@ export default function AppRoutes() {
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
             <Route path="/otp" element={<Otp />} />  {/* Route cho trang OTP */}
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/otp" element={<Otp />} />  {/* Route cho trang OTP */}
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Thêm các route khác nếu cần */}
