@@ -113,7 +113,7 @@ const Staff = () => {
     const menuItems = [
         { name: 'Trang Chủ', icon: Home, path: '/', hasLink: true },
         { name: 'Bảng Điều Khiển', icon: BarChart3, active: true, hasLink: false },
-        { name: 'Quản Lý Biên Lai', icon: Receipt, hasLink: false },
+        { name: 'Quản Lý Biên Lai', icon: Receipt, path: '/receipts', hasLink: true },
         { name: 'Quản Lý Đơn Vị Lưu Trữ', icon: Package, hasLink: false },
         { name: 'Quản Lý Đơn Vị Vận Chuyển', icon: Truck, hasLink: false },
         { name: 'Quản Lý Đơn Hàng', icon: ShoppingCart, path: '/manageorder', hasLink: true },
