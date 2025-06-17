@@ -26,7 +26,6 @@ export default function App() {
     <BrowserRouter>
       <AppRoutes />
     </BrowserRouter>
-
   );
 }
 
