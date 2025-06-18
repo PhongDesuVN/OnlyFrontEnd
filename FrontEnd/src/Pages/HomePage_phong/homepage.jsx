@@ -205,7 +205,7 @@ const About = () => {
                                     N
                                 </div>
                                 <div>
-                                    <div className="font-semibold">Nguyễn Văn An</div>
+                                    <div className="font-semibold">Nguyễn Văn Phong</div>
                                     <div className="text-blue-200">Khách hàng</div>
                                 </div>
                             </div>
