@@ -9,17 +9,7 @@
 
 
 
-    const initialReceipts = [
-      {
-
-      },
-      {
-
-      },
-      {
-
-      }
-    ];
+    const initialReceipts = [];
     const API_BASE = "http://localhost:8083/api/payments";
 
     export default function ReceiptsManagement() {
@@ -98,7 +88,17 @@
           </motion.div>
         );
       };
+const handleSearchTermChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
 
+    // Gọi lại API để tìm kiếm (realtime)
+    axios.get(`${API_BASE}/search`, {
+      params: { keyword: value, page: 0, size: 10 }
+    })
+    .then(res => setReceipts(res.data.content || []))
+    .catch(err => setError("Không thể tải dữ liệu từ API (Lỗi 403)"));
+  };
       // Tổng quan biên lai
       const OverviewReceipts = () => (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -108,8 +108,8 @@
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { label: "Tổng số biên lai", value: receipts.length },
-              { label: "Đã thanh toán", value: receipts.filter(r => r.status === "Đã thanh toán").length },
-              { label: "Chờ xử lý", value: receipts.filter(r => r.status === "Chờ xử lý").length }
+              { label: "Đã thanh toán", value: receipts.filter(r => r.status === "PAID").length },
+              { label: "Chưa thanh toán", value: receipts.filter(r => r.status === "UNPAID").length }
             ].map((item, idx) => (
               <motion.div
                 key={idx}
@@ -123,6 +123,7 @@
           </div>
         </motion.div>
       );
+
 
       // Danh sách biên lai
 const ViewReceipts = () => (
