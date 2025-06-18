@@ -192,7 +192,7 @@ const ViewReceipts = () => (
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                 />
-              </motion.div>
+              </motion.div> 
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
