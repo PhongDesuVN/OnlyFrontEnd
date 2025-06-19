@@ -33,7 +33,7 @@ const Header = () => {
                     </nav>
                     <div className="flex space-x-3">  {/* Nút đăng nhập và đăng ký với hiệu ứng hover */}
 
-                        <Link to="/signin">
+                        <Link to="/login">
                             <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
                                 Đăng Nhập
                             </button>
@@ -70,9 +70,9 @@ const Hero = () => { // Nền chuyển màu với các hình tròn nổi bật v
             {/* Nội dung Hero với tiêu đề, mô tả và nút hành động */}
             <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
                 <h2 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in"> {/* Tiêu đề chính với hiệu ứng hoạt ảnh */}
-                    Hệ Thống
+                    Dịch Vụ
                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                        Quản Lý Chuyên Sâu
+                        Vận Chuyển Nhà
                     </span>
                 </h2>
                 <p className="text-xl md:text-2xl mb-8 opacity-90 animate-fade-in-delay">
