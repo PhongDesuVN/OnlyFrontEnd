@@ -130,6 +130,10 @@ const performanceData = [
         if (managerId) navigate(`/managerstaff`)
     }
 
+    const handleNavigatePromotion = () => {
+        navigate("/promotions")
+    }
+
     return (
         <div className="manager-dashboard-root min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
             {/* Header */}
@@ -158,7 +162,10 @@ const performanceData = [
                     >
                         <Users className="w-5 h-5" /> Quản lý nhân viên
                     </button>
-                    <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow hover:opacity-90">
+                    <button
+                        onClick={handleNavigatePromotion}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow hover:opacity-90"
+                    >
                         <Package className="w-5 h-5" /> Quản lý khuyến mãi
                     </button>
                     <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow hover:opacity-90">

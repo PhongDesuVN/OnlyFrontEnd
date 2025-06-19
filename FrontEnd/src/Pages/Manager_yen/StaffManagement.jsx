@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Cookies from "js-cookie"
 import axios from "../../utils/axiosInstance.js" // Adjust path to your axios instance
+import Footer from "../../Components/FormLogin_yen/Footer.jsx"
 import {
     Edit,
     MessageSquare,
@@ -700,9 +701,10 @@ export default function StaffManagement() {
                             </div>
                         </div>
                     )}
+
                 </div>
             </div>
-
+            <Footer />
             <style jsx>{`
                 @keyframes slideInUp {
                     from {

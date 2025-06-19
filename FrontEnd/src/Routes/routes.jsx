@@ -69,8 +69,7 @@ import ResetPassword from "../Pages/Login_Register_trung/ResetPassword"
 
 import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard"
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx"
-
-
+import PromotionManagement from "../Pages/Manager_yen/PromotionManagement.jsx"
 
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
@@ -147,4 +146,28 @@ export default function AppRoutes() {
             <Route path="/transport-units" element={<TransportUnitManagement />} />
         </Routes>
     );
+        return (
+            <Routes>
+                    <Route path="/" element={<HomePage />} /> {/* Trang chủ */}
+                    <Route path="/login" element={<Signin />} />
+                    <Route path="/forgot" element={<ForgotPassword />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/otp" element={<Otp />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+
+                    {/* Staff routes */}
+                    <Route path="/staff" element={<Staff />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+
+                    {/* Management routes */}
+                    <Route path="/manageorder" element={<ManageOrder />} />
+                    <Route path="/manageuser" element={<ManageUser />} />
+                    <Route path="/managerevenue" element={<ManageRevenue />} />
+
+                    {/* Manager routes */}
+                    <Route path="/manager" element={<ManagerDashboard />} />
+                    <Route path="/managerstaff" element={<StaffManagement />} />
+                    <Route path="/promotions" element={<PromotionManagement />} />
+            </Routes>
+        )
 }
