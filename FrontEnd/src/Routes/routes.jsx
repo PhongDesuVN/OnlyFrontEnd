@@ -10,18 +10,18 @@ import Staff from "../Pages/Staff_phong/staff.jsx";
 import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx";
 import ManageUser from "../Pages/ManageUser_trung/manageuser.jsx";  // Import trang quản lý user mới
 import ManageRevenue from "../Pages/ManageRevenue_trung/managerevenue.jsx";  // Import trang quản lý doanh thu
-
 import Dashboard from "../Pages/Staff_phong/DashBoard.jsx";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
 import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
-import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard";
+import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard.jsx";
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx";
+import TransportUnitManagement from "../Pages/TransportUnit_TrungTran/TransportUnitManagement.jsx";
+
 export default function AppRoutes() {
     return (
         <Routes>
             <Route path="/" element={<HomePage />} />  {/* Trang chủ */}
-
             <Route path="/login" element={<Signin />} />
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
@@ -33,6 +33,7 @@ export default function AppRoutes() {
             <Route path="/manager" element={<ManagerDashboard />} />
             <Route path="/managestaff" element={<StaffManagement />} />
             <Route path="/manager-dashboard" element={<ManagerDashboard />} />
+            <Route path="/transport-units" element={<TransportUnitManagement />} />
         </Routes>
     );
 }

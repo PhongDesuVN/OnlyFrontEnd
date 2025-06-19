@@ -33,6 +33,8 @@ const Dashboard = () => {
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef(null);
     const navigate = useNavigate();
+    const [selectedUnit, setSelectedUnit] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     const cards = [
         {
@@ -99,6 +101,30 @@ const Dashboard = () => {
         navigate("/login");
     };
 
+    const handleViewDetails = async (transportUnitId) => {
+        try {
+            // Gọi API lấy approval theo transportUnitId (cần backend hỗ trợ)
+            const approvalRes = await fetch(`http://localhost:8083/api/transport-unit-approvals/by-transport-unit/${transportUnitId}`, {
+                headers: {
+                    'Authorization': `Bearer ${Cookies.get('authToken')}`,
+                },
+            });
+            if (approvalRes.ok) {
+                const approval = await approvalRes.json();
+                if (approval.status === "APPROVED") {
+                    setSelectedUnit(approval); // approval chứa email, address, ...
+                    setShowModal(true);
+                } else {
+                    alert("Đơn vị vận chuyển này chưa được duyệt!");
+                }
+            } else {
+                alert("Không tìm thấy thông tin phê duyệt!");
+            }
+        } catch (err) {
+            alert("Lỗi khi lấy thông tin phê duyệt!");
+        }
+    };
+
     return (
         <RequireAuth>
             <div className="manager-dashboard-root min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
@@ -131,7 +157,10 @@ const Dashboard = () => {
                         <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow hover:opacity-90">
                             <TrendingUp className="w-5 h-5" /> Báo cáo hiệu suất
                         </button>
-                        <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow hover:opacity-90">
+                        <button 
+                            onClick={() => navigate('/transport-units')}
+                            className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow hover:opacity-90"
+                        >
                             <MapPin className="w-5 h-5" /> Quản lý vận chuyển
                         </button>
                         <div className="mt-4">
