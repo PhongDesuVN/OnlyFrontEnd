@@ -9,6 +9,7 @@ import HomePage from "../Pages/HomePage_phong/homepage.jsx";  // Đổi tên imp
 import Staff from "../Pages/Staff_phong/staff.jsx";  // Đổi tên import cho rõ ràng
 import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx";
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
+
 export default function AppRoutes() {
     return (
         <Routes>
@@ -21,6 +22,7 @@ export default function AppRoutes() {
             <Route path="/staff" element={<Staff />} />
             <Route path="/manageorder" element={<ManageOrder />} />  {/* Quản lý đơn hàng */}
             <Route path="/receipts" element={<ReceiptsManagement />} />
+
         </Routes>
     );
 }
