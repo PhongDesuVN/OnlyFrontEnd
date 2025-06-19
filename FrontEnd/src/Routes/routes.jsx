@@ -8,9 +8,6 @@ import ForgotPassword from "../Pages/Login_Register_trung/ForgotPassword.jsx";
 import HomePage from "../Pages/HomePage_phong/homepage.jsx";
 import Staff from "../Pages/Staff_phong/staff.jsx";
 import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx";
-import ManageUser from "../Pages/ManageUser_trung/manageuser.jsx";  // Import trang quản lý user mới
-import ManageRevenue from "../Pages/ManageRevenue_trung/managerevenue.jsx";  // Import trang quản lý doanh thu
-import Dashboard from "../Pages/Staff_phong/DashBoard.jsx";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
 import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 

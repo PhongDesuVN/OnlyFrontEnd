@@ -26,16 +26,13 @@ const Register = () => {
         const { name, value } = e.target
         setFormData((prev) => ({
             ...prev,
-            [name]: name === 'gender' ? value.toUpperCase() : value
+            [name]: name === "gender" ? value.toUpperCase() : value,
         }))
         setError("")
     }
 
-    // Password: >=6 ký tự, ít nhất 1 hoa, 1 thường, 1 số
-    const validatePassword = (password) => {
-        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
-        return regex.test(password);
-    };
+    const validatePassword = (password) =>
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/.test(password)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -43,25 +40,17 @@ const Register = () => {
         setError("")
         setSuccess("")
 
-        // Validation
         if (!validatePassword(formData.password)) {
             setError("❌ Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ thường, chữ in hoa và số.")
-            setIsLoading(false)
-            return
+            return setIsLoading(false)
         }
+
         if (formData.password !== formData.confirmPassword) {
             setError("❌ Mật khẩu xác nhận không khớp.")
-            setIsLoading(false)
-            return
-        }
-        if (formData.password.length < 6) {
-            setError("❌ Mật khẩu phải có ít nhất 6 ký tự.")
-            setIsLoading(false)
-            return
+            return setIsLoading(false)
         }
 
         try {
-            console.log("📝 Register Request:", formData.email)
             const response = await apiCall("/api/auth/register", {
                 method: "POST",
                 body: JSON.stringify({
@@ -71,13 +60,14 @@ const Register = () => {
                     phone: formData.phone,
                     address: formData.address,
                     password: formData.password,
-                    gender: formData.gender ? formData.gender.toUpperCase() : "",
+                    gender: formData.gender,
                 }),
+                auth: false, // ⬅️ không gửi token
             })
-            console.log("📨 Register Response:", response.status)
+
             if (response.ok) {
-                const responseData = await response.text()
-                setSuccess("✅ Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt tài khoản.")
+                await response.text()
+                setSuccess("✅ Đăng ký thành công! Vui lòng chờ được đồng ý từ quản lí")
                 setFormData({
                     username: "",
                     fullName: "",
@@ -88,187 +78,88 @@ const Register = () => {
                     confirmPassword: "",
                     gender: "",
                 })
-                setTimeout(() => {
-                    navigate("/login")
-                }, 3000)
+                setTimeout(() => navigate("/login"), 3000)
             } else if (response.status === 403) {
-                setError("❌ Lỗi 403: Backend từ chối kết nối. Vui lòng kiểm tra cấu hình CORS hoặc dữ liệu gửi lên.")
+                setError("❌ Email đã đợc đăng kí ")
             } else if (response.status === 409) {
-                setError("❌ Email đã được sử dụng. Vui lòng chọn email khác.")
+                setError("❌ Email hoặc username đã tồn tại.")
             } else {
-                const errorText = await response.text()
-                setError(errorText || "Đăng ký thất bại. Vui lòng thử lại.")
+                const errText = await response.text()
+                setError(errText || "❌ Đăng ký thất bại. Vui lòng thử lại.")
             }
-        } catch (error) {
-            console.error("❌ Register Error:", error)
-            setError("Không thể kết nối đến server. Vui lòng kiểm tra backend.")
+        } catch (err) {
+            console.error("❌ Lỗi kết nối:", err)
+            setError("❌ Không thể kết nối đến server.")
         } finally {
             setIsLoading(false)
         }
     }
 
     return (
-        <div className="relative min-h-screen flex flex-col overflow-y-auto" style={{overflowX: 'hidden'}}>
+        <div className="relative min-h-screen flex flex-col overflow-y-auto" style={{ overflowX: "hidden" }}>
             <Header />
+
             {/* Background */}
-            <div
-                className="fixed inset-0 bg-cover bg-center z-[-1]"
-                style={{
-                    backgroundImage:
-                        "url('https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
-                }}
-            >
-                <div className="absolute inset-0 bg-black/30"></div>
+            <div className="fixed inset-0 bg-cover bg-center -z-10"
+                 style={{
+                     backgroundImage: "url('https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg')"
+                 }}>
+                <div className="absolute inset-0 bg-black/30" />
             </div>
-            {/* Centered Register Form, always below header and above footer */}
+
             <main className="flex-1 flex items-center justify-center pt-24 pb-8 px-2">
-                <div className="w-full max-w-2xl bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-gray-100 flex flex-col justify-center">
-                    {/* Notification Area - fixed height, always present */}
-                    <div className="mb-2 min-h-[48px] flex items-center justify-center">
-                        {success && (
-                            <div className="w-full bg-green-50 border border-green-300 rounded-lg px-3 py-2 text-green-700 text-sm text-center">
-                                {success}
-                            </div>
-                        )}
-                        {error && (
-                            <div className="w-full bg-red-50 border border-red-300 rounded-lg px-3 py-2 text-red-600 text-sm text-center">
-                                {error}
-                            </div>
-                        )}
+                <div className="w-full max-w-2xl bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-gray-100">
+                    {/* Notification */}
+                    <div className="mb-2 min-h-[48px] text-center text-sm">
+                        {success && <div className="bg-green-50 border border-green-300 px-3 py-2 text-green-700 rounded-lg">{success}</div>}
+                        {error && <div className="bg-red-50 border border-red-300 px-3 py-2 text-red-600 rounded-lg">{error}</div>}
                     </div>
-                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 tracking-tight">Đăng Ký</h2>
+
+                    <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Đăng ký</h2>
+
                     <form onSubmit={handleSubmit} className="space-y-4 text-sm">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InputField
-                                label="Tên đăng nhập"
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
-                                placeholder="Nhập tên đăng nhập"
-                                required
-                                minLength={4}
-                                maxLength={20}
-                                disabled={isLoading}
-                            />
-                            <InputField
-                                label="Họ tên"
-                                name="fullName"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                placeholder="Nhập họ và tên"
-                                required
-                                disabled={isLoading}
-                            />
+                            <InputField name="username" label="Tên đăng nhập" value={formData.username} onChange={handleChange} required />
+                            <InputField name="fullName" label="Họ tên" value={formData.fullName} onChange={handleChange} required />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InputField
-                                label="Email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="Nhập email"
-                                required
-                                type="email"
-                                disabled={isLoading}
-                            />
-                            <InputField
-                                label="Số điện thoại"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="Nhập số điện thoại"
-                                required
-                                disabled={isLoading}
-                            />
+                            <InputField name="email" type="email" label="Email" value={formData.email} onChange={handleChange} required />
+                            <InputField name="phone" label="Số điện thoại" value={formData.phone} onChange={handleChange} required />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InputField
-                                label="Địa chỉ"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                                placeholder="Nhập địa chỉ"
-                                required
-                                disabled={isLoading}
-                            />
-                            <InputField
-                                label="Mật khẩu"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                placeholder="Nhập mật khẩu (ít nhất 6 ký tự, chữ hoa, thường, số)"
-                                required
-                                type="password"
-                                disabled={isLoading}
-                            />
+                            <InputField name="address" label="Địa chỉ" value={formData.address} onChange={handleChange} required />
+                            <InputField name="password" type="password" label="Mật khẩu" value={formData.password} onChange={handleChange} required />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InputField
-                                label="Xác nhận mật khẩu"
-                                name="confirmPassword"
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                placeholder="Nhập lại mật khẩu"
-                                required
-                                type="password"
-                                disabled={isLoading}
-                            />
+                            <InputField name="confirmPassword" type="password" label="Xác nhận mật khẩu" value={formData.confirmPassword} onChange={handleChange} required />
                             <div>
                                 <label className="block text-gray-700 font-medium mb-1">Giới tính</label>
-                                <div className="flex items-center gap-6 mt-2">
-                                    <Radio
-                                        name="gender"
-                                        label="Nam"
-                                        value="MALE"
-                                        checked={formData.gender === "MALE"}
-                                        onChange={handleChange}
-                                        disabled={isLoading}
-                                    />
-                                    <Radio
-                                        name="gender"
-                                        label="Nữ"
-                                        value="FEMALE"
-                                        checked={formData.gender === "FEMALE"}
-                                        onChange={handleChange}
-                                        disabled={isLoading}
-                                    />
+                                <div className="flex gap-6 mt-2">
+                                    <Radio name="gender" label="Nam" value="MALE" checked={formData.gender === "MALE"} onChange={handleChange} />
+                                    <Radio name="gender" label="Nữ" value="FEMALE" checked={formData.gender === "FEMALE"} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all text-base mt-2"
-                        >
+                        <button type="submit" disabled={isLoading}
+                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 transition-all">
                             {isLoading ? "Đang đăng ký..." : "Đăng ký"}
                         </button>
                     </form>
+
                     <div className="mt-6 text-center text-gray-600 text-sm">
-                        Đã có tài khoản?{' '}
-                        <a href="/login" className="text-blue-600 hover:underline font-medium">
-                            Đăng nhập
-                        </a>
+                        Đã có tài khoản?{" "}
+                        <a href="/login" className="text-blue-600 hover:underline font-medium">Đăng nhập</a>
                     </div>
                 </div>
             </main>
+
             <Footer />
         </div>
     )
 }
 
-// InputField component
-const InputField = ({
-    label,
-    name,
-    value,
-    onChange,
-    placeholder,
-    required = false,
-    type = "text",
-    minLength,
-    maxLength,
-    disabled = false,
-}) => (
+/* Component nhỏ dùng lại */
+const InputField = ({ label, name, value, onChange, placeholder, required = false, type = "text", minLength, maxLength, disabled = false }) => (
     <div>
         <label className="block text-gray-700 font-medium mb-1">{label}</label>
         <input
@@ -276,17 +167,16 @@ const InputField = ({
             name={name}
             value={value}
             onChange={onChange}
+            placeholder={placeholder}
             required={required}
             minLength={minLength}
             maxLength={maxLength}
             disabled={disabled}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-sm"
-            placeholder={placeholder}
         />
     </div>
 )
 
-// Radio component
 const Radio = ({ name, value, label, checked, onChange, disabled = false }) => (
     <label className="flex items-center text-sm">
         <input
