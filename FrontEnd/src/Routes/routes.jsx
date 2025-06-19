@@ -18,6 +18,8 @@ import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard.jsx";
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx";
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement.jsx";
+import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
+
 
 export default function AppRoutes() {
     return (
@@ -35,6 +37,8 @@ export default function AppRoutes() {
             <Route path="/manager" element={<ManagerDashboard />} />
             <Route path="/managestaff" element={<StaffManagement />} />
             <Route path="/receipts" element={<ReceiptsManagement />} />
+<Route path="/storage-units" element={<StorageUnitManagement />} />
+
         </Routes>
     );
 }
