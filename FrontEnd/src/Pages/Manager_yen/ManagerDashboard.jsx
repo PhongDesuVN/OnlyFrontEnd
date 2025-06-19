@@ -54,6 +54,8 @@ const Dashboard = () => {
         { type: 'info', message: 'Nhận phản hồi từ khách hàng về chất lượng dịch vụ', time: '4 giờ trước' },
         { type: 'success', message: 'Hoàn thành đánh giá hiệu suất nhân viên tháng này', time: '1 ngày trước' },
     ];
+    const [selectedUnit, setSelectedUnit] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

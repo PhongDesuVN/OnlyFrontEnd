@@ -29,8 +29,10 @@ import Dashboard from "../Pages/Staff_phong/DashBoard.jsx";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
 import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
-import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard";
+import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard.jsx";
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx";
+import TransportUnitManagement from "../Pages/TransportUnit_TrungTran/TransportUnitManagement.jsx";
+
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
 import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
@@ -59,6 +61,7 @@ export default function AppRoutes() {
             <Route path="/managestaff" element={<StaffManagement />} />
             <Route path="/manager-dashboard" element={<ManagerDashboard />} />
             <Route path="/manager-dashboard" element={<ManagerDashboard />} />
+            <Route path="/transport-units" element={<TransportUnitManagement />} />
         </Routes>
     );
 }
