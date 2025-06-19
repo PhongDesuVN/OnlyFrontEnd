@@ -4,7 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FileText, BarChart, List, Search, AlertCircle, Loader, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
+
 const API_BASE = "http://localhost:8083/api/payments";
+
+
 
 // Tách các component nhỏ ra ngoài để tránh re-create
 const Header = React.memo(() => (
@@ -229,7 +232,21 @@ export default function ReceiptsManagement() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API_BASE}/search?page=0&size=100`);
+      const getCookie = (name) => {
+        const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+        return match ? match[2] : null;
+      };
+
+      const token = getCookie("authToken");
+
+
+      const response = await axios.get(`${API_BASE}/search?page=0&size=100`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+
       console.log('API data:', response.data);
       setReceipts(response.data.content || []);
     } catch (err) {
@@ -239,6 +256,7 @@ export default function ReceiptsManagement() {
       setLoading(false);
     }
   }, []);
+
 
   // Load data khi component mount
   useEffect(() => {
