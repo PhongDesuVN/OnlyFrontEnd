@@ -122,7 +122,7 @@ const Register = () => {
             }
         } catch (err) {
             console.error("❌ Lỗi kết nối:", err)
-            setError("❌ Không thể kết nối đến server.")
+            setError("❌ Email hoặc username đã đuợc đăng kí")
         } finally {
             setIsLoading(false)
         }
