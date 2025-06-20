@@ -1,28 +1,29 @@
-import React, { useState } from 'react';
-import Header from '../../Components/FormLogin_yen/Header.jsx';
-import Footer from '../../Components/FormLogin_yen/Footer.jsx';
+import React, { useState } from 'react'
+import Header from '../../Components/FormLogin_yen/Header.jsx'
+import Footer from '../../Components/FormLogin_yen/Footer.jsx'
 
 const ForgotPassword = () => {
-    const [email, setEmail] = useState('');
-    const [submitted, setSubmitted] = useState(false);
+    const [email, setEmail] = useState('')
+    const [submitted, setSubmitted] = useState(false)
 
     const handleSubmit = async (e) => {
     const handleSubmit = (e) => {
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault()
         try {
             const res = await fetch("http://localhost:8083/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
-            });
+            })
 
-            // Nếu không cần dùng `data`, không cần gán:
-            // const data = await res.text(); ❌
+            await res.text()
+            setSubmitted(true)
 
-            await res.text(); // ✅ Gọi mà không cần gán nếu không dùng
-            setSubmitted(true);
+            // Optional: auto hide success message after 5s
+            // setTimeout(() => setSubmitted(false), 5000)
         } catch {
+            alert("Có lỗi xảy ra, vui lòng thử lại!")
             alert("Có lỗi xảy ra, vui lòng thử lại!");
         }
         console.log('Send reset link to:', email);
@@ -39,8 +40,7 @@ const ForgotPassword = () => {
         } catch (err) {
             alert("Có lỗi xảy ra, vui lòng thử lại!");
         }
-    };
-
+    }
 
     return (
         <div className="min-h-screen flex flex-col relative">
