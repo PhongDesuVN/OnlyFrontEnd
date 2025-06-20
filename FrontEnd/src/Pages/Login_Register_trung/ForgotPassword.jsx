@@ -14,13 +14,17 @@ const ForgotPassword = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
-            const data = await res.text();
+
+            // Nếu không cần dùng `data`, không cần gán:
+            // const data = await res.text(); ❌
+
+            await res.text(); // ✅ Gọi mà không cần gán nếu không dùng
             setSubmitted(true);
-            // Có thể hiển thị data nếu muốn
-        } catch (err) {
+        } catch {
             alert("Có lỗi xảy ra, vui lòng thử lại!");
         }
     };
+
 
     return (
         <div className="min-h-screen flex flex-col relative">
