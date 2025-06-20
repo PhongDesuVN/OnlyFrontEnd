@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     BarChart2, Search, Download, Edit, Trash2, Eye,
     DollarSign, Calendar, Filter, AlertCircle, X, Save,
-    TrendingUp, FileText, List, Settings
+    TrendingUp, FileText, List, Settings, CheckCircle
 } from 'lucide-react';
 import revenueService from '../../Services/revenueService';
+import { Card, Row, Col } from 'antd';
+import { Bar, Pie, Line } from '@ant-design/charts';
 
 // Header Component
 const Header = () => {
@@ -77,9 +79,31 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
 const RevenueOverview = ({ revenues }) => {
     const totalRevenue = revenues.reduce((sum, rev) => sum + rev.amount, 0);
     const averageRevenue = revenues.length > 0 ? totalRevenue / revenues.length : 0;
-    const todayRevenue = revenues.filter(rev =>
+    const todayRevenue = revenues.filter(rev => 
         new Date(rev.date).toDateString() === new Date().toDateString()
     ).reduce((sum, rev) => sum + rev.amount, 0);
+
+    // Chart: Revenue by Day (Line)
+    const revenueByDay = revenues.reduce((acc, rev) => {
+        const date = new Date(rev.date).toLocaleDateString();
+        acc[date] = (acc[date] || 0) + rev.amount;
+        return acc;
+    }, {});
+    const lineData = Object.entries(revenueByDay).map(([date, amount]) => ({ date, amount }));
+
+    // Chart: Revenue by Source Type (Pie)
+    const revenueBySource = revenues.reduce((acc, rev) => {
+        acc[rev.sourceType] = (acc[rev.sourceType] || 0) + rev.amount;
+        return acc;
+    }, {});
+    const pieData = Object.entries(revenueBySource).map(([type, value]) => ({ type, value }));
+
+    // Chart: Revenue by Beneficiary Type (Bar)
+    const revenueByBeneficiary = revenues.reduce((acc, rev) => {
+        acc[rev.beneficiaryType] = (acc[rev.beneficiaryType] || 0) + rev.amount;
+        return acc;
+    }, {});
+    const barData = Object.entries(revenueByBeneficiary).map(([type, value]) => ({ type, value }));
 
     return (
         <motion.div
@@ -90,28 +114,28 @@ const RevenueOverview = ({ revenues }) => {
             <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
                 <BarChart2 className="mr-2" /> Tổng Quan Doanh Thu
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {[
-                    {
-                        label: 'Tổng Doanh Thu',
+                    { 
+                        label: 'Tổng Doanh Thu', 
                         value: `$${totalRevenue.toFixed(2)}`,
                         color: 'green',
                         icon: DollarSign
                     },
-                    {
-                        label: 'Doanh Thu Hôm Nay',
+                    { 
+                        label: 'Doanh Thu Hôm Nay', 
                         value: `$${todayRevenue.toFixed(2)}`,
                         color: 'blue',
                         icon: TrendingUp
                     },
-                    {
-                        label: 'Trung Bình/Đơn',
+                    { 
+                        label: 'Trung Bình/Đơn', 
                         value: `$${averageRevenue.toFixed(2)}`,
                         color: 'purple',
                         icon: BarChart2
                     },
-                    {
-                        label: 'Tổng Số Đơn',
+                    { 
+                        label: 'Tổng Số Đơn', 
                         value: revenues.length,
                         color: 'blue',
                         icon: FileText
@@ -135,6 +159,44 @@ const RevenueOverview = ({ revenues }) => {
                     );
                 })}
             </div>
+            {/* Biểu đồ tổng quan bằng antd charts */}
+            <Row gutter={[24, 24]}>
+                <Col xs={24} lg={12}>
+                    <Card title="Doanh Thu Theo Ngày" bordered={false}>
+                        <Line
+                            data={lineData}
+                            xField="date"
+                            yField="amount"
+                            point={{ size: 5, shape: 'diamond' }}
+                            color="#1677ff"
+                            height={260}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} lg={6}>
+                    <Card title="Tỉ Lệ Nguồn Thu" bordered={false}>
+                        <Pie
+                            data={pieData}
+                            angleField="value"
+                            colorField="type"
+                            radius={0.9}
+                            label={{ type: 'outer', content: '{name} {percentage}' }}
+                            height={260}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} lg={6}>
+                    <Card title="Doanh Thu Theo Loại Người Hưởng" bordered={false}>
+                        <Bar
+                            data={barData}
+                            xField="type"
+                            yField="value"
+                            color="#52c41a"
+                            height={260}
+                        />
+                    </Card>
+                </Col>
+            </Row>
         </motion.div>
     );
 };
