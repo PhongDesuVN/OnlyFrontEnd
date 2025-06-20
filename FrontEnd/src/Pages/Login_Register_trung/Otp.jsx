@@ -131,7 +131,7 @@ const Otp = () => {
 
                     setIsSuccess(true)
                     setTimeout(() => {
-                        if (authResponse.role && authResponse.role.toUpperCase() === "MANAGER") {
+                        if (authResponse.role && authResponse.role.toUpperCase() === "ROLE_MANAGER") {
                             navigate("/manager-dashboard")
                         } else {
                             navigate("/staff")
