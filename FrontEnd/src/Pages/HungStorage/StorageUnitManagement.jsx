@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Warehouse, BarChart, List, Search, AlertCircle, Loader, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
+// Đảm bảo đúng port với backend
 const API_BASE = "http://localhost:8083/api/storage-units";
 
 const Header = React.memo(() => (
@@ -231,28 +232,71 @@ export default function StorageUnitManagement() {
     setLoading(true);
     setError(null);
     try {
-      // Lấy token từ cookie hoặc localStorage (chỉ giữ lại 1)
-      const getCookie = (name) => {
-        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-        return match ? match[2] : null;
-      };
-      const token = getCookie('authToken'); // hoặc localStorage.getItem('authToken')
-      if (!token) throw new Error('Bạn chưa đăng nhập hoặc token đã hết hạn.');
+      // Cải thiện việc lấy token
+      const getToken = () => {
+        // Thử lấy từ localStorage trước
+        let token = localStorage.getItem('authToken');
+        if (token) return token;
 
-      // Gửi token vào header
-      const response = await axios.get(API_BASE, {
+        // Thử lấy từ sessionStorage
+        token = sessionStorage.getItem('authToken');
+        if (token) return token;
+
+        // Thử lấy từ cookie
+        const getCookie = (name) => {
+          const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+          return match ? match[2] : null;
+        };
+        return getCookie('authToken');
+      };
+
+      const token = getToken();
+      console.log('Token found:', !!token); // Debug log
+
+      if (!token) {
+        throw new Error('Bạn chưa đăng nhập hoặc token đã hết hạn.');
+      }
+
+      // Cấu hình axios request
+      const config = {
         headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000, // 10 giây timeout
+      };
+
+      console.log('Making request to:', API_BASE); // Debug log
+      const response = await axios.get(API_BASE, config);
+      console.log('Response received:', response.data); // Debug log
+
       setStorages(response.data || []);
     } catch (err) {
-      setError("Không thể tải dữ liệu từ API. Vui lòng kiểm tra kết nối và quyền truy cập.");
+      console.error('API Error:', err); // Debug log
+
+      if (err.response) {
+        // Server responded with error status
+        const status = err.response.status;
+        if (status === 401) {
+          setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        } else if (status === 403) {
+          setError("Bạn không có quyền truy cập vào tài nguyên này.");
+        } else if (status === 404) {
+          setError("Không tìm thấy API endpoint.");
+        } else {
+          setError(`Lỗi server: ${status}. ${err.response.data?.message || 'Vui lòng thử lại sau.'}`);
+        }
+      } else if (err.request) {
+        // Request was made but no response received
+        setError("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+      } else {
+        // Something else happened
+        setError(err.message || "Có lỗi xảy ra khi tải dữ liệu.");
+      }
     } finally {
       setLoading(false);
     }
   }, []);
-
 
   useEffect(() => {
     fetchInitialData();
@@ -276,9 +320,11 @@ export default function StorageUnitManagement() {
   const handleSearchChange = useCallback((e) => {
     setSearchTerm(e.target.value);
   }, []);
+
   const clearSearch = useCallback(() => {
     setSearchTerm("");
   }, []);
+
   const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
   }, []);
