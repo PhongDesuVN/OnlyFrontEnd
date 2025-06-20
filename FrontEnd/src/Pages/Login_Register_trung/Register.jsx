@@ -80,7 +80,7 @@ const Register = () => {
                 })
                 setTimeout(() => navigate("/login"), 3000)
             } else if (response.status === 403) {
-                setError("❌ Email đã đợc đăng kí ")
+                setError("❌ Email hoặc username đã đuợc đăng kí ")
             } else if (response.status === 409) {
                 setError("❌ Email hoặc username đã tồn tại.")
             } else {
