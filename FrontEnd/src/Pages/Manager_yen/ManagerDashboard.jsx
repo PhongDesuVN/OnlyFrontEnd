@@ -154,9 +154,12 @@ const Dashboard = () => {
                     <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow hover:opacity-90">
                         <TrendingUp className="w-5 h-5" /> Báo cáo hiệu suất
                     </button>
-                    <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow hover:opacity-90">
-                        <MapPin className="w-5 h-5" /> Quản lý vận chuyển
-                    </button>
+                    <button
+                                                onClick={() => navigate('/transport-units')}
+                                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow hover:opacity-90"
+                                            >
+                                                <MapPin className="w-5 h-5" /> Quản lý vận chuyển
+                                            </button>
                     <div className="mt-4">
                         <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                             <Clock className="w-4 h-4" /> Thời gian
@@ -195,47 +198,6 @@ const Dashboard = () => {
                             {cards[currentPage].content}
                         </div>
                     </div>
-                </div>
-                {/* Footer phủ toàn bộ chiều ngang, luôn ở dưới */}
-                <div style={{ height: 64 }}>
-                    <Footer />
-                </div>
-                <div
-                    style={{
-                        position: "absolute",
-                        top: 20,
-                        right: 40,
-                        zIndex: 50,
-                    }}
-                >
-                    <button
-                        onClick={() => setShowMenu((v) => !v)}
-                        className="p-2 rounded-full bg-white shadow hover:bg-gray-100"
-                    >
-                        <Settings className="w-6 h-6 text-gray-700" />
-                    </button>
-                    {showMenu && (
-                        <div
-                            ref={menuRef}
-                            className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-50"
-                        >
-                            <button
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                                onClick={() => {
-                                    setShowMenu(false);
-                                    // Hiện modal hoặc navigate tới trang profile
-                                }}
-                            >
-                                Thông tin cá nhân
-                            </button>
-                            <button
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-                                onClick={handleLogout}
-                            >
-                                Đăng xuất
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
 
