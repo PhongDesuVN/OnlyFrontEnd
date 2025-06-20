@@ -1,5 +1,5 @@
 "use client"
-
+import Footer from '../../Components/FormLogin_yen/Footer';
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
@@ -197,7 +197,7 @@ const Dashboard = () => {
                     </div>
                 </div>
                 {/* Footer phủ toàn bộ chiều ngang, luôn ở dưới */}
-                <div style={{ height: FOOTER_HEIGHT }}>
+                <div style={{ height: 64 }}>
                     <Footer />
                 </div>
                 <div

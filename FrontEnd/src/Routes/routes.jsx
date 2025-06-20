@@ -17,6 +17,9 @@ import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard"
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx"
 import PromotionManagement from "../Pages/Manager_yen/PromotionManagement.jsx"
 
+import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
+import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
+
 export default function AppRoutes() {
         return (
             <Routes>
@@ -40,6 +43,9 @@ export default function AppRoutes() {
                     <Route path="/manager" element={<ManagerDashboard />} />
                     <Route path="/managerstaff" element={<StaffManagement />} />
                     <Route path="/promotions" element={<PromotionManagement />} />
+
+                    <Route path="/receipts" element={<ReceiptsManagement />} />
+                    <Route path="/storage-units" element={<StorageUnitManagement />} />
             </Routes>
         )
 }
