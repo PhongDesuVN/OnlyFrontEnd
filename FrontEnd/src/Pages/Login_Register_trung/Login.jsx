@@ -57,7 +57,7 @@ const Login = () => {
                     }
                 }
             } catch (error) {
-                setError("Không thể kết nối đến server")
+                setError(error.message || "Không thể kết nối đến server")
             } finally {
                 setIsLoading(false)
             }
@@ -81,7 +81,7 @@ const Login = () => {
                 setError("Không thể gửi yêu cầu")
             }
         } catch (error) {
-            setError("Lỗi kết nối")
+            setError(error.message || "Lỗi kết nối")
         } finally {
             setIsLoading(false)
         }
@@ -90,16 +90,12 @@ const Login = () => {
     return (
         <div className="relative min-h-screen h-screen w-screen flex flex-col overflow-x-hidden">
             <Header />
-
-            {/* Background */}
             <div
                 className="fixed inset-0 bg-cover bg-center z-[-1]"
                 style={backgroundStyle}
             >
                 <div className="absolute inset-0 bg-black/30"></div>
             </div>
-
-            {/* Centered Login Form */}
             <main className="flex-1 flex items-center justify-center">
                 <div className="w-full max-w-md bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-lg">
                     <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Đăng Nhập</h2>
@@ -178,7 +174,6 @@ const Login = () => {
                     </div>
                 </div>
             </main>
-
             <Footer />
         </div>
     )
