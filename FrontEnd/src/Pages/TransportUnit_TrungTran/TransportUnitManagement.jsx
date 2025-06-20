@@ -438,7 +438,7 @@ export default function TransportUnitManagement() {
 
                                 {/* Yêu cầu lúc / Xử lý lúc */}
                                 <InfoCard
-                                    label="Yêu cầu lúc"
+                                       label="Yêu cầu lúc"
                                     value={approval.requestedAt ? new Date(approval.requestedAt).toLocaleString('vi-VN') : '—'}
                                 />
                                 <InfoCard
