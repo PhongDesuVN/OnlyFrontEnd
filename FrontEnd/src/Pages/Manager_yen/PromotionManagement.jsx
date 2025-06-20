@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import axios from "../../utils/axiosInstance.js"
+import Header from "../../Components/FormLogin_yen/Header.jsx"
 import Footer from "../../Components/FormLogin_yen/Footer.jsx"
 import ConfirmDialog from "../../Components/FormLogin_yen/ConfirmDialog.jsx"
 
@@ -17,6 +18,7 @@ const PromotionManager = () => {
     const [dates, setDates] = useState({ startDate: "", endDate: "" })
     const [dialog, setDialog] = useState({ open: false, type: "", promo: null })
     const [filtered, setFiltered] = useState(false)
+    const [totalPages, setTotalPages] = useState(0)
     const [nameEdits, setNameEdits] = useState({}) // 👈 new state
 
     useEffect(() => {
@@ -99,134 +101,138 @@ const PromotionManager = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-gradient-to-br from-rose-50 via-purple-50 to-indigo-100">
-            <main className="flex-grow p-6">
-                <div className="max-w-5xl mx-auto">
-                    <h1 className="text-4xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-rose-700 to-indigo-700">
-                        Quản lý khuyến mãi
-                    </h1>
+            <div className="relative z-10">
+                <Header className="mb-16" />
+                <div className="h-16"></div> {/* Thêm div trung gian để tạo khoảng cách cố định */}
+                <main className="flex-grow p-6">
+                    <div className="max-w-5xl mx-auto">
+                        <h1 className="text-4xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-rose-700 to-indigo-700">
+                            Quản lý khuyến mãi
+                        </h1>
 
-                    <div className="flex flex-wrap gap-4 mb-6 items-center">
-                        <input
-                            type="text"
-                            placeholder="Tìm tên khuyến mãi..."
-                            value={keyword}
-                            onChange={(e) => setKeyword(e.target.value)}
-                            className="px-4 py-2 rounded-xl border border-slate-300 shadow-inner w-full sm:w-auto flex-grow"
-                        />
-                        <button
-                            onClick={fetchPromotions}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition"
-                        >
-                            Lọc
-                        </button>
-                        {filtered && (
+                        <div className="flex flex-wrap gap-4 mb-6 items-center">
+                            <input
+                                type="text"
+                                placeholder="Tìm tên khuyến mãi..."
+                                value={keyword}
+                                onChange={(e) => setKeyword(e.target.value)}
+                                className="px-4 py-2 rounded-xl border border-slate-300 shadow-inner w-full sm:w-auto flex-grow"
+                            />
                             <button
-                                onClick={resetFilter}
-                                className="px-6 py-2 bg-gray-400 text-white rounded-xl shadow hover:bg-gray-500 transition flex items-center gap-2"
+                                onClick={fetchPromotions}
+                                className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow hover:from-indigo-700 hover:to-purple-700 transition"
                             >
-                                <ArrowLeft className="w-4 h-4" /> Quay lại danh sách
+                                Lọc
                             </button>
+                            {filtered && (
+                                <button
+                                    onClick={resetFilter}
+                                    className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow hover:from-indigo-700 hover:to-purple-700 transition flex items-center gap-2"
+                                >
+                                    <ArrowLeft className="w-4 h-4" /> Quay lại danh sách
+                                </button>
+                            )}
+                        </div>
+
+                        {loading ? (
+                            <p className="text-center py-10 text-slate-500">Đang tải...</p>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-6">
+                                {promotions.map((promo) => (
+                                    <div key={promo.id} className="p-6 rounded-2xl bg-white shadow-xl">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-3 bg-gradient-to-br from-rose-500 to-indigo-500 text-white rounded-xl">
+                                                    <Gift className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl font-bold text-slate-800">
+                                                        #{promo.id} – {promo.name}
+                                                    </h2>
+                                                    <p className="text-sm text-slate-500">
+                                                        {new Date(promo.startDate).toLocaleDateString()} → {new Date(promo.endDate).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(promo.status)}`}>
+                                                {getStatusIcon(promo.status)} {promo.status}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid gap-4">
+                                            <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                                <input
+                                                    type="text"
+                                                    value={nameEdits[promo.id] ?? promo.name}
+                                                    onChange={(e) =>
+                                                        setNameEdits((prev) => ({
+                                                            ...prev,
+                                                            [promo.id]: e.target.value
+                                                        }))
+                                                    }
+                                                    className="flex-1 border px-4 py-3 rounded-xl shadow-inner"
+                                                />
+                                                <button
+                                                    onClick={() => openConfirm(promo, "name")}
+                                                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
+                                                >
+                                                    <Save className="w-4 h-4" /> Cập nhật tên
+                                                </button>
+                                            </div>
+
+                                            <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                                <div className="flex-1 flex gap-4">
+                                                    <input
+                                                        type="date"
+                                                        value={dates.startDate}
+                                                        onChange={(e) => setDates({ ...dates, startDate: e.target.value })}
+                                                        className="w-1/2 border px-4 py-3 rounded-xl"
+                                                    />
+                                                    <input
+                                                        type="date"
+                                                        value={dates.endDate}
+                                                        onChange={(e) => setDates({ ...dates, endDate: e.target.value })}
+                                                        className="w-1/2 border px-4 py-3 rounded-xl"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={() => openConfirm(promo, "dates")}
+                                                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
+                                                >
+                                                    <RefreshCw className="w-4 h-4" /> Cập nhật ngày
+                                                </button>
+                                            </div>
+
+                                            <button
+                                                onClick={() => openConfirm(promo, "cancel")}
+                                                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
+                                            >
+                                                <Trash2 className="w-4 h-4" /> Hủy khuyến mãi
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
+                </main>
 
-                    {loading ? (
-                        <p className="text-center py-10 text-slate-500">Đang tải...</p>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-6">
-                            {promotions.map((promo) => (
-                                <div key={promo.id} className="p-6 rounded-2xl bg-white shadow-xl">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="p-3 bg-gradient-to-br from-rose-500 to-indigo-500 text-white rounded-xl">
-                                                <Gift className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-xl font-bold text-slate-800">
-                                                    #{promo.id} – {promo.name}
-                                                </h2>
-                                                <p className="text-sm text-slate-500">
-                                                    {new Date(promo.startDate).toLocaleDateString()} → {new Date(promo.endDate).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(promo.status)}`}>
-                                            {getStatusIcon(promo.status)} {promo.status}
-                                        </div>
-                                    </div>
+                <ConfirmDialog
+                    open={dialog.open}
+                    onClose={() => setDialog({ ...dialog, open: false })}
+                    onConfirm={handleConfirmed}
+                    title={dialog.type === 'cancel' ? 'Xác Nhận Huỷ' : 'Xác Nhận Cập Nhật'}
+                    message={
+                        dialog.type === 'cancel'
+                            ? 'Bạn có chắc chắn muốn huỷ khuyến mãi này không?'
+                            : 'Bạn có chắc chắn muốn cập nhật khuyến mãi này không?'
+                    }
+                    confirmLabel={dialog.type === 'cancel' ? 'Xoá' : 'Xác nhận'}
+                    confirmColor={dialog.type === 'cancel' ? 'from-rose-500 to-pink-500' : 'from-indigo-600 to-purple-600'}
+                />
 
-                                    <div className="grid gap-4">
-                                        <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                            <input
-                                                type="text"
-                                                value={nameEdits[promo.id] ?? promo.name}
-                                                onChange={(e) =>
-                                                    setNameEdits((prev) => ({
-                                                        ...prev,
-                                                        [promo.id]: e.target.value
-                                                    }))
-                                                }
-                                                className="flex-1 border px-4 py-3 rounded-xl shadow-inner"
-                                            />
-                                            <button
-                                                onClick={() => openConfirm(promo, "name")}
-                                                className="px-6 py-3 bg-blue-600 text-white rounded-xl flex items-center gap-2 hover:bg-blue-700"
-                                            >
-                                                <Save className="w-4 h-4" /> Cập nhật tên
-                                            </button>
-                                        </div>
-
-                                        <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                            <div className="flex-1 flex gap-4">
-                                                <input
-                                                    type="date"
-                                                    value={dates.startDate}
-                                                    onChange={(e) => setDates({ ...dates, startDate: e.target.value })}
-                                                    className="w-1/2 border px-4 py-3 rounded-xl"
-                                                />
-                                                <input
-                                                    type="date"
-                                                    value={dates.endDate}
-                                                    onChange={(e) => setDates({ ...dates, endDate: e.target.value })}
-                                                    className="w-1/2 border px-4 py-3 rounded-xl"
-                                                />
-                                            </div>
-                                            <button
-                                                onClick={() => openConfirm(promo, "dates")}
-                                                className="px-6 py-3 bg-green-600 text-white rounded-xl flex items-center gap-2 hover:bg-green-700"
-                                            >
-                                                <RefreshCw className="w-4 h-4" /> Cập nhật ngày
-                                            </button>
-                                        </div>
-
-                                        <button
-                                            onClick={() => openConfirm(promo, "cancel")}
-                                            className="px-6 py-3 bg-red-600 text-white rounded-xl flex items-center gap-2 hover:bg-red-700 w-max"
-                                        >
-                                            <Trash2 className="w-4 h-4" /> Hủy khuyến mãi
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </main>
-
-            <ConfirmDialog
-                open={dialog.open}
-                onClose={() => setDialog({ ...dialog, open: false })}
-                onConfirm={handleConfirmed}
-                title={dialog.type === 'cancel' ? 'Xác Nhận Huỷ' : 'Xác Nhận Cập Nhật'}
-                message={
-                    dialog.type === 'cancel'
-                        ? 'Bạn có chắc chắn muốn huỷ khuyến mãi này không?'
-                        : 'Bạn có chắc chắn muốn cập nhật khuyến mãi này không?'
-                }
-                confirmLabel={dialog.type === 'cancel' ? 'Xoá' : 'Xác nhận'}
-                confirmColor={dialog.type === 'cancel' ? 'from-rose-500 to-pink-500' : 'from-blue-500 to-indigo-500'}
-            />
-
-            <Footer />
+                <Footer />
+            </div>
         </div>
     )
 }
