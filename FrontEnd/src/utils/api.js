@@ -19,7 +19,7 @@ export const apiCall = async (endpoint, options = {}) => {
         ...options,
     }
 
-    // ✅ Thêm Authorization nếu cần
+    // ✅ Chỉ thêm Authorization header nếu được yêu cầu rõ ràng
     if (options.auth) {
         const token = localStorage.getItem("authToken")
         if (token) {
@@ -29,13 +29,12 @@ export const apiCall = async (endpoint, options = {}) => {
 
     try {
         const response = await fetch(url, config)
-
-        // ❌ KHÔNG throw lỗi nếu status !== 2xx
-        // Để caller (component) tự xử lý
         return response
     } catch (error) {
-        // Chỉ bắt lỗi mạng hoặc fetch fail
-        console.error("❌ API call failed:", { url, error: error.message })
+        console.error("❌ API call failed:", {
+            url,
+            error: error.message,
+        })
         throw error
     }
 }

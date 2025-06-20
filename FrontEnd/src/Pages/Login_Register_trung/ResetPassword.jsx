@@ -38,11 +38,9 @@ const ResetPassword = () => {
       } else {
         setMessage(data);
       }
-    } catch (error) {
-      console.error("Lỗi reset mật khẩu:", error); // <-- Sử dụng biến `error`
+    } catch (err) {
       setMessage("Có lỗi xảy ra, vui lòng thử lại!");
     }
-
   };
 
   if (!token) return <div className="text-center mt-20 text-red-600 font-bold">Token không hợp lệ!</div>;
