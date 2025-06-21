@@ -107,7 +107,7 @@ const ManageOrderApi = {
                 data = await response.json();
             } else {
                 data = await response.text();
-                // Nếu phản hồi là chuỗi thành công, tạo đối tượng giả lập
+                // Nếu phản hồi là chuỗi, giả định là thông báo thành công và sử dụng status gửi đi
                 if (data.includes("thành công")) {
                     data = { message: data, paymentStatus: status };
                 } else {
@@ -122,6 +122,10 @@ const ManageOrderApi = {
             });
             if (!response.ok) {
                 throw new Error(data.message || `Lỗi HTTP ${response.status}: ${data}`);
+            }
+            // Đảm bảo data chứa paymentStatus, nếu không có thì dùng status gửi đi
+            if (!data.paymentStatus) {
+                data.paymentStatus = status;
             }
             return data;
         } catch (error) {

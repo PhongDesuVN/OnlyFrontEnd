@@ -860,16 +860,11 @@ const Dashboard = () => {
         }
         setLoading(true);
         try {
-            console.log(`Cập nhật trạng thái cho orderId: ${orderId}, status: ${newStatus}`); // Debug
             const responseData = await ManageOrderApi.updatePaymentStatus(orderId, newStatus);
-            console.log('Dữ liệu trả về từ server:', responseData);
-
-            // Cập nhật trạng thái dựa trên phản hồi từ server
-            setOrders(orders.map(order =>
-                order.id === orderId
-                    ? { ...order, payment: responseData.paymentStatus === 'COMPLETED' ? 'Đã thanh toán' : 'Chưa thanh toán' }
-                    : order
-            ));
+            console.log('Phản hồi từ server:', responseData);
+            // Reload danh sách đơn hàng thay vì chỉ cập nhật cục bộ
+            const updatedOrders = await ManageOrderApi.getOrders();
+            setOrders(updatedOrders.map(mapBookingToOrder));
             alert(responseData.message || 'Cập nhật trạng thái thanh toán thành công!');
         } catch (err) {
             setError(`Lỗi khi cập nhật trạng thái thanh toán: ${err.message}`);
@@ -878,11 +873,6 @@ const Dashboard = () => {
                 data: err.response?.data,
                 message: err.message,
             });
-            if (err.response?.status === 403) {
-                setError('Lỗi 403: Truy cập bị từ chối. Vui lòng kiểm tra token hoặc quyền.');
-            } else if (err.response?.status === 400) {
-                setError('Lỗi 400: Dữ liệu không hợp lệ. Kiểm tra trạng thái thanh toán.');
-            }
         } finally {
             setLoading(false);
         }
@@ -901,6 +891,7 @@ const Dashboard = () => {
                 paymentStatus: updatedOrder.payment === 'Đã thanh toán' ? 'COMPLETED' : 'INCOMPLETED',
                 deliveryDate: new Date(updatedOrder.deliveryDate).toISOString(),
                 customerId: updatedOrder.customerId,
+                customerFullName: updatedOrder.customer, // Thêm trường này
                 storageUnitId: updatedOrder.storageUnitId,
                 transportUnitId: updatedOrder.transportUnitId,
                 operatorStaffId: updatedOrder.operatorStaffId,
