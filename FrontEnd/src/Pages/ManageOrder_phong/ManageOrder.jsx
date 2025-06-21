@@ -6,13 +6,16 @@ import {
     Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle,
     Plus, Edit2, Trash2, Save, X
 } from 'lucide-react';
-
-// Dữ liệu đơn hàng mẫu
+import ManageOrderApi from '../../API/ManageOrder_phongApi.js';
+// Dữ liệu đơn hàng mẫu (sẽ được thay thế bằng dữ liệu từ API khi tích hợp)
 const initialOrders = [
     { id: 'ORD001', customer: 'Nguyễn Văn A', total: 1500000, status: 'Đang giao', payment: 'Chưa thanh toán', deliveryProgress: 'Đã rời kho' },
     { id: 'ORD002', customer: 'Trần Thị B', total: 2500000, status: 'Hoàn thành', payment: 'Đã thanh toán', deliveryProgress: 'Đã giao' },
     { id: 'ORD003', customer: 'Lê Văn C', total: 800000, status: 'Đang xử lý', payment: 'Chưa thanh toán', deliveryProgress: 'Chuẩn bị hàng' },
-
+    { id: 'ORD004', customer: 'Phạm Thị D', total: 1200000, status: 'Hoàn thành', payment: 'Đã thanh toán', deliveryProgress: 'Đã giao' },
+    { id: 'ORD005', customer: 'Vũ Văn E', total: 300000, status: 'Đang xử lý', payment: 'Chưa thanh toán', deliveryProgress: 'Chuẩn bị hàng' },
+    { id: 'ORD006', customer: 'Hoàng Thị F', total: 700000, status: 'Đang giao', payment: 'Đã thanh toán', deliveryProgress: 'Đang giao' },
+    { id: 'ORD007', customer: 'Đặng Văn G', total: 950000, status: 'Hủy', payment: 'Chưa thanh toán', deliveryProgress: 'Đã hủy' },
 ];
 
 // Header
@@ -26,15 +29,11 @@ const Header = () => {
                         <h1 className="text-xl font-bold text-black">Vận Chuyển Nhà</h1>
                     </div>
                     <nav className="hidden md:flex space-x-8">
-
-
                     </nav>
                     <div className="flex space-x-3">
-
                         <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
                             <Link to="/" className="text-black hover:text-blue-600 transition-colors">Trang Chủ</Link>
                         </button>
-
                     </div>
                 </div>
             </div>
@@ -46,7 +45,6 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
     const pageLabels = {
         overview: 'Tổng Quan',
         view: 'Danh Sách',
-
         payment: 'Thanh Toán',
         search: 'Tìm Kiếm',
     };
@@ -73,7 +71,6 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
                     >
                         {page === 'overview' && <BarChart className="mr-2" size={20} />}
                         {page === 'view' && <List className="mr-2" size={20} />}
-
                         {page === 'payment' && <CreditCard className="mr-2" size={20} />}
                         {page === 'search' && <Search className="mr-2" size={20} />}
                         {pageLabels[page]}
@@ -487,7 +484,6 @@ const OverviewOrders = ({ orders }) => {
                     </p>
                     <p className="text-green-600 text-sm">Giá trị trung bình/đơn</p>
                 </div>
-
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
                     <div className="flex items-center mb-3">
                         <Truck className="w-6 h-6 text-purple-600 mr-2" />
@@ -503,15 +499,10 @@ const OverviewOrders = ({ orders }) => {
     );
 };
 // ViewOrders với CRUD
-const ViewOrders = ({ orders, onAddOrder, onEditOrder, onDeleteOrder }) => {
+const ViewOrders = ({ orders, onEditOrder }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
-    const handleAdd = () => {
-        setEditingOrder(null);
-        setShowModal(true);
-    };
 
     const handleEdit = (order) => {
         setEditingOrder(order);
@@ -528,11 +519,6 @@ const ViewOrders = ({ orders, onAddOrder, onEditOrder, onDeleteOrder }) => {
         setEditingOrder(null);
     };
 
-    const handleDelete = (orderId) => {
-        onDeleteOrder(orderId);
-        setShowDeleteConfirm(null);
-    };
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -543,15 +529,6 @@ const ViewOrders = ({ orders, onAddOrder, onEditOrder, onDeleteOrder }) => {
                 <h2 className="text-4xl font-bold flex items-center text-gray-800">
                     <List className="mr-2" /> Xem Thông Tin Đơn Hàng
                 </h2>
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleAdd}
-                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg"
-                >
-                    <Plus className="mr-2" size={16} />
-                    Thêm Đơn Hàng
-                </motion.button>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
@@ -597,15 +574,6 @@ const ViewOrders = ({ orders, onAddOrder, onEditOrder, onDeleteOrder }) => {
                                         >
                                             <Edit2 size={16} />
                                         </motion.button>
-                                        <motion.button
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => setShowDeleteConfirm(order.id)}
-                                            className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
-                                            title="Xóa"
-                                        >
-                                            <Trash2 size={16} />
-                                        </motion.button>
                                     </div>
                                 </td>
                             </motion.tr>
@@ -624,72 +592,73 @@ const ViewOrders = ({ orders, onAddOrder, onEditOrder, onDeleteOrder }) => {
                     />
                 </Modal>
             </AnimatePresence>
-
-            <AnimatePresence>
-                <Modal isOpen={!!showDeleteConfirm} onClose={() => setShowDeleteConfirm(null)}>
-                    <div className="text-center">
-                        <h3 className="text-xl font-bold mb-4 text-gray-800">Xác Nhận Xóa</h3>
-                        <p className="text-gray-600 mb-6">
-                            Bạn có chắc chắn muốn xóa đơn hàng <strong>{showDeleteConfirm}</strong>?
-                        </p>
-                        <div className="flex space-x-3">
-                            <button
-                                onClick={() => handleDelete(showDeleteConfirm)}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                            >
-                                Xóa
-                            </button>
-                            <button
-                                onClick={() => setShowDeleteConfirm(null)}
-                                className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                            >
-                                Hủy
-                            </button>
-                        </div>
-                    </div>
-                </Modal>
-            </AnimatePresence>
         </motion.div>
     );
 };
 
-
-
 // UpdatePayment
-const UpdatePayment = ({ orders, updatePaymentStatus }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-    >
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <CreditCard className="mr-2" /> Cập Nhật Thanh Toán
-        </h2>
-        <div className="space-y-4">
-            {orders.map(order => (
-                <motion.div
-                    key={order.id}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white p-6 rounded-xl shadow-lg border border-gray-100"
-                >
-                    <p className="font-bold text-lg">Mã Đơn: {order.id}</p>
-                    <p>Khách Hàng: {order.customer}</p>
-                    <p>Trạng Thái Thanh Toán: <span className="font-medium text-blue-600">{order.payment}</span></p>
-                    <motion.select
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="mt-3 p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500"
-                        value={order.payment}
-                        onChange={(e) => updatePaymentStatus(order.id, e.target.value)}
+const UpdatePayment = ({ orders, updatePaymentStatus }) => {
+    const [selectedOrderId, setSelectedOrderId] = useState('');
+    const [newPaymentStatus, setNewPaymentStatus] = useState('Đã thanh toán');
+
+    const handleUpdate = () => {
+        if (selectedOrderId && updatePaymentStatus) {
+            updatePaymentStatus(selectedOrderId, newPaymentStatus);
+            alert(`Đã cập nhật trạng thái thanh toán cho đơn hàng ${selectedOrderId} thành "${newPaymentStatus}"`);
+            setSelectedOrderId('');
+            setNewPaymentStatus('Đã thanh toán');
+        } else {
+            alert('Vui lòng chọn đơn hàng và trạng thái thanh toán!');
+        }
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white p-6 rounded-xl shadow-lg border border-gray-100"
+        >
+            <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
+                <CreditCard className="mr-2" /> Cập Nhật Thanh Toán
+            </h2>
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Chọn Đơn Hàng</label>
+                    <select
+                        value={selectedOrderId}
+                        onChange={(e) => setSelectedOrderId(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     >
-                        <option>Chưa thanh toán</option>
-                        <option>Đã thanh toán</option>
-                    </motion.select>
-                </motion.div>
-            ))}
-        </div>
-    </motion.div>
-);
+                        <option value="">-- Chọn đơn hàng --</option>
+                        {orders.map(order => (
+                            <option key={order.id} value={order.id}>
+                                {order.id} - {order.customer} ({order.payment})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái Thanh Toán Mới</label>
+                    <select
+                        value={newPaymentStatus}
+                        onChange={(e) => setNewPaymentStatus(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="Đã thanh toán">Đã thanh toán</option>
+                        <option value="Chưa thanh toán">Chưa thanh toán</option>
+                    </select>
+                </div>
+                <button
+                    onClick={handleUpdate}
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
+                >
+                    <Save className="mr-2" size={16} /> Cập Nhật
+                </button>
+            </div>
+        </motion.div>
+    );
+};
 
 // SearchOrders
 const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
@@ -765,52 +734,164 @@ const Footer = () => (
         <div className="border-t border-gray-700 mt-12 pt-8 text-center text-gray-400">
             <p>© 2025 Hệ Thống Quản Lý Vận Chuyển Nhà. Mọi quyền được bảo lưu.</p>
         </div>
-
     </footer>
 );
 
-// Dashboard Component
 const Dashboard = () => {
-    const [orders, setOrders] = useState(initialOrders);
+    const [orders, setOrders] = useState([]);
     const [currentPage, setCurrentPage] = useState('view');
     const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-    const updatePaymentStatus = (orderId, newStatus) => {
-        setOrders(orders.map(order =>
-            order.id === orderId ? { ...order, payment: newStatus } : order
-        ));
+    // Lấy và kiểm tra token
+    const token = localStorage.getItem('token');
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        console.log('Token trong localStorage:', token); // Debug
+        if (!token) {
+            setError('Không tìm thấy token. Vui lòng đăng nhập!');
+            console.error('Token không tồn tại. Chuyển hướng đến trang đăng nhập nếu cần.');
+            // Tùy chọn: Chuyển hướng đến trang đăng nhập
+            // window.location.href = '/login';
+            return;
+        }
+    }, []);
+
+    // Hàm ánh xạ BookingResponse sang cấu trúc đơn hàng
+    const mapBookingToOrder = (booking) => ({
+        id: booking.bookingId,
+        customer: booking.customerFullName || 'Không xác định',
+        total: booking.total || 0,
+        status: booking.status || 'Đang xử lý',
+        payment: booking.paymentStatus || 'Chưa thanh toán',
+        deliveryProgress: booking.deliveryProgress || 'Chuẩn bị hàng'
+    });
+
+    // Lấy danh sách đơn hàng khi component mount
+    useEffect(() => {
+        const fetchOrders = async () => {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setError('Token không tồn tại. Vui lòng đăng nhập!');
+                console.error('Token không tồn tại, yêu cầu không được gửi.');
+                return;
+            }
+            try {
+                const data = await ManageOrderApi.getOrders(); // Bỏ tham số token
+                const mappedOrders = Array.isArray(data) ? data.map(mapBookingToOrder) : [];
+                setOrders(mappedOrders);
+                setError(null);
+            } catch (err) {
+                setError(`Không thể tải danh sách đơn hàng: ${err.message}`);
+                console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrders();
+    }, []);
+
+    // Cập nhật trạng thái thanh toán
+    const updatePaymentStatus = async (orderId, newStatus) => {
+        if (!token) {
+            setError('Token không tồn tại. Vui lòng đăng nhập!');
+            return;
+        }
+        setLoading(true);
+        try {
+            await ManageOrderApi.updatePaymentStatus(orderId, newStatus);
+            setOrders(orders.map(order =>
+                order.id === orderId ? { ...order, payment: newStatus } : order
+            ));
+            alert('Cập nhật trạng thái thanh toán thành công!');
+        } catch (err) {
+            setError(`Lỗi khi cập nhật trạng thái thanh toán: ${err.message}`);
+            console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const updateDeliveryProgress = (orderId, newProgress) => {
-        setOrders(orders.map(order =>
-            order.id === orderId ? { ...order, deliveryProgress: newProgress } : order
-        ));
+    // Cập nhật đơn hàng
+    const handleEditOrder = async (updatedOrder) => {
+        if (!token) {
+            setError('Token không tồn tại. Vui lòng đăng nhập!');
+            return;
+        }
+        setLoading(true);
+        try {
+            const bookingRequest = {
+                status: updatedOrder.status,
+                paymentStatus: updatedOrder.payment,
+                deliveryProgress: updatedOrder.deliveryProgress,
+                customerFullName: updatedOrder.customer,
+                total: updatedOrder.total
+            };
+            const updatedBooking = await ManageOrderApi.updateOrder(updatedOrder.id, bookingRequest);
+            setOrders(orders.map(order =>
+                order.id === updatedOrder.id ? mapBookingToOrder(updatedBooking) : order
+            ));
+            alert('Cập nhật đơn hàng thành công!');
+        } catch (err) {
+            setError(`Lỗi khi cập nhật đơn hàng: ${err.message}`);
+            console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
+        } finally {
+            setLoading(false);
+        }
     };
-    const handleAddOrder = (newOrder) => {
 
-        setOrders([...orders, newOrder]);
-
+    // Tìm kiếm đơn hàng
+    const handleSearch = async (term) => {
+        setSearchTerm(term);
+        if (!token) {
+            setError('Token không tồn tại. Vui lòng đăng nhập!');
+            return;
+        }
+        setLoading(true);
+        try {
+            const data = term.trim() === ''
+                ? await ManageOrderApi.getOrders() // Bỏ tham số token
+                : await ManageOrderApi.searchOrders(term);
+            const mappedOrders = Array.isArray(data) ? data.map(mapBookingToOrder) : [];
+            setOrders(mappedOrders);
+            setError(null);
+        } catch (err) {
+            setError(`Lỗi khi tìm kiếm đơn hàng: ${err.message}`);
+            console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-
-
-    const handleEditOrder = (updatedOrder) => {
-
-        setOrders(orders.map(order =>
-
-            order.id === updatedOrder.id ? updatedOrder : order
-
-        ));
-
+    // Lấy thông tin tổng quan
+    const fetchOverview = async () => {
+        if (!token) {
+            setError('Token không tồn tại. Vui lòng đăng nhập!');
+            return;
+        }
+        setLoading(true);
+        try {
+            const overview = await ManageOrderApi.getOverview();
+            console.log('Thông tin tổng quan:', overview);
+            // Lưu overview vào state nếu cần
+            // setOverview(overview);
+            setError(null);
+        } catch (err) {
+            setError(`Lỗi khi lấy thông tin tổng quan: ${err.message}`);
+            console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-
-
-    const handleDeleteOrder = (orderId) => {
-
-        setOrders(orders.filter(order => order.id !== orderId));
-
-    };
+    // Gọi fetchOverview khi vào trang tổng quan
+    useEffect(() => {
+        if (currentPage === 'overview') {
+            fetchOverview();
+        }
+    }, [currentPage]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -819,20 +900,16 @@ const Dashboard = () => {
                     from { opacity: 0; transform: translateY(30px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                .animate-fade-in {
-                    animation: fade-in 1s ease-out;
-                }
-                .animate-fade-in-delay {
-                    animation: fade-in 1s ease-out 0.3s both;
-                }
-                .animate-fade-in-delay-2 {
-                    animation: fade-in 1s ease-out 0.6s both;
-                }
+                .animate-fade-in { animation: fade-in 1s ease-out; }
+                .animate-fade-in-delay { animation: fade-in 1s ease-out 0.3s both; }
+                .animate-fade-in-delay-2 { animation: fade-in 1s ease-out 0.6s both; }
             `}</style>
             <Header />
             <div className="flex pt-20">
                 <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
                 <div className="flex-1 p-8 overflow-auto">
+                    {loading && <p className="text-center text-gray-600">Đang tải...</p>}
+                    {error && <p className="text-center text-red-500">{error}</p>}
                     <AnimatePresence mode="wait">
                         {currentPage === 'overview' && (
                             <motion.div
@@ -853,23 +930,9 @@ const Dashboard = () => {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <ViewOrders
-
-                                    orders={orders}
-
-                                    onAddOrder={handleAddOrder}
-
-                                    onEditOrder={handleEditOrder}
-
-                                    onDeleteOrder={handleDeleteOrder}
-
-                                />
-
-
+                                <ViewOrders orders={orders} onEditOrder={handleEditOrder} />
                             </motion.div>
                         )}
-
-
                         {currentPage === 'payment' && (
                             <motion.div
                                 key="payment"
@@ -889,7 +952,7 @@ const Dashboard = () => {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <SearchOrders orders={orders} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                                <SearchOrders orders={orders} searchTerm={searchTerm} setSearchTerm={handleSearch} />
                             </motion.div>
                         )}
                     </AnimatePresence>
