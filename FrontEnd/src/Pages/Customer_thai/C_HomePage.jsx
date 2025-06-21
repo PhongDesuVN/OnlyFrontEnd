@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {Mail, MapPin, Phone, Star, Truck, Home, Users, Shield, CheckCircle, Calendar, Package, MapPinIcon} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -25,8 +25,8 @@ const Header = ({ isLoggedIn, handleLogout }) => {
                         <a href="#about" className="hover:text-blue-600 transition-colors">Về chúng tôi</a>
                         <a href="#promotion" className="hover:text-blue-600 transition-colors">Ưu đãi</a>
                     </nav>
-                    <div className="flex space-x-3">
-                        {!isLoggedIn ? (
+                    <div className="flex items-center space-x-3">
+                        {!isLoggedIn && (
                             <>
                                 <Link to="/c_login">
                                     <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
@@ -39,16 +39,16 @@ const Header = ({ isLoggedIn, handleLogout }) => {
                                     </button>
                                 </Link> */}
                             </>
-                        ) : (
-                            <button
-                                className="px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"
-                                onClick={handleLogout}
-                            >
-                                Đăng Xuất
-                            </button>
+                        )}
+                        {isLoggedIn && (
+                            <Link to="/c_customerinfo">
+                                <button className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
+                                    Info
+                                </button>
+                            </Link>
                         )}
                         <Link to="/">
-                            <button className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all ml-2">
+                            <button className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all">
                                 Operator
                             </button>
                         </Link>
@@ -104,10 +104,39 @@ const Booking = ({ isLoggedIn }) => {
     const [bookingData, setBookingData] = useState({
         pickupLocation: '',
         deliveryLocation: '',
-        departureDate: '',
-        content: ''
+        deliveryDate: '',
+        note: '',
+        transportId: null,
+        storageId: null,
     });
     const [loading, setLoading] = useState(false);
+    const [transportUnits, setTransportUnits] = useState([]);
+    const [storageUnits, setStorageUnits] = useState([]);
+    const [dropdownOpen, setDropdownOpen] = useState({ transport: false, storage: false });
+    const [hoveredItem, setHoveredItem] = useState(null);
+    const hoverTimeout = useRef(null);
+
+    useEffect(() => {
+        const fetchOptions = async () => {
+            if (!isLoggedIn || !selectedService) return;
+
+            try {
+                const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+                const [transportRes, storageRes] = await Promise.all([
+                    fetch('http://localhost:8083/api/customer/transport-units', { headers }),
+                    fetch('http://localhost:8083/api/customer/storage-units', { headers })
+                ]);
+
+                if (transportRes.ok) setTransportUnits(await transportRes.json());
+                if (storageRes.ok) setStorageUnits(await storageRes.json());
+
+            } catch (error) {
+                console.error("Lỗi khi tải tùy chọn đặt xe:", error);
+            }
+        };
+
+        fetchOptions();
+    }, [isLoggedIn, selectedService]);
 
     const handleInputChange = (e) => {
         setBookingData({
@@ -115,27 +144,155 @@ const Booking = ({ isLoggedIn }) => {
             [e.target.name]: e.target.value
         });
     };
+    
+    const handleSelect = (type, value) => {
+        setBookingData(prev => ({ ...prev, [type]: value }));
+        setDropdownOpen(prev => ({ ...prev, [type === 'transportId' ? 'transport' : 'storage']: false }));
+        setHoveredItem(null);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isLoggedIn) return;
+
+        if (!bookingData.transportId) {
+            alert('Vui lòng chọn phương tiện vận chuyển.');
+            return;
+        }
+
         setLoading(true);
+
+        // Chuẩn bị payload, thêm operatorId mặc định và định dạng lại ngày
+        const payload = {
+            ...bookingData,
+            deliveryDate: bookingData.deliveryDate ? `${bookingData.deliveryDate}T00:00:00` : null,
+            operatorId: 2,
+        };
+
         try {
-            // Gửi dữ liệu booking về backend (ví dụ endpoint)
-            const response = await fetch('http://localhost:8083/api/booking', {
+            const response = await fetch('http://localhost:8083/api/customer/bookings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bookingData),
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(payload),
             });
-            if (!response.ok) throw new Error('Đặt xe thất bại!');
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Lỗi đặt xe:", errorText);
+                throw new Error('Đặt xe thất bại!');
+            }
+
             alert('Đặt xe thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.');
-            setBookingData({ pickupLocation: '', deliveryLocation: '', departureDate: '', content: '' });
+            // Reset state với tên mới
+            setBookingData({ pickupLocation: '', deliveryLocation: '', deliveryDate: '', note: '', transportId: null, storageId: null });
             setSelectedService(null);
         } catch (err) {
             alert(err.message);
         } finally {
             setLoading(false);
         }
+    };
+    
+    // Dropdown tùy chỉnh
+    const CustomSelect = ({ label, type, options, selectedId, placeholder, isRequired }) => {
+        const selectedOption = options.find(opt => opt[type === 'transport' ? 'transportId' : 'storageId'] === selectedId);
+        const displayField = type === 'transport' ? 'nameCompany' : 'name';
+
+        return (
+            <div className="relative">
+                <label className="block text-gray-700 font-medium mb-2">
+                    {label} {isRequired && <span className="text-red-500">*</span>}
+                </label>
+                <div
+                    onClick={() => setDropdownOpen(prev => ({ ...prev, [type]: !prev[type] }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white cursor-pointer flex justify-between items-center"
+                >
+                    <span className={selectedOption ? 'text-gray-800' : 'text-gray-400'}>{selectedOption ? selectedOption[displayField] : placeholder}</span>
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                {dropdownOpen[type] && (
+                    <>
+                        {/* Overlay toàn màn hình để bắt sự kiện click/hover ra ngoài */}
+                        <div
+                            className="fixed inset-0 z-0"
+                            onMouseMove={() => setHoveredItem(null)}
+                            onClick={() => setDropdownOpen(prev => ({ ...prev, [type]: false }))}
+                            style={{ background: 'transparent' }}
+                        />
+                        <div
+                            className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border"
+                            onMouseLeave={() => setHoveredItem(null)}
+                            onMouseEnter={() => { if (hoverTimeout.current) clearTimeout(hoverTimeout.current); }}
+                        >
+                            <ul className="py-1" style={{ maxHeight: '8.5rem', overflowY: 'auto' }}>
+                                {options.length > 0 ? options.map(option => (
+                                    <li
+                                        key={option[type === 'transport' ? 'transportId' : 'storageId']}
+                                        onClick={() => handleSelect(type === 'transport' ? 'transportId' : 'storageId', option[type === 'transport' ? 'transportId' : 'storageId'])}
+                                        onMouseEnter={() => setHoveredItem({ type, data: option })}
+                                        onMouseLeave={() => setHoveredItem(null)}
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800"
+                                    >
+                                        {option[displayField]}
+                                    </li>
+                                )) : <li className="px-4 py-2 text-gray-500">Không có lựa chọn nào</li>}
+                            </ul>
+                        </div>
+                    </>
+                )}
+                {hoveredItem && hoveredItem.type === type && <InfoPopover item={hoveredItem} />}
+            </div>
+        );
+    };
+
+    const InfoPopover = ({ item }) => {
+        if (!item) return null;
+        let image = '';
+        let content = null;
+        if (item.type === 'transport') {
+            const { data } = item;
+            image = data.imageTransportUnit || data.image || '';
+            content = (
+                <div className="flex flex-col justify-center">
+                    <p><strong>Công ty:</strong> {data.nameCompany}</p>
+                    <p><strong>Liên hệ:</strong> {data.namePersonContact}</p>
+                    <p><strong>SĐT:</strong> {data.phone}</p>
+                    <p><strong>Biển số:</strong> {data.licensePlate}</p>
+                    <p><strong>Trạng thái:</strong> <span className="font-semibold">{data.status}</span></p>
+                </div>
+            );
+        }
+        if (item.type === 'storage') {
+            const { data } = item;
+            image = data.imageStorageUnit || data.image || '';
+            content = (
+                <div className="flex flex-col justify-center">
+                    <p><strong>Tên kho:</strong> {data.name}</p>
+                    <p><strong>Địa chỉ:</strong> {data.address}</p>
+                    <p><strong>SĐT:</strong> {data.phone}</p>
+                    <p><strong>Trạng thái:</strong> <span className="font-semibold">{data.status}</span></p>
+                </div>
+            );
+        }
+        return (
+            <div
+                className="absolute left-0 z-50 w-full max-w-full -top-2 translate-y-[-100%] p-4 bg-white text-gray-800 rounded-lg shadow-2xl text-sm border border-gray-200 flex items-center"
+                style={{ minWidth: '300px' }}
+            >
+                {image && (
+                    <img
+                        src={image}
+                        alt="Hình ảnh"
+                        className="mr-4 w-24 h-24 object-cover rounded shadow border"
+                        style={{ background: '#fff' }}
+                    />
+                )}
+                {content}
+            </div>
+        );
     };
 
     const ServiceCard = ({ title, description, icon: Icon, onClick }) => (
@@ -164,7 +321,7 @@ const Booking = ({ isLoggedIn }) => {
                         </p>
                     </div>
                     
-                    <div className="max-w-2xl mx-auto">
+                    <div className="max-w-2xl mx-auto relative">
                         <div className="bg-white p-8 rounded-2xl shadow-lg">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
@@ -203,26 +360,43 @@ const Booking = ({ isLoggedIn }) => {
                                     </label>
                                     <input
                                         type="date"
-                                        name="departureDate"
-                                        value={bookingData.departureDate}
+                                        name="deliveryDate"
+                                        value={bookingData.deliveryDate}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         required
                                     />
                                 </div>
+                                
+                                <CustomSelect
+                                    label="Chọn phương tiện vận chuyển"
+                                    type="transport"
+                                    options={transportUnits}
+                                    selectedId={bookingData.transportId}
+                                    placeholder="Bắt buộc chọn một phương tiện"
+                                    isRequired={true}
+                                />
+
+                                <CustomSelect
+                                    label="Thuê kho (tùy chọn)"
+                                    type="storage"
+                                    options={storageUnits}
+                                    selectedId={bookingData.storageId}
+                                    placeholder="Không thuê kho"
+                                    isRequired={false}
+                                />
 
                                 <div>
                                     <label className="block text-gray-700 font-medium mb-2">
-                                        Nội dung vận chuyển *
+                                        Nội dung vận chuyển
                                     </label>
                                     <textarea
-                                        name="content"
-                                        value={bookingData.content}
+                                        name="note"
+                                        value={bookingData.note}
                                         onChange={handleInputChange}
                                         rows="4"
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Mô tả chi tiết hàng hóa cần vận chuyển..."
-                                        required
                                     ></textarea>
                                 </div>
 

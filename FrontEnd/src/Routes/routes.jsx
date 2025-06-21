@@ -13,6 +13,7 @@ import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
 import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
+import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
 import ManagerDashboard from "../Pages/Manager_yen/ManagerDashboard.jsx";
 import StaffManagement from "../Pages/Manager_yen/StaffManagement.jsx";
 import TransportUnitManagement from "../Pages/TransportUnit_TrungTran/TransportUnitManagement.jsx";
@@ -29,6 +30,7 @@ export default function AppRoutes() {
             <Route path="/c_login" element={<CustomerLogin />} />
             <Route path="/c_register" element={<C_Register/>}/>
             <Route path="/c_homepage" element={<C_HomePage/>}/>
+            <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
             {/* Thêm các route khác nếu cần */}
             <Route path="/staff" element={<Staff />} />
             <Route path="/manageorder" element={<ManageOrder />} />  {/* Quản lý đơn hàng */}

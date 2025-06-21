@@ -43,6 +43,7 @@ const C_Login = () => {
             console.log('Đăng nhập thành công:', data);
             setErrorMessage('');
             localStorage.setItem("isLoggedIn", "true");
+            localStorage.setItem("token", data.accessToken);
             navigate('/c_homepage');
         } catch (error) {
             console.error('Đăng nhập thất bại:', error.message);
