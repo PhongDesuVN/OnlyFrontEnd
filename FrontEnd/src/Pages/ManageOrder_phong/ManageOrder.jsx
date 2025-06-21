@@ -6,17 +6,7 @@ import {
     Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle,
     Plus, Edit2, Trash2, Save, X
 } from 'lucide-react';
-import ManageOrderApi from '../../API/ManageOrder_phongApi.js';
-// Dữ liệu đơn hàng mẫu (sẽ được thay thế bằng dữ liệu từ API khi tích hợp)
-const initialOrders = [
-    { id: 'ORD001', customer: 'Nguyễn Văn A', total: 1500000, status: 'Đang giao', payment: 'Chưa thanh toán', deliveryProgress: 'Đã rời kho' },
-    { id: 'ORD002', customer: 'Trần Thị B', total: 2500000, status: 'Hoàn thành', payment: 'Đã thanh toán', deliveryProgress: 'Đã giao' },
-    { id: 'ORD003', customer: 'Lê Văn C', total: 800000, status: 'Đang xử lý', payment: 'Chưa thanh toán', deliveryProgress: 'Chuẩn bị hàng' },
-    { id: 'ORD004', customer: 'Phạm Thị D', total: 1200000, status: 'Hoàn thành', payment: 'Đã thanh toán', deliveryProgress: 'Đã giao' },
-    { id: 'ORD005', customer: 'Vũ Văn E', total: 300000, status: 'Đang xử lý', payment: 'Chưa thanh toán', deliveryProgress: 'Chuẩn bị hàng' },
-    { id: 'ORD006', customer: 'Hoàng Thị F', total: 700000, status: 'Đang giao', payment: 'Đã thanh toán', deliveryProgress: 'Đang giao' },
-    { id: 'ORD007', customer: 'Đặng Văn G', total: 950000, status: 'Hủy', payment: 'Chưa thanh toán', deliveryProgress: 'Đã hủy' },
-];
+import ManageOrderApi from '../../utils/ManageOrder_phongApi.js';
 
 // Header
 const Header = () => {
@@ -40,6 +30,7 @@ const Header = () => {
         </header>
     );
 };
+
 // Sidebar
 const Sidebar = ({ currentPage, setCurrentPage }) => {
     const pageLabels = {
@@ -80,6 +71,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
         </motion.div>
     );
 };
+
 // Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
     if (!isOpen) return null;
@@ -104,26 +96,31 @@ const Modal = ({ isOpen, onClose, children }) => {
         </motion.div>
     );
 };
+
 // Order Form Component
 const OrderForm = ({ order, onSave, onCancel, isEditing }) => {
     const [formData, setFormData] = useState({
         id: order?.id || '',
         customer: order?.customer || '',
+        customerId: order?.customerId || '',
         total: order?.total || 0,
         status: order?.status || 'Đang xử lý',
         payment: order?.payment || 'Chưa thanh toán',
-        deliveryProgress: order?.deliveryProgress || 'Chuẩn bị hàng'
+        deliveryDate: order?.deliveryDate || new Date().toISOString().split('T')[0],
+        storageUnitId: order?.storageUnitId || '',
+        transportUnitId: order?.transportUnitId || '',
+        operatorStaffId: order?.operatorStaffId || '',
+        note: order?.note || ''
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.customer || !formData.total) {
+        if (!formData.customer || !formData.total || !formData.customerId || !formData.storageUnitId || !formData.transportUnitId || !formData.operatorStaffId || !formData.deliveryDate) {
             alert('Vui lòng điền đầy đủ thông tin!');
             return;
         }
 
         if (!isEditing) {
-            // Generate new ID for new orders
             formData.id = `ORD${String(Date.now()).slice(-3).padStart(3, '0')}`;
         }
 
@@ -136,78 +133,130 @@ const OrderForm = ({ order, onSave, onCancel, isEditing }) => {
                 {isEditing ? 'Sửa Đơn Hàng' : 'Thêm Đơn Hàng Mới'}
             </h3>
 
-            {isEditing && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {isEditing && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mã Đơn</label>
+                        <input
+                            type="text"
+                            value={formData.id}
+                            disabled
+                            className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+                        />
+                    </div>
+                )}
+
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Mã Đơn</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Khách Hàng *</label>
                     <input
                         type="text"
-                        value={formData.id}
-                        disabled
-                        className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
+                        value={formData.customer}
+                        onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
                     />
                 </div>
-            )}
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Khách Hàng *</label>
-                <input
-                    type="text"
-                    value={formData.customer}
-                    onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                />
-            </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Khách Hàng *</label>
+                    <input
+                        type="number"
+                        value={formData.customerId}
+                        onChange={(e) => setFormData({ ...formData, customerId: parseInt(e.target.value) || '' })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tổng Tiền (VNĐ) *</label>
-                <input
-                    type="number"
-                    value={formData.total}
-                    onChange={(e) => setFormData({ ...formData, total: parseInt(e.target.value) || 0 })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                />
-            </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tổng Tiền (VNĐ) *</label>
+                    <input
+                        type="number"
+                        value={formData.total}
+                        onChange={(e) => setFormData({ ...formData, total: parseInt(e.target.value) || 0 })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái</label>
-                <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="Đang xử lý">Đang xử lý</option>
-                    <option value="Đang giao">Đang giao</option>
-                    <option value="Hoàn thành">Hoàn thành</option>
-                    <option value="Hủy">Hủy</option>
-                </select>
-            </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái</label>
+                    <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="Đang xử lý">Đang xử lý</option>
+                        <option value="Đang giao">Đang giao</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
+                        <option value="Hủy">Hủy</option>
+                    </select>
+                </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Thanh Toán</label>
-                <select
-                    value={formData.payment}
-                    onChange={(e) => setFormData({ ...formData, payment: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="Chưa thanh toán">Chưa thanh toán</option>
-                    <option value="Đã thanh toán">Đã thanh toán</option>
-                </select>
-            </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Thanh Toán</label>
+                    <select
+                        value={formData.payment}
+                        onChange={(e) => setFormData({ ...formData, payment: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="Đã thanh toán">Đã thanh toán</option>
+                        <option value="Chưa thanh toán">Chưa thanh toán</option>
+                    </select>
+                </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tiến Trình Giao Hàng</label>
-                <select
-                    value={formData.deliveryProgress}
-                    onChange={(e) => setFormData({ ...formData, deliveryProgress: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="Chuẩn bị hàng">Chuẩn bị hàng</option>
-                    <option value="Đã rời kho">Đã rời kho</option>
-                    <option value="Đang giao">Đang giao</option>
-                    <option value="Đã giao">Đã giao</option>
-                </select>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngày Giao Hàng *</label>
+                    <input
+                        type="date"
+                        value={formData.deliveryDate}
+                        onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Kho Lưu Trữ *</label>
+                    <input
+                        type="number"
+                        value={formData.storageUnitId}
+                        onChange={(e) => setFormData({ ...formData, storageUnitId: parseInt(e.target.value) || '' })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Phương Tiện Vận Chuyển *</label>
+                    <input
+                        type="number"
+                        value={formData.transportUnitId}
+                        onChange={(e) => setFormData({ ...formData, transportUnitId: parseInt(e.target.value) || '' })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Nhân Viên Điều Hành *</label>
+                    <input
+                        type="number"
+                        value={formData.operatorStaffId}
+                        onChange={(e) => setFormData({ ...formData, operatorStaffId: parseInt(e.target.value) || '' })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                    />
+                </div>
+
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ghi Chú</label>
+                    <textarea
+                        value={formData.note}
+                        onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
             </div>
 
             <div className="flex space-x-3 pt-4">
@@ -498,11 +547,11 @@ const OverviewOrders = ({ orders }) => {
         </motion.div>
     );
 };
+
 // ViewOrders với CRUD
 const ViewOrders = ({ orders, onEditOrder }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
-
 
     const handleEdit = (order) => {
         setEditingOrder(order);
@@ -512,8 +561,6 @@ const ViewOrders = ({ orders, onEditOrder }) => {
     const handleSave = (orderData) => {
         if (editingOrder) {
             onEditOrder(orderData);
-        } else {
-            onAddOrder(orderData);
         }
         setShowModal(false);
         setEditingOrder(null);
@@ -599,14 +646,14 @@ const ViewOrders = ({ orders, onEditOrder }) => {
 // UpdatePayment
 const UpdatePayment = ({ orders, updatePaymentStatus }) => {
     const [selectedOrderId, setSelectedOrderId] = useState('');
-    const [newPaymentStatus, setNewPaymentStatus] = useState('Đã thanh toán');
+    const [newPaymentStatus, setNewPaymentStatus] = useState('COMPLETED');
 
     const handleUpdate = () => {
         if (selectedOrderId && updatePaymentStatus) {
             updatePaymentStatus(selectedOrderId, newPaymentStatus);
-            alert(`Đã cập nhật trạng thái thanh toán cho đơn hàng ${selectedOrderId} thành "${newPaymentStatus}"`);
+            alert(`Đã cập nhật trạng thái thanh toán cho đơn hàng ${selectedOrderId} thành "${newPaymentStatus === 'COMPLETED' ? 'Đã thanh toán' : 'Chưa thanh toán'}"`);
             setSelectedOrderId('');
-            setNewPaymentStatus('Đã thanh toán');
+            setNewPaymentStatus('COMPLETED');
         } else {
             alert('Vui lòng chọn đơn hàng và trạng thái thanh toán!');
         }
@@ -645,8 +692,8 @@ const UpdatePayment = ({ orders, updatePaymentStatus }) => {
                         onChange={(e) => setNewPaymentStatus(e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="Đã thanh toán">Đã thanh toán</option>
-                        <option value="Chưa thanh toán">Chưa thanh toán</option>
+                        <option value="COMPLETED">Đã thanh toán</option>
+                        <option value="INCOMPLETED">Chưa thanh toán</option>
                     </select>
                 </div>
                 <button
@@ -663,7 +710,7 @@ const UpdatePayment = ({ orders, updatePaymentStatus }) => {
 // SearchOrders
 const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
     const filteredOrders = orders.filter(order =>
-        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -745,15 +792,13 @@ const Dashboard = () => {
     const [error, setError] = useState(null);
 
     // Lấy và kiểm tra token
-    const token = localStorage.getItem('token');
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         console.log('Token trong localStorage:', token); // Debug
         if (!token) {
             setError('Không tìm thấy token. Vui lòng đăng nhập!');
             console.error('Token không tồn tại. Chuyển hướng đến trang đăng nhập nếu cần.');
-            // Tùy chọn: Chuyển hướng đến trang đăng nhập
-            // window.location.href = '/login';
+            window.location.href = '/login';
             return;
         }
     }, []);
@@ -762,24 +807,37 @@ const Dashboard = () => {
     const mapBookingToOrder = (booking) => ({
         id: booking.bookingId,
         customer: booking.customerFullName || 'Không xác định',
+        customerId: booking.customerId || '',
         total: booking.total || 0,
         status: booking.status || 'Đang xử lý',
-        payment: booking.paymentStatus || 'Chưa thanh toán',
-        deliveryProgress: booking.deliveryProgress || 'Chuẩn bị hàng'
+        payment: booking.paymentStatus === 'COMPLETED' ? 'Đã thanh toán' : 'Chưa thanh toán',
+        deliveryProgress: mapStatusToDeliveryProgress(booking.status),
+        deliveryDate: booking.deliveryDate || '',
+        note: booking.note || ''
     });
+
+    // Hàm ánh xạ status sang deliveryProgress
+    const mapStatusToDeliveryProgress = (status) => {
+        switch (status) {
+            case 'Đang xử lý':
+                return 'Chuẩn bị hàng';
+            case 'Đang giao':
+                return 'Đang giao';
+            case 'Hoàn thành':
+                return 'Đã giao';
+            case 'Hủy':
+                return 'Đã hủy';
+            default:
+                return 'Chuẩn bị hàng';
+        }
+    };
 
     // Lấy danh sách đơn hàng khi component mount
     useEffect(() => {
         const fetchOrders = async () => {
             setLoading(true);
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError('Token không tồn tại. Vui lòng đăng nhập!');
-                console.error('Token không tồn tại, yêu cầu không được gửi.');
-                return;
-            }
             try {
-                const data = await ManageOrderApi.getOrders(); // Bỏ tham số token
+                const data = await ManageOrderApi.getOrders();
                 const mappedOrders = Array.isArray(data) ? data.map(mapBookingToOrder) : [];
                 setOrders(mappedOrders);
                 setError(null);
@@ -795,27 +853,43 @@ const Dashboard = () => {
 
     // Cập nhật trạng thái thanh toán
     const updatePaymentStatus = async (orderId, newStatus) => {
+        const token = localStorage.getItem('authToken');
         if (!token) {
             setError('Token không tồn tại. Vui lòng đăng nhập!');
             return;
         }
         setLoading(true);
         try {
-            await ManageOrderApi.updatePaymentStatus(orderId, newStatus);
+            console.log(`Cập nhật trạng thái cho orderId: ${orderId}, status: ${newStatus}`); // Debug
+            const responseData = await ManageOrderApi.updatePaymentStatus(orderId, newStatus);
+            console.log('Dữ liệu trả về từ server:', responseData);
+
+            // Cập nhật trạng thái dựa trên phản hồi từ server
             setOrders(orders.map(order =>
-                order.id === orderId ? { ...order, payment: newStatus } : order
+                order.id === orderId
+                    ? { ...order, payment: responseData.paymentStatus === 'COMPLETED' ? 'Đã thanh toán' : 'Chưa thanh toán' }
+                    : order
             ));
-            alert('Cập nhật trạng thái thanh toán thành công!');
+            alert(responseData.message || 'Cập nhật trạng thái thanh toán thành công!');
         } catch (err) {
             setError(`Lỗi khi cập nhật trạng thái thanh toán: ${err.message}`);
-            console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
+            console.error('Lỗi chi tiết:', {
+                status: err.response?.status,
+                data: err.response?.data,
+                message: err.message,
+            });
+            if (err.response?.status === 403) {
+                setError('Lỗi 403: Truy cập bị từ chối. Vui lòng kiểm tra token hoặc quyền.');
+            } else if (err.response?.status === 400) {
+                setError('Lỗi 400: Dữ liệu không hợp lệ. Kiểm tra trạng thái thanh toán.');
+            }
         } finally {
             setLoading(false);
         }
     };
-
     // Cập nhật đơn hàng
     const handleEditOrder = async (updatedOrder) => {
+        const token = localStorage.getItem('authToken');
         if (!token) {
             setError('Token không tồn tại. Vui lòng đăng nhập!');
             return;
@@ -824,10 +898,14 @@ const Dashboard = () => {
         try {
             const bookingRequest = {
                 status: updatedOrder.status,
-                paymentStatus: updatedOrder.payment,
-                deliveryProgress: updatedOrder.deliveryProgress,
-                customerFullName: updatedOrder.customer,
-                total: updatedOrder.total
+                paymentStatus: updatedOrder.payment === 'Đã thanh toán' ? 'COMPLETED' : 'INCOMPLETED',
+                deliveryDate: new Date(updatedOrder.deliveryDate).toISOString(),
+                customerId: updatedOrder.customerId,
+                storageUnitId: updatedOrder.storageUnitId,
+                transportUnitId: updatedOrder.transportUnitId,
+                operatorStaffId: updatedOrder.operatorStaffId,
+                total: updatedOrder.total,
+                note: updatedOrder.note
             };
             const updatedBooking = await ManageOrderApi.updateOrder(updatedOrder.id, bookingRequest);
             setOrders(orders.map(order =>
@@ -845,6 +923,7 @@ const Dashboard = () => {
     // Tìm kiếm đơn hàng
     const handleSearch = async (term) => {
         setSearchTerm(term);
+        const token = localStorage.getItem('authToken');
         if (!token) {
             setError('Token không tồn tại. Vui lòng đăng nhập!');
             return;
@@ -852,7 +931,7 @@ const Dashboard = () => {
         setLoading(true);
         try {
             const data = term.trim() === ''
-                ? await ManageOrderApi.getOrders() // Bỏ tham số token
+                ? await ManageOrderApi.getOrders()
                 : await ManageOrderApi.searchOrders(term);
             const mappedOrders = Array.isArray(data) ? data.map(mapBookingToOrder) : [];
             setOrders(mappedOrders);
@@ -867,6 +946,7 @@ const Dashboard = () => {
 
     // Lấy thông tin tổng quan
     const fetchOverview = async () => {
+        const token = localStorage.getItem('authToken');
         if (!token) {
             setError('Token không tồn tại. Vui lòng đăng nhập!');
             return;
@@ -875,8 +955,6 @@ const Dashboard = () => {
         try {
             const overview = await ManageOrderApi.getOverview();
             console.log('Thông tin tổng quan:', overview);
-            // Lưu overview vào state nếu cần
-            // setOverview(overview);
             setError(null);
         } catch (err) {
             setError(`Lỗi khi lấy thông tin tổng quan: ${err.message}`);
