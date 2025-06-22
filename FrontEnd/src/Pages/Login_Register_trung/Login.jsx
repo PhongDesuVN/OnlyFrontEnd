@@ -92,7 +92,7 @@ const Login = () => {
                             setError("Email hoặc mật khẩu không đúng.");
                         }
                     } else {
-                        setError("Email hoặc mật khẩu không đúng.");
+                        setError("Email hoặc mật khẩu không tồn tại");
                     }
                 }
             } catch (_err) {                       // _err -> không bị ESLint cảnh báo

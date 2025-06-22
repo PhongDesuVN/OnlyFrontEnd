@@ -1,3 +1,52 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.bg-pastel-purple { background-color: #d4a9e6; }
+.bg-pastel-purple-dark { background-color: #b57edc; }
+.bg-pastel-purple-light { background-color: #e6c3ff; }
+.bg-pastel-blue { background-color: #a3d8f4; }
+.bg-pastel-blue-light { background-color: #c2e7fa; }
+.bg-pastel-blue-dark { background-color: #8dc4e6; }
+.bg-pastel-pink { background-color: #f8d7da; }
+.bg-pastel-green { background-color: #c3e6cb; }
+.bg-pastel-green-light { background-color: #d1f0d7; }
+.bg-pastel-green-dark { background-color: #a9d9b4; }
+.bg-pastel-red { background-color: #f5c6cb; }
+.bg-pastel-red-light { background-color: #fad2d6; }
+.bg-pastel-red-dark { background-color: #e6b3b8; }
+.bg-pastel-yellow { background-color: #ffeeba; }
+.bg-pastel-yellow-light { background-color: #fff3cd; }
+.bg-pastel-gray { background-color: #e9ecef; }
+.bg-pastel-gray-light { background-color: #f8f9fa; }
+.bg-pastel-gray-dark { background-color: #dee2e6; }
+.bg-pastel-gray-extra-light { background-color: #eef2f7; }
+.text-pastel-purple { color: #d4a9e6; }
+.text-pastel-purple-dark { color: #b57edc; }
+.text-pastel-blue { color: #a3d8f4; }
+.text-pastel-blue-dark { color: #8dc4e6; }
+.text-pastel-green { color: #c3e6cb; }
+.text-pastel-red { color: #f5c6cb; }
+.text-pastel-yellow { color: #ffeeba; }
+.text-pastel-red { color: #f5c6cb; }
+.bg-gray-800 { background-color: #2d3748; }
+.bg-blue-100 { background-color: #ebf8ff; }
+.bg-green-100 { background-color: #f0fff4; }
+.bg-red-100 { background-color: #fff5f5; }
+.bg-yellow-100 { background-color: #fefcbf; }
+.text-gray-800 { color: #2d3748; }
+.text-green-700 { color: #2f855a; }
+.text-red-700 { color: #c53030; }
+.text-yellow-700 { color: #744210; }
+.bg-charcoal-800 { background-color: #1a202c; }
+.bg-charcoal-700 { background-color: #2d3748; }
+.bg-cream-100 { background-color: #f5f5f0; }
+.bg-cream-50 { background-color: #fafaf5; }
+.bg-gold-50 { background-color: #fff7e6; }
+.bg-gold-100 { background-color: #fff3e0; }
+.bg-gold-200 { background-color: #e8c87a; }
+.bg-gold-300 { background-color: #d4af37; }
+.text-gold-200 { color: #d4af37; }
+.text-gold-400 { color: #f6c66b; }
+.text-gold-500 { color: #e8b71a; }
+.text-gold-700 { color: #b38600; }
