@@ -1,265 +1,241 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiCall } from "../../utils/api.js";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
+import { apiCall } from "../../utils/api.js"
+import Cookies from "js-cookie"
+import { jwtDecode } from "jwt-decode"
 
 const Otp = () => {
-    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [countdown, setCountdown] = useState(0);
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [userEmail, setUserEmail] = useState("");
-    const inputRefs = useRef([]);
-    const navigate = useNavigate();
+    const [otp, setOtp] = useState(["", "", "", "", "", ""])
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState("")
+    const [countdown, setCountdown] = useState(0)
+    const [isSuccess, setIsSuccess] = useState(false)
+    const [userEmail, setUserEmail] = useState("")
+    const inputRefs = useRef([])
+    const navigate = useNavigate()
 
+    // Memoize background image để tránh re-render
     const backgroundStyle = useMemo(
         () => ({
             backgroundImage:
                 "url('https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
         }),
         [],
-    );
+    )
 
     useEffect(() => {
-        const email = Cookies.get("loginEmail");
+        const email = Cookies.get("loginEmail")
         if (!email) {
-            navigate("/login");
-            return;
+            navigate("/login")
+            return
         }
-        setUserEmail(email);
-        setTimeout(() => inputRefs.current[0]?.focus(), 100);
-    }, [navigate]);
+        setUserEmail(email)
+        setTimeout(() => inputRefs.current[0]?.focus(), 100)
+    }, [navigate])
 
     useEffect(() => {
-        let timer;
+        let timer
         if (countdown > 0) {
-            timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+            timer = setTimeout(() => setCountdown(countdown - 1), 1000)
         }
-        return () => clearTimeout(timer);
-    }, [countdown]);
+        return () => clearTimeout(timer)
+    }, [countdown])
 
+    // Optimize handleChange với useCallback
     const handleChange = useCallback((index, value) => {
         if (value !== "" && isNaN(value)) {
-            setError("Vui lòng nhập số");
-            return;
+            setError("Vui lòng nhập số")
+            return
         }
 
         setOtp((prev) => {
-            const newOtp = [...prev];
-            newOtp[index] = value;
-            return newOtp;
-        });
-        setError("");
+            const newOtp = [...prev]
+            newOtp[index] = value
+            return newOtp
+        })
+        setError("")
 
         if (value && index < 5) {
-            setTimeout(() => inputRefs.current[index + 1]?.focus(), 10);
+            // Delay focus để smooth hơn
+            setTimeout(() => inputRefs.current[index + 1]?.focus(), 10)
         }
-    }, []);
+    }, [])
 
+    // Optimize handleKeyDown với useCallback
     const handleKeyDown = useCallback(
         (index, e) => {
             if (e.key === "Backspace" && !otp[index] && index > 0) {
-                setTimeout(() => inputRefs.current[index - 1]?.focus(), 10);
+                setTimeout(() => inputRefs.current[index - 1]?.focus(), 10)
             }
         },
         [otp],
-    );
+    )
 
+    // Optimize handleSubmit với xử lý lỗi 403
     const handleSubmit = useCallback(
         async (e) => {
-            e.preventDefault();
-            const otpValue = otp.join("");
+            e.preventDefault()
+            const otpValue = otp.join("")
 
             if (otpValue.length !== 6) {
-                setError("Vui lòng nhập đầy đủ 6 chữ số");
-                return;
+                setError("Vui lòng nhập đầy đủ 6 chữ số")
+                return
             }
 
-            setIsLoading(true);
-            setError("");
+            setIsLoading(true)
+            setError("")
 
             try {
                 console.log("🔐 OTP Verification Request:", {
                     email: userEmail,
                     otp: otpValue,
                     otpLength: otpValue.length,
-                });
+                })
 
                 const response = await apiCall("/api/auth/login/verify-otp", {
                     method: "POST",
                     body: JSON.stringify({ email: userEmail, otp: otpValue }),
-                });
+                })
 
-                console.log("📨 OTP Response Status:", response.status);
-
-                let authResponse;
-                try {
-                    authResponse = await response.json();
-                    console.log("✅ OTP Success Response (JSON):", authResponse);
-                } catch (parseError) {
-                    console.error("❌ Error parsing JSON:", parseError);
-                    setError("Lỗi khi phân tích dữ liệu từ server.");
-                    setIsLoading(false);
-                    return;
-                }
+                console.log("📨 OTP Response Status:", response.status)
 
                 if (response.ok) {
-                    Cookies.set("authToken", authResponse.accessToken, { expires: 7 });
-                    const apiRole = authResponse.role;
-                    console.log("🔍 API Role:", apiRole);
+                    const authResponse = await response.json()
+                    console.log("✅ OTP Success Response:", authResponse)
 
+                    Cookies.set("authToken", authResponse.accessToken, { expires: 7 })
+                    Cookies.set("userRole", authResponse.role, { expires: 7 })
                     if (authResponse.accessToken) {
                         try {
-                            const decoded = jwtDecode(authResponse.accessToken);
-                            console.log("DECODED TOKEN:", decoded);
+                            const decoded = jwtDecode(authResponse.accessToken)
+                            console.log("DECODED TOKEN:", decoded)
                             if (decoded.username) {
                                 Cookies.set("username", decoded.username, {
                                     expires: 7,
-                                    path: "/",
+                                    path: '/',
                                     secure: true,
-                                    sameSite: "strict",
-                                });
-                                console.log("USERNAME LƯU VÀO COOKIES:", decoded.username);
-                            }
-                            const decodedRole = decoded.role;
-                            if (decodedRole) {
-                                Cookies.set("userRole", decodedRole, { expires: 7 });
-                                console.log("🔍 Decoded Role from Token:", decodedRole);
-                            } else if (apiRole) {
-                                Cookies.set("userRole", apiRole, { expires: 7 });
-                                console.log("🔍 Fallback to API Role:", apiRole);
-                            }
-                            // Lấy managerId từ token (giả định có trong payload)
-                            const managerId = decoded.managerId; // Thay bằng trường thực tế từ token
-                            if (managerId) {
-                                Cookies.set("managerId", managerId, { expires: 7 });
-                                console.log("🔍 Decoded managerId from Token:", managerId);
+                                    sameSite: 'strict'
+                                })
+                                console.log("USERNAME LƯU VÀO COOKIES:", decoded.username)
+                                console.log("USERNAME TRONG COOKIES:", Cookies.get("username"))
+                            } else {
+                                console.log("No username found in token")
                             }
                         } catch (decodeErr) {
-                            console.error("Lỗi decode JWT:", decodeErr);
-                            if (apiRole) {
-                                Cookies.set("userRole", apiRole, { expires: 7 });
-                                console.log("🔍 Fallback to API Role after decode error:", apiRole);
-                            }
-                            setError("Lỗi giải mã token. Vui lòng kiểm tra server.");
-                            setIsLoading(false);
-                            return;
+                            console.error("Lỗi decode JWT:", decodeErr)
                         }
-                    } else if (apiRole) {
-                        Cookies.set("userRole", apiRole, { expires: 7 });
-                        console.log("🔍 Only API Role available:", apiRole);
                     }
+                    Cookies.remove("loginEmail")
 
-                    Cookies.remove("loginEmail");
-
-                    setIsSuccess(true);
+                    setIsSuccess(true)
                     setTimeout(() => {
-                        const finalRole = Cookies.get("userRole");
-                        if (finalRole && finalRole.toUpperCase() === "MANAGER") {
-                            navigate("/manager");
+                        if (authResponse.role && authResponse.role.toUpperCase() === "MANAGER") {
+                            navigate("/manager-dashboard")
                         } else {
-                            navigate("/staff");
+                            navigate("/staff")
                         }
-                    }, 1000);
+                    }, 1000)
                 } else {
-                    let errorMessage = "Mã OTP không đúng";
+                    let errorMessage = "Mã OTP không đúng"
 
                     try {
-                        const errorText = await response.text();
+                        const errorText = await response.text()
                         console.log("❌ OTP Error Response:", {
                             status: response.status,
                             statusText: response.statusText,
                             errorText: errorText,
-                        });
+                        })
 
                         if (response.status === 401) {
                             if (errorText.includes("expired") || errorText.includes("hết hạn")) {
-                                errorMessage = "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới.";
-                                setOtp(["", "", "", "", "", ""]);
-                                setCountdown(0);
+                                errorMessage = "Mã OTP đã hết hạn. Vui lòng gửi lại mã mới."
+                                // Clear the OTP input and reset countdown
+                                setOtp(["", "", "", "", "", ""])
+                                setCountdown(0)
                             } else if (errorText.includes("invalid") || errorText.includes("không đúng")) {
-                                errorMessage = "Mã OTP không đúng. Vui lòng kiểm tra lại.";
+                                errorMessage = "Mã OTP không đúng. Vui lòng kiểm tra lại."
                             } else if (errorText.includes("session") || errorText.includes("phiên")) {
-                                errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-                                Cookies.remove("loginEmail");
-                                setTimeout(() => navigate("/login"), 2000);
-                                return;
+                                errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+                                Cookies.remove("loginEmail")
+                                setTimeout(() => navigate("/login"), 2000)
+                                return
                             } else {
-                                errorMessage = errorText || "Mã OTP không hợp lệ";
+                                errorMessage = errorText || "Mã OTP không hợp lệ"
                             }
                         } else if (response.status === 403) {
-                            errorMessage = "Không có quyền truy cập. Vui lòng liên hệ quản trị viên.";
-                            setTimeout(() => navigate("/login"), 2000);
-                            return;
+                            errorMessage = "Không có quyền truy cập. Vui lòng liên hệ quản trị viên."
+                            setTimeout(() => navigate("/login"), 2000)
+                            return
                         } else if (response.status === 404) {
-                            errorMessage = "Không tìm thấy endpoint. Vui lòng kiểm tra cấu hình server.";
+                            errorMessage = "Không tìm thấy endpoint. Vui lòng kiểm tra cấu hình server."
                         } else if (response.status >= 500) {
-                            errorMessage = "Lỗi server. Vui lòng thử lại sau.";
+                            errorMessage = "Lỗi server. Vui lòng thử lại sau."
                         } else {
-                            errorMessage = errorText || `Lỗi ${response.status}: ${response.statusText}`;
+                            errorMessage = errorText || `Lỗi ${response.status}: ${response.statusText}`
                         }
                     } catch (parseError) {
-                        console.error("Error parsing response:", parseError);
-                        errorMessage = `Lỗi ${response.status}: Không thể xác thực OTP`;
+                        console.error("Error parsing response:", parseError)
+                        errorMessage = `Lỗi ${response.status}: Không thể xác thực OTP`
                     }
 
-                    setError(errorMessage);
-                    setOtp(["", "", "", "", "", ""]);
-                    setTimeout(() => inputRefs.current[0]?.focus(), 100);
+                    setError(errorMessage)
+                    setOtp(["", "", "", "", "", ""])
+                    setTimeout(() => inputRefs.current[0]?.focus(), 100)
                 }
             } catch (error) {
-                console.error("❌ Network Error:", error);
-                setError("Không thể kết nối server. Vui lòng kiểm tra kết nối mạng.");
-                setOtp(["", "", "", "", "", ""]);
-                setTimeout(() => inputRefs.current[0]?.focus(), 100);
+                console.error("❌ Network Error:", error)
+                setError("Không thể kết nối server. Vui lòng kiểm tra kết nối mạng.")
+                setOtp(["", "", "", "", "", ""])
+                setTimeout(() => inputRefs.current[0]?.focus(), 100)
             } finally {
-                setIsLoading(false);
+                setIsLoading(false)
             }
         },
         [otp, userEmail, navigate],
-    );
+    )
 
+    // Optimize handleResendOtp
     const handleResendOtp = useCallback(async () => {
-        if (countdown > 0) return;
+        if (countdown > 0) return
 
         try {
-            setIsLoading(true);
-            console.log("📤 Resending OTP for:", userEmail);
+            setIsLoading(true)
+            console.log("📤 Resending OTP for:", userEmail)
 
             const response = await apiCall("/api/auth/sendOTP", {
                 method: "POST",
                 body: JSON.stringify({ email: userEmail }),
-            });
+            })
 
             if (response.ok) {
-                setOtp(["", "", "", "", "", ""]);
-                setError("");
-                setCountdown(60);
-                setTimeout(() => inputRefs.current[0]?.focus(), 100);
-                console.log("✅ OTP resent successfully");
+                setOtp(["", "", "", "", "", ""])
+                setError("")
+                setCountdown(60)
+                setTimeout(() => inputRefs.current[0]?.focus(), 100)
+                console.log("✅ OTP resent successfully")
             } else {
-                const errorText = await response.text();
-                console.log("❌ Resend OTP Error:", errorText);
-                setError("Không thể gửi lại mã. Vui lòng thử lại sau.");
+                const errorText = await response.text()
+                console.log("❌ Resend OTP Error:", errorText)
+                setError("Không thể gửi lại mã. Vui lòng thử lại sau.")
             }
         } catch (error) {
-            console.error("❌ Resend OTP Network Error:", error);
-            setError("Lỗi kết nối khi gửi lại mã");
+            console.error("❌ Resend OTP Network Error:", error)
+            setError("Lỗi kết nối khi gửi lại mã")
         } finally {
-            setIsLoading(false);
+            setIsLoading(false)
         }
-    }, [countdown, userEmail]);
+    }, [countdown, userEmail])
 
+    // Optimize handleBackToLogin
     const handleBackToLogin = useCallback(() => {
-        Cookies.remove("loginEmail");
-        navigate("/login");
-    }, [navigate]);
+        Cookies.remove("loginEmail")
+        navigate("/login")
+    }, [navigate])
 
-    const isSubmitDisabled = useMemo(() => isLoading || otp.some((digit) => !digit), [isLoading, otp]);
+    // Memoize button disabled state
+    const isSubmitDisabled = useMemo(() => isLoading || otp.some((digit) => !digit), [isLoading, otp])
 
     if (isSuccess) {
         return (
@@ -277,7 +253,7 @@ const Otp = () => {
                     <p className="text-xl text-gray-200">Chào mừng bạn quay trở lại</p>
                 </div>
             </div>
-        );
+        )
     }
 
     return (
@@ -286,6 +262,7 @@ const Otp = () => {
                 <div className="absolute inset-0 bg-black/40"></div>
             </div>
 
+            {/* Giảm số lượng animated elements */}
             <div className="absolute top-20 left-10 w-16 h-16 bg-white/10 rounded-full animate-pulse"></div>
             <div className="absolute top-40 right-20 w-12 h-12 bg-white/10 rounded-full animate-pulse"></div>
 
@@ -298,13 +275,7 @@ const Otp = () => {
                                     d="M12 2L3 7V12.5C3 16.09 5.91 19.5 9.5 20.5L12 21L14.5 20.5C18.09 19.5 21 16.09 21 12.5V7L12 2Z"
                                     fill="white"
                                 />
-                                <path
-                                    d="M9 12L11 14L15 10"
-                                    stroke="#6366f1"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    fill="none"
-                                />
+                                <path d="M9 12L11 14L15 10" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" fill="none" />
                             </svg>
                         </div>
                         <h1 className="text-3xl font-bold text-gray-800 mb-3">Xác thực OTP</h1>
@@ -368,7 +339,7 @@ const Otp = () => {
                 </div>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default Otp;
+export default Otp

@@ -205,7 +205,7 @@ const About = () => {
                                     N
                                 </div>
                                 <div>
-                                    <div className="font-semibold">Nguyễn Văn An</div>
+                                    <div className="font-semibold">Nguyễn Văn Phong</div>
                                     <div className="text-blue-200">Khách hàng</div>
                                 </div>
                             </div>
@@ -419,24 +419,25 @@ const Footer = () => {
 // Thành phần ứng dụng chính với chức năng cuộn mượt mà
 const App = () => {
     useEffect(() => {
+        // Cuộn mượt mà cho các liên kết điều hướng
         const handleSmoothScroll = (e) => {
-            e.preventDefault();
-            const targetId = e.currentTarget.getAttribute('href').substring(1);
-            const targetElement = document.getElementById(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
+            if (e.target.getAttribute('href')?.startsWith('#')) {
+                e.preventDefault();
+                const targetId = e.target.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const headerHeight = 80;
+                    const targetPosition = targetElement.offsetTop - headerHeight;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
             }
         };
 
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', handleSmoothScroll);
-        });
-
-        return () => {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.removeEventListener('click', handleSmoothScroll);
-            });
-        };
+        document.addEventListener('click', handleSmoothScroll);
+        return () => document.removeEventListener('click', handleSmoothScroll);
     }, []);
 
     return (
