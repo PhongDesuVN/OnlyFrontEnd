@@ -19,7 +19,6 @@ import PromotionManagement from "../Pages/Manager_yen/PromotionManagement.jsx"
 
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
-import TransportUnitManagement from "../Pages/TransportUnit_TrungTran/TransportUnitManagement.jsx";
 
 export default function AppRoutes() {
         return (
@@ -47,7 +46,6 @@ export default function AppRoutes() {
 
                     <Route path="/receipts" element={<ReceiptsManagement />} />
                     <Route path="/storage-units" element={<StorageUnitManagement />} />
-                    <Route path="/transport-units" element={<TransportUnitManagement />} />
             </Routes>
         )
 }

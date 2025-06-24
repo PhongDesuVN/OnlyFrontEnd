@@ -1,5 +1,5 @@
 "use client"
-import Footer from '../../Components/FormLogin_yen/Footer';
+
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
@@ -110,7 +110,7 @@ const Dashboard = () => {
 
     const handleNavigateStaffList = () => {
         const managerId = Cookies.get("managerId")
-        if (managerId) navigate(`/managerstaff`)
+        if (managerId) navigate("/managerstaff")
     }
 
     const handleNavigatePromotion = () => {
@@ -154,12 +154,9 @@ const Dashboard = () => {
                     <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow hover:opacity-90">
                         <TrendingUp className="w-5 h-5" /> Báo cáo hiệu suất
                     </button>
-                    <button
-                                                onClick={() => navigate('/transport-units')}
-                                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow hover:opacity-90"
-                                            >
-                                                <MapPin className="w-5 h-5" /> Quản lý vận chuyển
-                                            </button>
+                    <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow hover:opacity-90">
+                        <MapPin className="w-5 h-5" /> Quản lý vận chuyển
+                    </button>
                     <div className="mt-4">
                         <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                             <Clock className="w-4 h-4" /> Thời gian
