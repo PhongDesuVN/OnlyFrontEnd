@@ -1,46 +1,38 @@
-import React, { useState } from 'react'
-import Header from '../../Components/FormLogin_yen/Header.jsx'
-import Footer from '../../Components/FormLogin_yen/Footer.jsx'
+import React, { useState } from 'react';
+import Header from '../../Components/FormLogin_yen/Header.jsx';
+import Footer from '../../Components/FormLogin_yen/Footer.jsx';
 
 const ForgotPassword = () => {
-    const [email, setEmail] = useState('')
-    const [submitted, setSubmitted] = useState(false)
+    const [email, setEmail] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
-    const handleSubmit = (e) => {
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        try {
-            const res = await fetch("http://localhost:8083/api/auth/forgot-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            })
-
-            await res.text()
-            setSubmitted(true)
-
-            // Optional: auto hide success message after 5s
-            // setTimeout(() => setSubmitted(false), 5000)
-        } catch {
-            alert("Có lỗi xảy ra, vui lòng thử lại!")
-            alert("Có lỗi xảy ra, vui lòng thử lại!");
-        }
-        console.log('Send reset link to:', email);
-        setSubmitted(true);
+        e.preventDefault();
+        setError('');
         try {
             const res = await fetch("http://localhost:8083/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
-            const data = await res.text();
+
+            if (!res.ok) {
+                throw new Error("Gửi thất bại");
+            }
+
+            await res.text();
             setSubmitted(true);
-            // Có thể hiển thị data nếu muốn
         } catch (err) {
-            alert("Có lỗi xảy ra, vui lòng thử lại!");
+            setError("❌ Có lỗi xảy ra, vui lòng thử lại!");
         }
-    }
+    };
+
+    const handleResend = () => {
+        setSubmitted(false);
+        setEmail('');
+        setError('');
+    };
 
     return (
         <div className="min-h-screen flex flex-col relative">
@@ -92,18 +84,21 @@ const ForgotPassword = () => {
                         </p>
                     )}
 
+                    {error && (
+                        <p className="mt-4 text-red-600 text-center">
+                            {error}
+                        </p>
+                    )}
+
                     <div className="mt-6 text-center text-gray-600">
                         Chưa nhận được email?{' '}
                         <button
-                            onClick={() => {
-                                console.log('Resend clicked');
-                            }}
+                            onClick={handleResend}
                             className="text-blue-600 font-medium hover:underline"
                         >
                             Gửi lại
                         </button>
                     </div>
-
                 </div>
             </main>
 
@@ -113,4 +108,3 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
-    
