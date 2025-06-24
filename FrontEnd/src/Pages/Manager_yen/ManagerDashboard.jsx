@@ -127,7 +127,7 @@ const performanceData = [
 
     const handleNavigateStaffList = () => {
         const managerId = Cookies.get("managerId")
-        if (managerId) navigate(`/managerstaff`)
+        if (managerId) navigate("/managerstaff")
     }
 
     const handleNavigatePromotion = () => {
