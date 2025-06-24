@@ -6,15 +6,18 @@ import Cookies from "js-cookie"
 import { apiCall } from "../../utils/api.js"
 import Header from "../../Components/FormLogin_yen/Header.jsx"
 import Footer from "../../Components/FormLogin_yen/Footer.jsx"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
 import Cookies from "js-cookie"
 
 const Login = () => {
     /* ------------------------------ state ------------------------------ */
     const [formData, setFormData] = useState({ email: "", password: "" })
-    const [isLoading, setIsLoading]   = useState(false)
-    const [error, setError]           = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState("")
     const [statusMessage, setStatusMessage] = useState("")
     const [showStatusRequest, setShowStatusRequest] = useState(false)
+    const [showPassword, setShowPassword] = useState(false) // 👈 thêm toggle
     const navigate = useNavigate()
 
     /* ------------------------- memoised bg style ----------------------- */
@@ -49,7 +52,6 @@ const Login = () => {
                 })
 
                 const message = await response.text()
-
                 if (response.ok) {
                     localStorage.setItem("loginEmail", formData.email)
                     Cookies.set("loginEmail", formData.email, { expires: 7 })
@@ -78,23 +80,19 @@ const Login = () => {
                     } else {
                         setError("Email hoặc mật khẩu không đúng.");
                     setIsLoading(false)                // mở lại form
+                    setIsLoading(false)
                     const m = message.toUpperCase()
-
-                    // INACTIVE
-                    if (
-                        response.status === 401 || response.status === 403
-                    ) {
-                        if (m.includes("INACTIVE")) {
-                            setShowStatusRequest(true);
-                        } else if (m.includes("PENDING") || m.includes("PENDING_APPROVAL")) {
-                            setShowStatusRequest(true);
+                    if (response.status === 401 || response.status === 403) {
+                        if (m.includes("INACTIVE") || m.includes("PENDING")) {
+                            setShowStatusRequest(true)
                         } else {
-                            setError("Email hoặc mật khẩu không đúng.");
+                            setError("Email hoặc mật khẩu không đúng.")
                         }
                     } else {
-                        setError("Email hoặc mật khẩu không tồn tại");
+                        setError("Email hoặc mật khẩu không tồn tại")
                     }
                 }
+            } catch (_err) {
             } catch (_err) {                       // _err -> không bị ESLint cảnh báo
                 console.error(_err)
             } catch (error) {
@@ -150,10 +148,11 @@ const Login = () => {
     return (
         <div className="min-h-screen flex flex-col">
         <div className="relative min-h-screen h-screen w-screen flex flex-col overflow-x-hidden">
-            <Header/>
+            <Header />
 
             {/* bg */}
             <div className="fixed inset-0 bg-cover bg-center -z-10" style={backgroundStyle}>
+                <div className="absolute inset-0 bg-black/30" />
                 <div className="absolute inset-0 bg-black/30"/>
             <div className="absolute inset-0 bg-cover bg-center z-[-1]" style={backgroundStyle}>
                 <div className="absolute inset-0 bg-black/30"></div>
@@ -220,6 +219,7 @@ const Login = () => {
                                 placeholder="Nhập email"
                             />
                         </div>
+
                         <div>
                             <label className="block text-gray-700 font-medium mb-1">Mật Khẩu</label>
                             <input
@@ -234,12 +234,31 @@ const Login = () => {
                                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                                 placeholder="Nhập mật khẩu"
                             />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={isLoading}
+                                    className="w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                    placeholder="Nhập mật khẩu"
+                                />
+                                <span
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                </span>
+                            </div>
                             <div className="text-right mt-2">
                                 <a href="/forgot" className="text-blue-600 text-sm hover:underline">
                                     Quên mật khẩu?
                                 </a>
                             </div>
                         </div>
+
                         <button
                             type="submit"
                             disabled={isLoading}
@@ -260,7 +279,7 @@ const Login = () => {
                 </div>
             </main>
 
-            <Footer/>
+            <Footer />
         </div>
     )
 }
