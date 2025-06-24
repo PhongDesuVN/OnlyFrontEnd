@@ -77,7 +77,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
 const RevenueOverview = ({ revenues }) => {
     const totalRevenue = revenues.reduce((sum, rev) => sum + rev.amount, 0);
     const averageRevenue = revenues.length > 0 ? totalRevenue / revenues.length : 0;
-    const todayRevenue = revenues.filter(rev => 
+    const todayRevenue = revenues.filter(rev =>
         new Date(rev.date).toDateString() === new Date().toDateString()
     ).reduce((sum, rev) => sum + rev.amount, 0);
 
@@ -92,26 +92,26 @@ const RevenueOverview = ({ revenues }) => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { 
-                        label: 'Tổng Doanh Thu', 
+                    {
+                        label: 'Tổng Doanh Thu',
                         value: `$${totalRevenue.toFixed(2)}`,
                         color: 'green',
                         icon: DollarSign
                     },
-                    { 
-                        label: 'Doanh Thu Hôm Nay', 
+                    {
+                        label: 'Doanh Thu Hôm Nay',
                         value: `$${todayRevenue.toFixed(2)}`,
                         color: 'blue',
                         icon: TrendingUp
                     },
-                    { 
-                        label: 'Trung Bình/Đơn', 
+                    {
+                        label: 'Trung Bình/Đơn',
                         value: `$${averageRevenue.toFixed(2)}`,
                         color: 'purple',
                         icon: BarChart2
                     },
-                    { 
-                        label: 'Tổng Số Đơn', 
+                    {
+                        label: 'Tổng Số Đơn',
                         value: revenues.length,
                         color: 'blue',
                         icon: FileText

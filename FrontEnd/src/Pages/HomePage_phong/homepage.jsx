@@ -75,9 +75,9 @@ const Hero = () => { // Nền chuyển màu với các hình tròn nổi bật v
             {/* Nội dung Hero với tiêu đề, mô tả và nút hành động */}
             <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
                 <h2 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in"> {/* Tiêu đề chính với hiệu ứng hoạt ảnh */}
-                    Hệ Thống
+                    Dịch Vụ
                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                        Quản Lý Chuyên Sâu
+                        Vận Chuyển Nhà
                     </span>
                 </h2>
                 <p className="text-xl md:text-2xl mb-8 opacity-90 animate-fade-in-delay">
@@ -210,7 +210,7 @@ const About = () => {
                                     N
                                 </div>
                                 <div>
-                                    <div className="font-semibold">Nguyễn Văn An</div>
+                                    <div className="font-semibold">Nguyễn Văn Phong</div>
                                     <div className="text-blue-200">Khách hàng</div>
                                 </div>
                             </div>
@@ -424,24 +424,25 @@ const Footer = () => {
 // Thành phần ứng dụng chính với chức năng cuộn mượt mà
 const App = () => {
     useEffect(() => {
+        // Cuộn mượt mà cho các liên kết điều hướng
         const handleSmoothScroll = (e) => {
-            e.preventDefault();
-            const targetId = e.currentTarget.getAttribute('href').substring(1);
-            const targetElement = document.getElementById(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
+            if (e.target.getAttribute('href')?.startsWith('#')) {
+                e.preventDefault();
+                const targetId = e.target.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const headerHeight = 80;
+                    const targetPosition = targetElement.offsetTop - headerHeight;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
             }
         };
 
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', handleSmoothScroll);
-        });
-
-        return () => {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.removeEventListener('click', handleSmoothScroll);
-            });
-        };
+        document.addEventListener('click', handleSmoothScroll);
+        return () => document.removeEventListener('click', handleSmoothScroll);
     }, []);
 
     return (

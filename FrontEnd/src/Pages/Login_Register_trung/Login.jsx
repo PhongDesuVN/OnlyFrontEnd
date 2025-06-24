@@ -6,17 +6,18 @@ import Cookies from "js-cookie"
 import { apiCall } from "../../utils/api.js"
 import Header from "../../Components/FormLogin_yen/Header.jsx"
 import Footer from "../../Components/FormLogin_yen/Footer.jsx"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons"
 
 const Login = () => {
-    /* ------------------------------ state ------------------------------ */
     const [formData, setFormData] = useState({ email: "", password: "" })
-    const [isLoading, setIsLoading]   = useState(false)
-    const [error, setError]           = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState("")
     const [statusMessage, setStatusMessage] = useState("")
     const [showStatusRequest, setShowStatusRequest] = useState(false)
+    const [showPassword, setShowPassword] = useState(false) // 👈 thêm toggle
     const navigate = useNavigate()
 
-    /* ------------------------- memoised bg style ----------------------- */
     const backgroundStyle = useMemo(
         () => ({
             backgroundImage:
@@ -25,14 +26,12 @@ const Login = () => {
         [],
     )
 
-    /* --------------------------- handlers ----------------------------- */
     const handleChange = useCallback((e) => {
         const { name, value } = e.target
         setFormData((prev) => ({ ...prev, [name]: value }))
         setError("")
     }, [])
 
-    /** gửi request đăng nhập */
     const handleSubmit = useCallback(
         async (e) => {
             e.preventDefault()
@@ -53,25 +52,19 @@ const Login = () => {
                     setStatusMessage(message)
                     setTimeout(() => navigate("/otp"), 1000)
                 } else {
-                    setIsLoading(false)                // mở lại form
+                    setIsLoading(false)
                     const m = message.toUpperCase()
-
-                    // INACTIVE
-                    if (
-                        response.status === 401 || response.status === 403
-                    ) {
-                        if (m.includes("INACTIVE")) {
-                            setShowStatusRequest(true);
-                        } else if (m.includes("PENDING") || m.includes("PENDING_APPROVAL")) {
-                            setShowStatusRequest(true);
+                    if (response.status === 401 || response.status === 403) {
+                        if (m.includes("INACTIVE") || m.includes("PENDING")) {
+                            setShowStatusRequest(true)
                         } else {
-                            setError("Email hoặc mật khẩu không đúng.");
+                            setError("Email hoặc mật khẩu không đúng.")
                         }
                     } else {
-                        setError("Email hoặc mật khẩu không đúng.");
+                        setError("Email hoặc mật khẩu không tồn tại")
                     }
                 }
-            } catch (_err) {                       // _err -> không bị ESLint cảnh báo
+            } catch (_err) {
                 console.error(_err)
                 setIsLoading(false)
                 setError("Không thể kết nối đến server.")
@@ -80,7 +73,6 @@ const Login = () => {
         [formData, navigate],
     )
 
-    /** gửi yêu cầu kích hoạt / duyệt tài khoản */
     const handleRequestStatusChange = useCallback(async () => {
         setIsLoading(true)
         try {
@@ -104,20 +96,16 @@ const Login = () => {
         }
     }, [formData.email])
 
-    /* ----------------------------- UI --------------------------------- */
     return (
         <div className="relative min-h-screen h-screen w-screen flex flex-col overflow-x-hidden">
-            <Header/>
+            <Header />
 
-            {/* bg */}
             <div className="fixed inset-0 bg-cover bg-center -z-10" style={backgroundStyle}>
-                <div className="absolute inset-0 bg-black/30"/>
+                <div className="absolute inset-0 bg-black/30" />
             </div>
 
-            {/* form */}
             <main className="flex-1 flex items-center justify-center">
                 <div className="w-full max-w-md bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-lg">
-
                     <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Đăng Nhập</h2>
 
                     {statusMessage && (
@@ -161,16 +149,24 @@ const Login = () => {
 
                         <div>
                             <label className="block text-gray-700 font-medium mb-1">Mật Khẩu</label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                required
-                                disabled={isLoading}
-                                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                                placeholder="Nhập mật khẩu"
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    required
+                                    disabled={isLoading}
+                                    className="w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                                    placeholder="Nhập mật khẩu"
+                                />
+                                <span
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                                </span>
+                            </div>
                             <div className="text-right mt-2">
                                 <a href="/forgot" className="text-blue-600 text-sm hover:underline">
                                     Quên mật khẩu?
@@ -196,7 +192,7 @@ const Login = () => {
                 </div>
             </main>
 
-            <Footer/>
+            <Footer />
         </div>
     )
 }
