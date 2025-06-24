@@ -11,6 +11,12 @@
   },
   "dependencies": {
     "@ant-design/charts": "^2.4.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@mui/icons-material": "^7.1.1",
+    "@mui/material": "^7.1.1",
     "antd": "^5.25.4",
     "axios": "^1.10.0",
     "framer-motion": "^12.16.0",
