@@ -20,32 +20,43 @@ import PromotionManagement from "../Pages/Manager_yen/PromotionManagement.jsx"
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
 
+import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
+import C_Register from "../Pages/Customer_thai/C_Register.jsx";
+import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
+import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
+
 export default function AppRoutes() {
-        return (
-            <Routes>
-                    <Route path="/" element={<HomePage />} /> {/* Trang chủ */}
-                    <Route path="/login" element={<Signin />} />
-                    <Route path="/forgot" element={<ForgotPassword />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/otp" element={<Otp />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
+    return (
+        <Routes>
+            <Route path="/" element={<HomePage />} /> {/* Trang chủ */}
+            <Route path="/login" element={<Signin />} />
+            <Route path="/forgot" element={<ForgotPassword />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/otp" element={<Otp />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-                    {/* Staff routes */}
-                    <Route path="/staff" element={<Staff />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
+            {/* Staff routes */}
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/dashboard" element={<Dashboard />} />
 
-                    {/* Management routes */}
-                    <Route path="/manageorder" element={<ManageOrder />} />
-                    <Route path="/manageuser" element={<ManageUser />} />
-                    <Route path="/managerevenue" element={<ManageRevenue />} />
+            {/* Management routes */}
+            <Route path="/manageorder" element={<ManageOrder />} />
+            <Route path="/manageuser" element={<ManageUser />} />
+            <Route path="/managerevenue" element={<ManageRevenue />} />
 
-                    {/* Manager routes */}
-                    <Route path="/manager" element={<ManagerDashboard />} />
-                    <Route path="/managerstaff" element={<StaffManagement />} />
-                    <Route path="/promotions" element={<PromotionManagement />} />
+            {/* Manager routes */}
+            <Route path="/manager" element={<ManagerDashboard />} />
+            <Route path="/managerstaff" element={<StaffManagement />} />
+            <Route path="/promotions" element={<PromotionManagement />} />
 
-                    <Route path="/receipts" element={<ReceiptsManagement />} />
-                    <Route path="/storage-units" element={<StorageUnitManagement />} />
-            </Routes>
-        )
+            <Route path="/receipts" element={<ReceiptsManagement />} />
+            <Route path="/storage-units" element={<StorageUnitManagement />} />
+            {/* Customer routes */}
+            <Route path="/c_login" element={<CustomerLogin />} />
+            <Route path="/c_register" element={<C_Register/>}/>
+            <Route path="/c_homepage" element={<C_HomePage/>}/>
+            <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
+
+        </Routes>
+    )
 }

@@ -43,6 +43,11 @@ const Header = () => {
                                 Đăng Ký
                             </button>
                         </Link>
+                        <Link to="/c_homepage">
+                            <button className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all">
+                                Customer
+                            </button>
+                        </Link>
                     </div>
                 </div>
             </div>
