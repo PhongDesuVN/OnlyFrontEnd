@@ -9,10 +9,9 @@ import ManageOrder from "../Pages/ManageOrder_phong/manageorder.jsx"
 import ManageUser from "../Pages/ManageUser_trung/manageuser.jsx" // Import trang quản lý user mới
 import ManageRevenue from "../Pages/ManageRevenue_trung/managerevenue.jsx" // Import trang quản lý doanh thu
 import React from 'react';
-import {Routes, Route, Navigate} from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-/* --- auth / chung --- */
-import HomePage from '../Pages/HomePage_phong/homepage.jsx';
+// --- Auth ---
 import Signin from '../Pages/Login_Register_trung/Login.jsx';
 import Register from '../Pages/Login_Register_trung/Register.jsx';
 import ForgotPassword from '../Pages/Login_Register_trung/ForgotPassword.jsx';
@@ -45,13 +44,20 @@ import Dashboard from "../Pages/Staff_phong/DashBoard.jsx";
 import Otp from "../Pages/Login_Register_trung/Otp.jsx";
 import ResetPassword from "../Pages/Login_Register_trung/ResetPassword";
 
-/* --- manager / staff --- */
+// --- Pages ---
+import HomePage from '../Pages/HomePage_phong/homepage.jsx';
+import Staff from '../Pages/Staff_phong/staff.jsx';
+import Dashboard from '../Pages/Staff_phong/DashBoard.jsx';
+import ManageOrder from '../Pages/ManageOrder_phong/manageorder.jsx';
+import ManageUser from '../Pages/ManageUser_trung/manageuser.jsx';
+import ManageRevenue from '../Pages/ManageRevenue_trung/managerevenue.jsx';
+
+// --- Manager ---
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
-import Staff from '../Pages/Staff_phong/staff.jsx';
-import ManageOrder from '../Pages/ManageOrder_phong/manageorder.jsx';
+import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
 
-/* --- vận chuyển --- */
+// --- Transport Unit ---
 import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.jsx';
 import TransportUnitManagement from '../Pages/TransportUnit_TrungTran/TransportUnitManagement.jsx';
 import TransportUnitOverview from '../Pages/TransportUnit_TrungTran/TransportUnitOverview.jsx';
@@ -79,15 +85,23 @@ export default function AppRoutes() {
     return (
         <Routes>
             {/* Trang chính */}
-            <Route path="/" element={<HomePage/>}/>
+            <Route path="/" element={<HomePage />} />
 
             {/* Auth */}
-            <Route path="/login" element={<Signin/>}/>
-            <Route path="/register" element={<Register/>}/>
-            <Route path="/forgot" element={<ForgotPassword/>}/>
-            <Route path="/otp" element={<Otp/>}/>
-            <Route path="/reset-password" element={<ResetPassword/>}/>
+            <Route path="/login" element={<Signin />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot" element={<ForgotPassword />} />
+            <Route path="/otp" element={<Otp />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
+            {/* Staff */}
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+
+            {/* Management */}
+            <Route path="/manageorder" element={<ManageOrder />} />
+            <Route path="/manageuser" element={<ManageUser />} />
+            <Route path="/managerevenue" element={<ManageRevenue />} />
             {/* Manager / Staff */}
             <Route path="/manager" element={<ManagerDashboard/>}/>
             <Route path="/manager-dashboard" element={<ManagerDashboard/>}/>
@@ -95,10 +109,15 @@ export default function AppRoutes() {
             <Route path="/staff" element={<Staff/>}/>
             <Route path="/manageorder" element={<ManageOrder/>}/>
 
-            {/* Đơn vị vận chuyển: layout + 2 trang con */}
-            <Route path="/transport-units" element={<TransportLayout/>}>
-                <Route index element={<TransportUnitManagement/>}/>
-                <Route path="overview" element={<TransportUnitOverview/>}/>
+            {/* Manager */}
+            <Route path="/manager" element={<ManagerDashboard />} />
+            <Route path="/managerstaff" element={<StaffManagement />} />
+            <Route path="/promotions" element={<PromotionManagement />} />
+
+            {/* Đơn vị vận chuyển */}
+            <Route path="/transport-units" element={<TransportLayout />}>
+                <Route index element={<TransportUnitManagement />} />
+                <Route path="overview" element={<TransportUnitOverview />} />
             </Route>
 
             {/* fallback 404 → về danh sách */}
@@ -144,6 +163,7 @@ export default function AppRoutes() {
             <Route path="/manager-dashboard" element={<ManagerDashboard />} />
             <Route path="/manager-dashboard" element={<ManagerDashboard />} />
             <Route path="/transport-units" element={<TransportUnitManagement />} />
+            <Route path="*" element={<Navigate to="/transport-units" replace />} />
         </Routes>
     );
         return (
