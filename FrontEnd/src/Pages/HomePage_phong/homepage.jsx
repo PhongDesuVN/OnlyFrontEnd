@@ -424,25 +424,24 @@ const Footer = () => {
 // Thành phần ứng dụng chính với chức năng cuộn mượt mà
 const App = () => {
     useEffect(() => {
-        // Cuộn mượt mà cho các liên kết điều hướng
         const handleSmoothScroll = (e) => {
-            if (e.target.getAttribute('href')?.startsWith('#')) {
-                e.preventDefault();
-                const targetId = e.target.getAttribute('href');
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    const headerHeight = 80;
-                    const targetPosition = targetElement.offsetTop - headerHeight;
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
-                }
+            e.preventDefault();
+            const targetId = e.currentTarget.getAttribute('href').substring(1);
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth' });
             }
         };
 
-        document.addEventListener('click', handleSmoothScroll);
-        return () => document.removeEventListener('click', handleSmoothScroll);
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', handleSmoothScroll);
+        });
+
+        return () => {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.removeEventListener('click', handleSmoothScroll);
+            });
+        };
     }, []);
 
     return (

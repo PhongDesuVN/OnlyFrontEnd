@@ -57,7 +57,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${currentPage === page ? 'bg-blue-500 shadow-lg' : 'hover:bg-blue-600'
-                            }`}
+                        }`}
                         onClick={() => setCurrentPage(page)}
                     >
                         {page === 'overview' && <BarChart className="mr-2" size={20} />}
@@ -465,38 +465,38 @@ const OverviewOrders = ({ orders }) => {
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-gray-200">
-                                <th className="text-left py-2 text-gray-600 font-medium">Mã Đơn</th>
-                                <th className="text-left py-2 text-gray-600 font-medium">Khách Hàng</th>
-                                <th className="text-left py-2 text-gray-600 font-medium">Giá Trị</th>
-                                <th className="text-left py-2 text-gray-600 font-medium">Trạng Thái</th>
-                            </tr>
+                        <tr className="border-b border-gray-200">
+                            <th className="text-left py-2 text-gray-600 font-medium">Mã Đơn</th>
+                            <th className="text-left py-2 text-gray-600 font-medium">Khách Hàng</th>
+                            <th className="text-left py-2 text-gray-600 font-medium">Giá Trị</th>
+                            <th className="text-left py-2 text-gray-600 font-medium">Trạng Thái</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {orders.slice(0, 5).map((order, index) => (
-                                <motion.tr
-                                    key={order.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.6 + index * 0.1 }}
-                                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                                >
-                                    <td className="py-3 font-medium text-blue-600">{order.id}</td>
-                                    <td className="py-3 text-gray-800">{order.customer}</td>
-                                    <td className="py-3 font-semibold text-green-600">
-                                        {order.total.toLocaleString()} VNĐ
-                                    </td>
-                                    <td className="py-3">
+                        {orders.slice(0, 5).map((order, index) => (
+                            <motion.tr
+                                key={order.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.6 + index * 0.1 }}
+                                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                            >
+                                <td className="py-3 font-medium text-blue-600">{order.id}</td>
+                                <td className="py-3 text-gray-800">{order.customer}</td>
+                                <td className="py-3 font-semibold text-green-600">
+                                    {order.total.toLocaleString()} VNĐ
+                                </td>
+                                <td className="py-3">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'Hoàn thành' ? 'bg-green-100 text-green-700' :
                                             order.status === 'Đang giao' ? 'bg-yellow-100 text-yellow-700' :
                                                 order.status === 'Hủy' ? 'bg-red-100 text-red-700' :
                                                     'bg-blue-100 text-blue-700'
-                                            }`}>
+                                        }`}>
                                             {order.status}
                                         </span>
-                                    </td>
-                                </motion.tr>
-                            ))}
+                                </td>
+                            </motion.tr>
+                        ))}
                         </tbody>
                     </table>
                 </div>
@@ -581,50 +581,50 @@ const ViewOrders = ({ orders, onEditOrder }) => {
             <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
                 <table className="w-full border-collapse">
                     <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
-                            <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
-                            <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
-                            <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
-                            <th className="border p-3 text-left text-gray-700">Thanh Toán</th>
-                            <th className="border p-3 text-left text-gray-700">Thao Tác</th>
-                        </tr>
+                    <tr className="bg-gray-100">
+                        <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
+                        <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
+                        <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
+                        <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
+                        <th className="border p-3 text-left text-gray-700">Thanh Toán</th>
+                        <th className="border p-3 text-left text-gray-700">Thao Tác</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {orders.map(order => (
-                            <motion.tr
-                                key={order.id}
-                                whileHover={{ backgroundColor: '#f3f4f6' }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <td className="border p-3">{order.id}</td>
-                                <td className="border p-3">{order.customer}</td>
-                                <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
-                                <td className="border p-3">
+                    {orders.map(order => (
+                        <motion.tr
+                            key={order.id}
+                            whileHover={{ backgroundColor: '#f3f4f6' }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <td className="border p-3">{order.id}</td>
+                            <td className="border p-3">{order.customer}</td>
+                            <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
+                            <td className="border p-3">
                                     <span className={`px-2 py-1 rounded-full text-sm ${order.status === 'Hoàn thành' ? 'bg-green-100 text-green-700' :
                                         order.status === 'Đang giao' ? 'bg-yellow-100 text-yellow-700' :
                                             order.status === 'Hủy' ? 'bg-red-100 text-red-700' :
                                                 'bg-blue-100 text-blue-700'
-                                        }`}>
+                                    }`}>
                                         {order.status}
                                     </span>
-                                </td>
-                                <td className="border p-3">{order.payment}</td>
-                                <td className="border p-3">
-                                    <div className="flex space-x-2">
-                                        <motion.button
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => handleEdit(order)}
-                                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                                            title="Sửa"
-                                        >
-                                            <Edit2 size={16} />
-                                        </motion.button>
-                                    </div>
-                                </td>
-                            </motion.tr>
-                        ))}
+                            </td>
+                            <td className="border p-3">{order.payment}</td>
+                            <td className="border p-3">
+                                <div className="flex space-x-2">
+                                    <motion.button
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={() => handleEdit(order)}
+                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                        title="Sửa"
+                                    >
+                                        <Edit2 size={16} />
+                                    </motion.button>
+                                </div>
+                            </td>
+                        </motion.tr>
+                    ))}
                     </tbody>
                 </table>
             </div>
@@ -740,33 +740,33 @@ const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="bg-gray-100">
-                                <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
-                                <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
-                                <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
-                                <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
-                            </tr>
+                        <tr className="bg-gray-100">
+                            <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
+                            <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
+                            <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
+                            <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
+                        </tr>
                         </thead>
                         <tbody>
-                            {filteredOrders.map(order => (
-                                <motion.tr
-                                    key={order.id}
-                                    whileHover={{ backgroundColor: '#f3f4f6' }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <td className="border p-3">{order.id}</td>
-                                    <td className="border p-3">{order.customer}</td>
-                                    <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
-                                    <td className="border p-3">
+                        {filteredOrders.map(order => (
+                            <motion.tr
+                                key={order.id}
+                                whileHover={{ backgroundColor: '#f3f4f6' }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <td className="border p-3">{order.id}</td>
+                                <td className="border p-3">{order.customer}</td>
+                                <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
+                                <td className="border p-3">
                                         <span className={`px-2 py-1 rounded-full text-sm ${order.status === 'Hoàn thành' ? 'bg-green-100 text-green-700' :
                                             order.status === 'Đang giao' ? 'bg-yellow-100 text-yellow-700' :
                                                 'bg-red-100 text-red-700'
-                                            }`}>
+                                        }`}>
                                             {order.status}
                                         </span>
-                                    </td>
-                                </motion.tr>
-                            ))}
+                                </td>
+                            </motion.tr>
+                        ))}
                         </tbody>
                     </table>
                 </div>

@@ -7,7 +7,7 @@ import Header from "../../Components/FormLogin_yen/Header.jsx"
 import Footer from "../../Components/FormLogin_yen/Footer.jsx"
 import {
     Edit, MessageSquare, Ban, Trash2, Search, Phone, Mail,
-    MapPin, User, X, Check, AlertTriangle, Loader2, Crown, Shield, Award, Home, ChevronLeft, Zap,
+    MapPin, User, X, Check, AlertTriangle, Loader2, Crown, Shield, Award, Home, ChevronLeft, Zap, Download
 } from "lucide-react"
 
 // Component hiển thị trường thông tin nhân viên
@@ -61,7 +61,8 @@ const StaffCard = ({ staff, index, onFeedback, onEdit, onBlock, onDelete, onView
             <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-20 group-hover:translate-x-0">
                 <button
                     onClick={(e) => { e.stopPropagation(); onFeedback(staff); }}
-                    className="group/btn p-5 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl transition-all duration-300 transform hover:scale-125 hover:shadow-2xl relative overflow-hidden">
+                    className="group/btn p-5 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-6
+00 hover:to-blue-700 text-white rounded-2xl transition-all duration-300 transform hover:scale-125 hover:shadow-2xl relative overflow-hidden">
                     <div className="absolute inset-0 bg-white/30 transform scale-0 group-hover/btn:scale-100 transition-transform duration-300 rounded-2xl"></div>
                     <MessageSquare className="w-6 h-6 relative z-10 group-hover/btn:animate-pulse" />
                 </button>
@@ -180,61 +181,85 @@ const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose }) => (
                     </div>
                 </div>
 
-                <div className="p-10 space-y-8">
-                    <div>
-                        <label className="block text-lg font-black text-slate-700 mb-4 flex items-center gap-3">
-                            <User className="w-5 h-5" />
-                            Họ và Tên
-                        </label>
-                        <input
-                            className="w-full border-3 border-slate-200 rounded-2xl px-8 py-5 focus:outline-none focus:ring-6 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-xl shadow-inner bg-white/90 font-medium"
-                            placeholder="Nhập họ và tên"
-                            value={editForm.fullName}
-                            onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-lg font-black text-slate-700 mb-4 flex items-center gap-3">
-                            <Phone className="w-5 h-5" />
-                            Số Điện Thoại
-                        </label>
-                        <input
-                            className="w-full border-3 border-slate-200 rounded-2xl px-8 py-5 focus:outline-none focus:ring-6 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-xl shadow-inner bg-white/90 font-medium"
-                            placeholder="Nhập số điện thoại"
-                            value={editForm.phone}
-                            onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-lg font-black text-slate-700 mb-4 flex items-center gap-3">
-                            <MapPin className="w-5 h-5" />
-                            Địa Chỉ
-                        </label>
-                        <input
-                            className="w-full border-3 border-slate-200 rounded-2xl px-8 py-5 focus:outline-none focus:ring-6 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-xl shadow-inner bg-white/90 font-medium"
-                            placeholder="Nhập địa chỉ"
-                            value={editForm.address}
-                            onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                        />
+                <div className="p-10 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-base font-black text-slate-700 mb-2 flex items-center gap-2">
+                                <User className="w-4 h-4" />
+                                Tên Đăng Nhập
+                            </label>
+                            <input
+                                className="w-full border-2 border-slate-200 rounded-xl px-2 py-2 focus:outline-none focus:ring-4 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-base shadow-inner bg-white/90 font-medium"
+                                placeholder="Nhập tên đăng nhập"
+                                value={editForm.username}
+                                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-base font-black text-slate-700 mb-2 flex items-center gap-2">
+                                <Mail className="w-4 h-4" />
+                                Email
+                            </label>
+                            <input
+                                className="w-full border-2 border-slate-200 rounded-xl px-2 py-2 focus:outline-none focus:ring-4 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-base shadow-inner bg-white/90 font-medium"
+                                placeholder="Nhập email"
+                                value={editForm.email}
+                                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-base font-black text-slate-700 mb-2 flex items-center gap-2">
+                                <User className="w-4 h-4" />
+                                Họ và Tên
+                            </label>
+                            <input
+                                className="w-full border-2 border-slate-200 rounded-xl px-2 py-2 focus:outline-none focus:ring-4 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-base shadow-inner bg-white/90 font-medium"
+                                placeholder="Nhập họ và tên"
+                                value={editForm.fullName}
+                                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-base font-black text-slate-700 mb-2 flex items-center gap-2">
+                                <Phone className="w-4 h-4" />
+                                Số Điện Thoại
+                            </label>
+                            <input
+                                className="w-full border-2 border-slate-200 rounded-xl px-2 py-2 focus:outline-none focus:ring-4 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-base shadow-inner bg-white/90 font-medium"
+                                placeholder="Nhập số điện thoại"
+                                value={editForm.phone}
+                                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="block text-base font-black text-slate-700 mb-2 flex items-center gap-2">
+                                <MapPin className="w-4 h-4" />
+                                Địa Chỉ
+                            </label>
+                            <input
+                                className="w-full border-2 border-slate-200 rounded-xl px-2 py-2 focus:outline-none focus:ring-4 focus:ring-green-500/30 focus:border-green-500 transition-all duration-500 text-base shadow-inner bg-white/90 font-medium"
+                                placeholder="Nhập địa chỉ"
+                                value={editForm.address}
+                                onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                            />
+                        </div>
                     </div>
                 </div>
 
                 <div className="p-10 pt-0 flex justify-end gap-6">
                     <button
                         onClick={onClose}
-                        className="px-8 py-4 text-slate-600 hover:bg-slate-100 rounded-2xl transition-all duration-300 font-bold text-lg transform hover:scale-110"
+                        className="px-6 py-3 text-slate-600 hover:bg-slate-100 rounded-2xl transition-all duration-300 font-bold text-base transform hover:scale-110"
                     >
                         Hủy Bỏ
                     </button>
                     <button
                         onClick={onSubmit}
-                        className="px-12 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-2xl font-black text-lg transition-all duration-500 transform hover:scale-110 hover:shadow-2xl flex items-center gap-4 relative overflow-hidden"
+                        className="px-10 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-2xl font-black text-base transition-all duration-500 transform hover:scale-110 hover:shadow-2xl flex items-center gap-3 relative overflow-hidden"
                     >
                         <div className="absolute inset-0 bg-white/20 transform scale-x-0 hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-                        <div className="relative z-10 flex items-center gap-4">
-                            <Check className="w-6 h-6" />
+                        <div className="relative z-10 flex items-center gap-3">
+                            <Check className="w-5 h-5" />
                             Cập Nhật
                         </div>
                     </button>
@@ -242,7 +267,7 @@ const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose }) => (
             </div>
         </div>
     </div>
-)
+);
 
 // Component Modal Xác nhận
 const ConfirmModal = ({ type, onConfirm, onClose }) => (
@@ -315,10 +340,11 @@ const StaffDetailsModal = ({ staff, onClose }) => (
                 </div>
 
                 <div className="p-10 space-y-8">
+                    <StaffInfoField icon={User} value={staff.fullName} />
+                    <StaffInfoField icon={User} value={`@${staff.username}`} />
                     <StaffInfoField icon={Mail} value={staff.email} />
                     <StaffInfoField icon={Phone} value={staff.phone} />
                     <StaffInfoField icon={MapPin} value={staff.address} />
-                    <StaffInfoField icon={User} value={`@${staff.username}`} />
                     <StaffInfoField icon={Shield} value={staff.status} />
                     <StaffInfoField icon={User} value={staff.gender} />
                 </div>
@@ -351,7 +377,8 @@ export default function StaffManagement() {
         confirmAction: { type: "", staffId: null },
         filtered: false,
         staffDetails: null,
-        showDetailsModal: false
+        showDetailsModal: false,
+        exporting: false
     })
 
     // Authentication using JWT token from cookies
@@ -384,7 +411,7 @@ export default function StaffManagement() {
                 ...prev,
                 staffList: Array.isArray(staffData) ? staffData : [],
                 totalPages: res.data.data.totalPages || 0,
-                currentPage: res.data.data.pageNumber || 0
+                currentPage: page
             }))
         } catch {
             setState((prev) => ({ ...prev, staffList: [] }))
@@ -468,6 +495,38 @@ export default function StaffManagement() {
         }
     }
 
+    const handleExportExcel = async () => {
+        setState((prev) => ({ ...prev, exporting: true }))
+        try {
+            const response = await axios.post(
+                `/api/v1/manager/${state.managerId}/staff/export`,
+                {
+                    searchTerm: state.searchTerm || null,
+                    includeStatistics: true
+                },
+                {
+                    responseType: 'blob'
+                }
+            )
+
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', `Staff_Export_${state.managerId}_${new Date().toISOString().slice(0,10)}.xlsx`)
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+
+            alert("Xuất Excel thành công!")
+        } catch (error) {
+            console.error("Export Excel failed:", error)
+            alert("Không thể xuất file Excel")
+        } finally {
+            setState((prev) => ({ ...prev, exporting: false }))
+        }
+    }
+
     const fetchStaffDetails = async (operatorId) => {
         setState((prev) => ({ ...prev, loading: true }))
         try {
@@ -507,9 +566,9 @@ export default function StaffManagement() {
     return (
         <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-400 via-indigo-200 to-purple-300 relative overflow-hidden">
             <div className="relative z-10">
-                <Header className="mb-16" /> {/* Tăng mb-16 để tạo khoảng cách lớn hơn */}
-                <div className="h-16"></div> {/* Thêm div trung gian với chiều cao cố định */}
-                <div className="pt-16 p-6 flex-grow"> {/* Tăng pt-16 để đảm bảo khoảng cách từ trên */}
+                <Header className="mb-16" />
+                <div className="h-16"></div>
+                <div className="pt-16 p-6 flex-grow">
                     <div className="max-w-7xl mx-auto">
                         <div className="mb-8">
                             <div className="flex items-center justify-between mb-6">
@@ -599,6 +658,21 @@ export default function StaffManagement() {
                                             </div>
                                         </button>
 
+                                        <button
+                                            onClick={handleExportExcel}
+                                            disabled={state.exporting || state.loading}
+                                            className="group px-6 py-3 min-w-[160px] bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white rounded-3xl font-medium text-lg transition-all duration-500 transform hover:scale-105 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <div className="relative z-10 flex items-center justify-center gap-2">
+                                                {state.exporting ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                ) : (
+                                                    <Download className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                                                )}
+                                                <span>Export Excel</span>
+                                            </div>
+                                        </button>
+
                                         {state.filtered && (
                                             <button
                                                 onClick={() => {
@@ -674,10 +748,10 @@ export default function StaffManagement() {
                                         <button
                                             key={i}
                                             onClick={() => fetchStaffList(i)}
-                                            className={`relative z-10 px-4 py-2 rounded-2xl font-bold text-lg transition-all duration-500 transform hover:bg-purple-100 ${
+                                            className={`relative z-10 px-4 py-2 rounded-full font-bold text-lg transition-all duration-500 transform hover:bg-purple-100 ${
                                                 i === state.currentPage
-                                                    ? "bg-blue-600 text-white shadow-2xl animate-pulse"
-                                                    : "text-blue-600 hover:bg-gray-200 hover:shadow-xl"
+                                                    ? "bg-blue-600 text-white shadow-2xl animate-pulse font-extrabold ring-4 ring-blue-300"
+                                                    : "bg-white text-blue-400 hover:bg-gray-200 hover:shadow-xl"
                                             }`}
                                         >
                                             {i + 1}

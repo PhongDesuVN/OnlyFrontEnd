@@ -3,27 +3,36 @@ import Header from '../../Components/FormLogin_yen/Header.jsx'
 import Footer from '../../Components/FormLogin_yen/Footer.jsx'
 
 const ForgotPassword = () => {
-    const [email, setEmail] = useState('')
-    const [submitted, setSubmitted] = useState(false)
+    const [email, setEmail] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
-        e.preventDefault()
+        e.preventDefault();
+        setError('');
         try {
             const res = await fetch("http://localhost:8083/api/auth/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
-            })
+            });
 
-            await res.text()
-            setSubmitted(true)
+            if (!res.ok) {
+                throw new Error("Gửi thất bại");
+            }
 
-            // Optional: auto hide success message after 5s
-            // setTimeout(() => setSubmitted(false), 5000)
-        } catch {
-            alert("Có lỗi xảy ra, vui lòng thử lại!")
+            await res.text();
+            setSubmitted(true);
+        } catch (err) {
+            setError("❌ Có lỗi xảy ra, vui lòng thử lại!");
         }
-    }
+    };
+
+    const handleResend = () => {
+        setSubmitted(false);
+        setEmail('');
+        setError('');
+    };
 
     return (
         <div className="min-h-screen flex flex-col relative">
@@ -41,7 +50,7 @@ const ForgotPassword = () => {
             </div>
 
             <main className="flex-grow flex items-center justify-center px-4 min-h-[calc(100vh-80px)]">
-                <div className="w-full max-w-md bg-white bg-opacity-90 backdrop-blur-md p-6 rounded-2xl shadow-lg my-6 text-sm transition-all duration-300">
+                <div className="w-full max-w-md bg-white bg-opacity-90 backdrop-blur-md p-6 rounded-2xl shadow-lg my-6 text-sm">
                     <h2 className="text-xl font-bold mb-4 text-center text-gray-800">Quên mật khẩu?</h2>
                     <p className="text-center text-gray-600 mb-6">
                         Nhập email đã đăng ký để nhận liên kết đặt lại mật khẩu.
@@ -69,19 +78,22 @@ const ForgotPassword = () => {
                         </button>
                     </form>
 
-                    {/* Success notification */}
-                    <div
-                        className={`mt-4 p-3 text-green-700 bg-green-50 border border-green-300 rounded-lg text-center transition-all duration-300 ease-in-out ${
-                            submitted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-                        }`}
-                    >
-                        Liên kết khôi phục đã được gửi! Vui lòng kiểm tra hộp thư.
-                    </div>
+                    {submitted && (
+                        <p className="mt-4 text-green-600 text-center">
+                            ✅ Liên kết khôi phục đã được gửi! Vui lòng kiểm tra hộp thư.
+                        </p>
+                    )}
+
+                    {error && (
+                        <p className="mt-4 text-red-600 text-center">
+                            {error}
+                        </p>
+                    )}
 
                     <div className="mt-6 text-center text-gray-600">
                         Chưa nhận được email?{' '}
                         <button
-                            onClick={handleSubmit}
+                            onClick={handleResend}
                             className="text-blue-600 font-medium hover:underline"
                         >
                             Gửi lại
@@ -92,7 +104,7 @@ const ForgotPassword = () => {
 
             <Footer />
         </div>
-    )
-}
+    );
+};
 
-export default ForgotPassword
+export default ForgotPassword;

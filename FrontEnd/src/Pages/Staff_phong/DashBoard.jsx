@@ -47,7 +47,7 @@ const Dashboard = () => {
     const [selectedUnit, setSelectedUnit] = useState("Tất cả")
     const [selectedPeriod, setSelectedPeriod] = useState("month")
     const [selectedMetric, setSelectedMetric] = useState("revenue")
-    
+
     const [hoveredCard, setHoveredCard] = useState(null)
     const [pressedButton, setPressedButton] = useState(null)
     const [showMenu, setShowMenu] = useState(false)
@@ -147,6 +147,7 @@ const Dashboard = () => {
                 .join("")
                 .toUpperCase()
                 .slice(0, 2),
+            avatar: "NA",
         },
         {
             rank: 2,
@@ -1189,6 +1190,7 @@ const Dashboard = () => {
                 >
                     Logout
                 </button>
+
             </div>
         </div>
     )

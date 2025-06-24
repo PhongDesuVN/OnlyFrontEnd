@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useMemo } from "react"
+import React, { useState, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import Cookies from "js-cookie"
 import { apiCall } from "../../utils/api.js"
@@ -15,16 +16,13 @@ const Login = () => {
     const [error, setError] = useState("")
     const [statusMessage, setStatusMessage] = useState("")
     const [showStatusRequest, setShowStatusRequest] = useState(false)
-    const [showPassword, setShowPassword] = useState(false) // 👈 thêm toggle
+    const [showPassword, setShowPassword] = useState(false)
     const navigate = useNavigate()
 
-    const backgroundStyle = useMemo(
-        () => ({
-            backgroundImage:
-                "url('https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
-        }),
-        [],
-    )
+    const backgroundStyle = useMemo(() => ({
+        backgroundImage:
+            "url('https://images.pexels.com/photos/268533/pexels-photo-268533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')",
+    }), [])
 
     const handleChange = useCallback((e) => {
         const { name, value } = e.target
@@ -32,64 +30,62 @@ const Login = () => {
         setError("")
     }, [])
 
-    const handleSubmit = useCallback(
-        async (e) => {
-            e.preventDefault()
-            setIsLoading(true)
-            setError("")
-            setShowStatusRequest(false)
-            setStatusMessage("")
+    const handleSubmit = useCallback(async (e) => {
+        e.preventDefault()
+        setIsLoading(true)
+        setError("")
+        setShowStatusRequest(false)
+        setStatusMessage("")
 
-            try {
-                const response = await apiCall("/api/auth/login", {
-                    method: "POST",
-                    body: JSON.stringify(formData),
-                })
-
-                const message = await response.text()
-                if (response.ok) {
-                    Cookies.set("loginEmail", formData.email, { expires: 7 })
-                    setStatusMessage(message)
-                    setTimeout(() => navigate("/otp"), 1000)
-                } else {
-                    setIsLoading(false)
-                    const m = message.toUpperCase()
-                    if (response.status === 401 || response.status === 403) {
-                        if (m.includes("INACTIVE") || m.includes("PENDING")) {
-                            setShowStatusRequest(true)
-                        } else {
-                            setError("Email hoặc mật khẩu không đúng.")
-                        }
+        try {
+            const response = await apiCall("/api/auth/login", {
+                method: "POST",
+                body: JSON.stringify(formData),
+            })
+            const message = await response.text()
+            if (response.ok) {
+                localStorage.setItem("loginEmail", formData.email)
+                Cookies.set("loginEmail", formData.email, { expires: 7 })
+                setStatusMessage(message)
+                setTimeout(() => navigate("/otp"), 1000)
+            } else {
+                const m = message.toUpperCase()
+                if (response.status === 401 || response.status === 403) {
+                    if (m.includes("INACTIVE") || m.includes("PENDING")) {
+                        setShowStatusRequest(true)
+                        setError(message)
                     } else {
-                        setError("Email hoặc mật khẩu không tồn tại")
+                        setError("Email hoặc mật khẩu không đúng.")
                     }
+                } else {
+                    setError("Email hoặc mật khẩu không tồn tại.")
                 }
-            } catch (_err) {
-                console.error(_err)
-                setIsLoading(false)
-                setError("Không thể kết nối đến server.")
             }
-        },
-        [formData, navigate],
-    )
+        } catch (err) {
+            console.error(err)
+            setError("Không thể kết nối đến server.")
+        } finally {
+            setIsLoading(false)
+        }
+    }, [formData, navigate])
 
     const handleRequestStatusChange = useCallback(async () => {
         setIsLoading(true)
         try {
-            const res = await apiCall("/api/auth/request-status-change", {
+            const response = await apiCall("/api/auth/request-status-change", {
                 method: "POST",
                 body: JSON.stringify({ email: formData.email }),
             })
 
-            if (res.ok) {
+            if (response.ok) {
                 setStatusMessage("Yêu cầu kích hoạt đã được gửi!")
                 setShowStatusRequest(false)
                 setError("")
             } else {
                 setError("Không thể gửi yêu cầu.")
             }
-        } catch (_err) {
-            console.error(_err)
+        } catch (err) {
+            console.error(err)
             setError("Lỗi kết nối.")
         } finally {
             setIsLoading(false)
@@ -97,14 +93,15 @@ const Login = () => {
     }, [formData.email])
 
     return (
-        <div className="relative min-h-screen h-screen w-screen flex flex-col overflow-x-hidden">
+        <div className="min-h-screen flex flex-col">
             <Header />
 
+            {/* Background */}
             <div className="fixed inset-0 bg-cover bg-center -z-10" style={backgroundStyle}>
                 <div className="absolute inset-0 bg-black/30" />
             </div>
 
-            <main className="flex-1 flex items-center justify-center">
+            <main className="flex-grow flex items-center justify-center px-4 py-10">
                 <div className="w-full max-w-md bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-lg">
                     <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Đăng Nhập</h2>
 
@@ -122,10 +119,13 @@ const Login = () => {
 
                     {showStatusRequest && (
                         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+                            <p className="text-yellow-800 text-sm mb-3">
+                                Tài khoản chưa kích hoạt. Gửi yêu cầu?
+                            </p>
                             <button
                                 onClick={handleRequestStatusChange}
                                 disabled={isLoading}
-                                className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                                className="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition"
                             >
                                 {isLoading ? "Đang gửi..." : "Gửi yêu cầu kích hoạt"}
                             </button>
@@ -148,7 +148,7 @@ const Login = () => {
                         </div>
 
                         <div>
-                            <label className="block text-gray-700 font-medium mb-1">Mật Khẩu</label>
+                            <label className="block text-gray-700 font-medium mb-1">Mật khẩu</label>
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
@@ -161,8 +161,9 @@ const Login = () => {
                                     placeholder="Nhập mật khẩu"
                                 />
                                 <span
-                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
                                     onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+
                                 >
                                     <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                                 </span>
@@ -177,7 +178,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50"
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 disabled:opacity-50 transition-all"
                         >
                             {isLoading ? "Đang đăng nhập..." : "Đăng Nhập"}
                         </button>

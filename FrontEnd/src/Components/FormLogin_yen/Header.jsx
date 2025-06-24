@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const Header = ({ dashboardHideHome, backgroundClass = '' }) => {
+const Header = ({ dashboardHideHome = false, backgroundClass = '' }) => {
     const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
@@ -21,7 +21,7 @@ const Header = ({ dashboardHideHome, backgroundClass = '' }) => {
                     : backgroundClass || 'bg-transparent'
             }`}
         >
-            <div className="max-w-7xl mx-auto px-6 lg:px-8" style={{ position: 'relative' }}>
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 relative">
                 <div className="flex items-center justify-between h-16 lg:h-20">
                     {/* Logo + Brand */}
                     <Link
@@ -74,53 +74,24 @@ const Header = ({ dashboardHideHome, backgroundClass = '' }) => {
                     )}
                 </div>
 
-                {/* Hoạt động 24/7 */}
+                {/* Animated dots + Hoạt động 24/7 ở giữa */}
                 <div
-                    style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '20px',
-                        zIndex: 10,
-                    }}
+                    className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-5 z-10"
                 >
-                    {/* Animated dots */}
+                    {/* Dots */}
                     <div className="flex items-center space-x-1">
-                        <div
-                            className={`w-2 h-2 rounded-full animate-pulse transition-colors duration-300 ${
-                                isScrolled ? 'bg-blue-400' : 'bg-white/60'
-                            }`}
-                        ></div>
-                        <div
-                            className={`w-2 h-2 rounded-full animate-pulse delay-100 transition-colors duration-300 ${
-                                isScrolled ? 'bg-purple-400' : 'bg-white/60'
-                            }`}
-                        ></div>
-                        <div
-                            className={`w-2 h-2 rounded-full animate-pulse delay-200 transition-colors duration-300 ${
-                                isScrolled ? 'bg-blue-400' : 'bg-white/60'
-                            }`}
-                        ></div>
+                        <div className={`w-2 h-2 rounded-full animate-pulse ${isScrolled ? 'bg-blue-400' : 'bg-white/60'}`}></div>
+                        <div className={`w-2 h-2 rounded-full animate-pulse delay-100 ${isScrolled ? 'bg-purple-400' : 'bg-white/60'}`}></div>
+                        <div className={`w-2 h-2 rounded-full animate-pulse delay-200 ${isScrolled ? 'bg-blue-400' : 'bg-white/60'}`}></div>
                     </div>
-                    <div
-                        className={`w-px h-8 transition-colors duration-300 ${
-                            isScrolled ? 'bg-gray-200' : 'bg-white/30'
-                        }`}
-                    ></div>
+
+                    {/* Divider */}
+                    <div className={`w-px h-8 ${isScrolled ? 'bg-gray-200' : 'bg-white/30'}`}></div>
+
+                    {/* Status */}
                     <div className="flex items-center space-x-2">
-                        <div
-                            className={`w-2 h-2 rounded-full animate-pulse transition-colors duration-300 ${
-                                isScrolled ? 'bg-green-500' : 'bg-green-400'
-                            }`}
-                        ></div>
-                        <span
-                            className={`text-xs font-medium transition-colors duration-300 ${
-                                isScrolled ? 'text-gray-600' : 'text-white/80'
-                            }`}
-                        >
+                        <div className={`w-2 h-2 rounded-full animate-pulse ${isScrolled ? 'bg-green-500' : 'bg-green-400'}`}></div>
+                        <span className={`text-xs font-medium ${isScrolled ? 'text-gray-600' : 'text-white/80'}`}>
                             Hoạt động 24/7
                         </span>
                     </div>

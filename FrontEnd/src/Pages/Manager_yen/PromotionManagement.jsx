@@ -11,73 +11,13 @@ import {
     Clock, AlertCircle, X, Tag, ArrowLeft
 } from "lucide-react"
 
-const PromotionManager = () => {
-    const [promotions, setPromotions] = useState([])
-    const [loading, setLoading] = useState(false)
-    const [keyword, setKeyword] = useState("")
-    const [dates, setDates] = useState({ startDate: "", endDate: "" })
-    const [dialog, setDialog] = useState({ open: false, type: "", promo: null })
-    const [filtered, setFiltered] = useState(false)
-    const [totalPages, setTotalPages] = useState(0)
-    const [nameEdits, setNameEdits] = useState({}) // 👈 new state
-
-    useEffect(() => {
-        fetchPromotions()
-    }, [])
-
-    const fetchPromotions = async () => {
-        setLoading(true)
-        try {
-            const res = await axios.get(`/api/promotions?keyword=${encodeURIComponent(keyword)}`)
-            setPromotions(res.data)
-            setFiltered(!!keyword.trim())
-        } catch {
-            alert("❌ Không thể tải danh sách khuyến mãi")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const resetFilter = async () => {
-        setKeyword("")
-        await fetchPromotions()
-    }
-
-    const openConfirm = (promo, type) => {
-        setDialog({ open: true, type, promo })
-    }
-
-    const handleConfirmed = async () => {
-        const { promo, type } = dialog
-        if (!promo) return
-        try {
-            if (type === "name") {
-                const name = nameEdits[promo.id] ?? promo.name
-                await axios.post("/api/promotions/update", {
-                    id: promo.id,
-                    name
-                })
-                setNameEdits((prev) => {
-                    const updated = { ...prev }
-                    delete updated[promo.id]
-                    return updated
-                })
-            } else if (type === "dates") {
-                await axios.post("/api/promotions/update-dates", {
-                    id: promo.id,
-                    startDate: dates.startDate,
-                    endDate: dates.endDate
-                })
-            } else if (type === "cancel") {
-                await axios.post("/api/promotions/cancel", { id: promo.id })
-            }
-            fetchPromotions()
-        } catch {
-            alert("❌ Thao tác thất bại")
-        } finally {
-            setDialog({ open: false, type: "", promo: null })
-        }
-    }
+// Component hiển thị một khuyến mãi
+const PromotionCard = ({ promo, onUpdateName, onUpdateDates, onCancel }) => {
+    const [nameEdit, setNameEdit] = useState(promo.name)
+    const [localDates, setLocalDates] = useState({
+        startDate: new Date(promo.startDate).toISOString().split("T")[0],
+        endDate: new Date(promo.endDate).toISOString().split("T")[0]
+    })
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
@@ -99,12 +39,163 @@ const PromotionManager = () => {
         }
     }
 
+    const handleDateUpdate = () => {
+        if (new Date(localDates.startDate) > new Date(localDates.endDate)) {
+            alert("Ngày bắt đầu phải trước ngày kết thúc!")
+            return
+        }
+        onUpdateDates(promo, localDates)
+    }
+
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-br from-rose-50 via-purple-50 to-indigo-100">
-            <div className="relative z-10">
+        <div className="p-6 rounded-2xl bg-white shadow-xl">
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-rose-500 to-indigo-500 text-white rounded-xl">
+                        <Gift className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">
+                            #{promo.id} – {promo.name}
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                            {new Date(promo.startDate).toLocaleDateString()} → {new Date(promo.endDate).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                            Mô tả: {promo.description || "Chưa có mô tả"}
+                        </p>
+                    </div>
+                </div>
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(promo.status)}`}>
+                    {getStatusIcon(promo.status)} {promo.status}
+                </div>
+            </div>
+
+            <div className="grid gap-4">
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <input
+                        type="text"
+                        value={nameEdit}
+                        onChange={(e) => setNameEdit(e.target.value)}
+                        className="flex-1 border px-4 py-3 rounded-xl shadow-inner"
+                        placeholder="Nhập tên khuyến mãi"
+                    />
+                    <button
+                        onClick={() => onUpdateName(promo, nameEdit)}
+                        className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
+                    >
+                        <Save className="w-4 h-4" /> Cập nhật tên
+                    </button>
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="flex-1 flex gap-4">
+                        <input
+                            type="date"
+                            value={localDates.startDate}
+                            onChange={(e) => setLocalDates({ ...localDates, startDate: e.target.value })}
+                            className="w-1/2 border px-4 py-3 rounded-xl"
+                        />
+                        <input
+                            type="date"
+                            value={localDates.endDate}
+                            onChange={(e) => setLocalDates({ ...localDates, endDate: e.target.value })}
+                            className="w-1/2 border px-4 py-3 rounded-xl"
+                        />
+                    </div>
+                    <button
+                        onClick={handleDateUpdate}
+                        className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
+                    >
+                        <RefreshCw className="w-4 h-4" /> Cập nhật ngày
+                    </button>
+                </div>
+
+                <button
+                    onClick={() => onCancel(promo)}
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
+                >
+                    <Trash2 className="w-4 h-4" /> Hủy khuyến mãi
+                </button>
+            </div>
+        </div>
+    )
+}
+
+const PromotionManager = () => {
+    const [promotions, setPromotions] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [keyword, setKeyword] = useState("")
+    const [dialog, setDialog] = useState({ open: false, type: "", promo: null, data: null })
+    const [filtered, setFiltered] = useState(false)
+
+    useEffect(() => {
+        fetchPromotions()
+    }, [])
+
+    const fetchPromotions = async () => {
+        setLoading(true)
+        try {
+            const res = await axios.get("/api/promotions")
+            const data = Array.isArray(res.data) ? res.data : res.data.content || []
+            const filteredData = keyword.trim()
+                ? data.filter(promo => promo.name.toLowerCase().includes(keyword.toLowerCase()))
+                : data
+            setPromotions(filteredData)
+            setFiltered(!!keyword.trim())
+            console.log("Phản hồi API:", res.data)
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu:", error)
+            alert("❌ Không thể tải danh sách khuyến mãi")
+            setPromotions([])
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const resetFilter = async () => {
+        setKeyword("")
+        await fetchPromotions()
+    }
+
+    const openConfirm = (promo, type, data = null) => {
+        setDialog({ open: true, type, promo, data })
+    }
+
+    const handleConfirmed = async () => {
+        const { promo, type, data } = dialog
+        if (!promo) return
+        try {
+            if (type === "name") {
+                await axios.post("/api/promotions/update", {
+                    id: promo.id,
+                    name: data.name
+                })
+            } else if (type === "dates") {
+                await axios.post("/api/promotions/update-dates", {
+                    id: promo.id,
+                    startDate: data.startDate,
+                    endDate: data.endDate
+                })
+            } else if (type === "cancel") {
+                await axios.post("/api/promotions/cancel", { id: promo.id })
+            }
+            fetchPromotions()
+            alert("✅ Thao tác thành công")
+        } catch (error) {
+            console.error("Lỗi cập nhật:", error.response?.data || error.message)
+            alert(`❌ Thao tác thất bại: ${error.response?.data?.message || error.message}`)
+        } finally {
+            setDialog({ open: false, type: "", promo: null, data: null })
+        }
+    }
+
+    return (
+        <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-400 via-indigo-200 to-purple-300">
+            <div className="flex-grow">
                 <Header className="mb-16" />
-                <div className="h-16"></div> {/* Thêm div trung gian để tạo khoảng cách cố định */}
-                <main className="flex-grow p-6">
+                <div className="h-16"></div>
+                <main className="p-6">
                     <div className="max-w-5xl mx-auto">
                         <h1 className="text-4xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-rose-700 to-indigo-700">
                             Quản lý khuyến mãi
@@ -138,101 +229,36 @@ const PromotionManager = () => {
                             <p className="text-center py-10 text-slate-500">Đang tải...</p>
                         ) : (
                             <div className="grid grid-cols-1 gap-6">
-                                {promotions.map((promo) => (
-                                    <div key={promo.id} className="p-6 rounded-2xl bg-white shadow-xl">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-3 bg-gradient-to-br from-rose-500 to-indigo-500 text-white rounded-xl">
-                                                    <Gift className="w-6 h-6" />
-                                                </div>
-                                                <div>
-                                                    <h2 className="text-xl font-bold text-slate-800">
-                                                        #{promo.id} – {promo.name}
-                                                    </h2>
-                                                    <p className="text-sm text-slate-500">
-                                                        {new Date(promo.startDate).toLocaleDateString()} → {new Date(promo.endDate).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(promo.status)}`}>
-                                                {getStatusIcon(promo.status)} {promo.status}
-                                            </div>
-                                        </div>
-
-                                        <div className="grid gap-4">
-                                            <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                                <input
-                                                    type="text"
-                                                    value={nameEdits[promo.id] ?? promo.name}
-                                                    onChange={(e) =>
-                                                        setNameEdits((prev) => ({
-                                                            ...prev,
-                                                            [promo.id]: e.target.value
-                                                        }))
-                                                    }
-                                                    className="flex-1 border px-4 py-3 rounded-xl shadow-inner"
-                                                />
-                                                <button
-                                                    onClick={() => openConfirm(promo, "name")}
-                                                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
-                                                >
-                                                    <Save className="w-4 h-4" /> Cập nhật tên
-                                                </button>
-                                            </div>
-
-                                            <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                                <div className="flex-1 flex gap-4">
-                                                    <input
-                                                        type="date"
-                                                        value={dates.startDate}
-                                                        onChange={(e) => setDates({ ...dates, startDate: e.target.value })}
-                                                        className="w-1/2 border px-4 py-3 rounded-xl"
-                                                    />
-                                                    <input
-                                                        type="date"
-                                                        value={dates.endDate}
-                                                        onChange={(e) => setDates({ ...dates, endDate: e.target.value })}
-                                                        className="w-1/2 border px-4 py-3 rounded-xl"
-                                                    />
-                                                </div>
-                                                <button
-                                                    onClick={() => openConfirm(promo, "dates")}
-                                                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
-                                                >
-                                                    <RefreshCw className="w-4 h-4" /> Cập nhật ngày
-                                                </button>
-                                            </div>
-
-                                            <button
-                                                onClick={() => openConfirm(promo, "cancel")}
-                                                className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl flex items-center gap-2 hover:from-indigo-700 hover:to-purple-700"
-                                            >
-                                                <Trash2 className="w-4 h-4" /> Hủy khuyến mãi
-                                            </button>
-                                        </div>
-                                    </div>
+                                {promotions.map(promo => (
+                                    <PromotionCard
+                                        key={promo.id}
+                                        promo={promo}
+                                        onUpdateName={(promo, name) => openConfirm(promo, "name", { name })}
+                                        onUpdateDates={(promo, dates) => openConfirm(promo, "dates", dates)}
+                                        onCancel={(promo) => openConfirm(promo, "cancel")}
+                                    />
                                 ))}
                             </div>
                         )}
                     </div>
                 </main>
-
-                <ConfirmDialog
-                    open={dialog.open}
-                    onClose={() => setDialog({ ...dialog, open: false })}
-                    onConfirm={handleConfirmed}
-                    title={dialog.type === 'cancel' ? 'Xác Nhận Huỷ' : 'Xác Nhận Cập Nhật'}
-                    message={
-                        dialog.type === 'cancel'
-                            ? 'Bạn có chắc chắn muốn huỷ khuyến mãi này không?'
-                            : 'Bạn có chắc chắn muốn cập nhật khuyến mãi này không?'
-                    }
-                    confirmLabel={dialog.type === 'cancel' ? 'Xoá' : 'Xác nhận'}
-                    confirmColor={dialog.type === 'cancel' ? 'from-rose-500 to-pink-500' : 'from-indigo-600 to-purple-600'}
-                />
-
-                <Footer />
             </div>
+
+            <ConfirmDialog
+                open={dialog.open}
+                onClose={() => setDialog({ open: false, type: "", promo: null, data: null })}
+                onConfirm={handleConfirmed}
+                title={dialog.type === "cancel" ? "Xác nhận hủy" : "Xác nhận cập nhật"}
+                message={
+                    dialog.type === "cancel"
+                        ? "Bạn có chắc chắn muốn hủy khuyến mãi này không?"
+                        : "Bạn có chắc chắn muốn cập nhật khuyến mãi này không?"
+                }
+                confirmLabel={dialog.type === "cancel" ? "Xóa" : "Xác nhận"}
+                confirmColor={dialog.type === "cancel" ? "from-rose-500 to-pink-500" : "from-indigo-600 to-purple-600"}
+            />
+
+            <Footer className="mt-auto" />
         </div>
     )
 }
