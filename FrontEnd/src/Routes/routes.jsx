@@ -52,8 +52,8 @@ export default function AppRoutes() {
 
             {/* Management */}
             <Route path="/manageorder" element={<ManageOrder />} />
-            <Route path="/manageuser" element={<ManageUser />} />
-            <Route path="/managerevenue" element={<ManageRevenue />} />
+            <Route path="/manageuser" element={<ManageUser />} /> 
+            <Route path="/managerevenue" element={<ManageRevenue />} /> 
 
             {/* Manager */}
             <Route path="/manager" element={<ManagerDashboard />} />
