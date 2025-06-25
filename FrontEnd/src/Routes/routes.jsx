@@ -32,6 +32,8 @@ export default function AppRoutes() {
             {/* Thêm các route khác nếu cần */}
             <Route path="/staff" element={<Staff />} />
             <Route path="/manageorder" element={<ManageOrder />} />  {/* Quản lý đơn hàng */}
+            <Route path="/manageuser" element={<ManageUser />} /> 
+            <Route path="/managerevenue" element={<ManageRevenue />} /> 
             <Route path="/manager" element={<ManagerDashboard />} />
             <Route path="/managestaff" element={<StaffManagement />} />
             <Route path="/receipts" element={<ReceiptsManagement />} />
