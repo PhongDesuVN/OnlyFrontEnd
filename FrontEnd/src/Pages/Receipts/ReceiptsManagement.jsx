@@ -4,10 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FileText, BarChart, List, Search, AlertCircle, Loader, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
-
 const API_BASE = "http://localhost:8083/api/payments";
-
-
 
 // Tách các component nhỏ ra ngoài để tránh re-create
 const Header = React.memo(() => (
@@ -228,40 +225,152 @@ export default function ReceiptsManagement() {
   const [loading, setLoading] = useState(false);
 
   // Load dữ liệu ban đầu
-  const fetchInitialData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const getCookie = (name) => {
-        const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-        return match ? match[2] : null;
-      };
+const fetchInitialData = useCallback(async () => {
+  setLoading(true);
+  setError(null);
 
-      const token = getCookie("authToken");
+  try {
+    // 1. Kiểm tra token kỹ càng hơn
+    const authToken = localStorage.getItem('authToken');
+    const fallbackToken = localStorage.getItem('token');
+    const accessToken = localStorage.getItem('accessToken');
 
+    const token = authToken || fallbackToken || accessToken;
 
-      const response = await axios.get(`${API_BASE}/search?page=0&size=100`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-
-      console.log('API data:', response.data);
-      setReceipts(response.data.content || []);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError("Không thể tải dữ liệu từ API. Vui lòng kiểm tra kết nối và quyền truy cập.");
-    } finally {
-      setLoading(false);
+    // 2. Kiểm tra token có tồn tại và hợp lệ không
+    if (!token) {
+      throw new Error('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
     }
-  }, []);
 
+    // 3. Kiểm tra token có hết hạn không (nếu là JWT)
+    if (token.includes('.')) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
 
-  // Load data khi component mount
-  useEffect(() => {
-    fetchInitialData();
-  }, [fetchInitialData]);
+        if (payload.exp && payload.exp < currentTime) {
+          throw new Error('Token đã hết hạn. Vui lòng đăng nhập lại.');
+        }
+      } catch (jwtError) {
+        console.warn('Không thể parse JWT token:', jwtError);
+      }
+    }
+
+    // 4. Cấu hình headers đầy đủ
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        // Thêm headers khác nếu cần
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      timeout: 10000 // 10 seconds timeout
+    };
+
+    console.log('Making API request with config:', {
+      url: `${API_BASE}/search?page=0&size=100`,
+      headers: { ...config.headers, Authorization: 'Bearer [HIDDEN]' }
+    });
+
+    const response = await axios.get(`${API_BASE}/search?page=0&size=100`, config);
+
+    console.log('API Response:', response.data);
+    setReceipts(response.data.content || []);
+
+  } catch (err) {
+    console.error('API Error Details:', {
+      message: err.message,
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: err.response?.data,
+      headers: err.response?.headers
+    });
+
+    // 5. Xử lý lỗi chi tiết hơn
+    if (err.response?.status === 403) {
+      setError("Không có quyền truy cập dữ liệu. Vui lòng kiểm tra quyền tài khoản.");
+
+      // Có thể redirect về trang đăng nhập
+      // window.location.href = '/login';
+
+    } else if (err.response?.status === 401) {
+      setError("Token không hợp lệ hoặc đã hết hạn. Đang chuyển hướng về trang đăng nhập...");
+
+      // Xóa token cũ và redirect
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+
+      // Chuyển hướng sau 2 giây
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+
+    } else if (err.response?.status === 404) {
+      setError("API endpoint không tồn tại. Vui lòng kiểm tra cấu hình server.");
+
+    } else if (err.code === 'ECONNABORTED') {
+      setError("Kết nối timeout. Vui lòng thử lại sau.");
+
+    } else if (err.message.includes('Network Error')) {
+      setError("Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet.");
+
+    } else {
+      setError(`Lỗi không xác định: ${err.message}`);
+    }
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+// 6. Thêm function để refresh token nếu cần
+const refreshAuthToken = useCallback(async () => {
+  try {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      throw new Error('Không có refresh token');
+    }
+
+    const response = await axios.post(`${API_BASE}/auth/refresh`, {
+      refreshToken: refreshToken
+    });
+
+    const newToken = response.data.accessToken;
+    localStorage.setItem('authToken', newToken);
+
+    return newToken;
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    // Redirect to login
+    window.location.href = '/login';
+    return null;
+  }
+}, []);
+
+// 7. Thêm interceptor để tự động handle 401 errors
+useEffect(() => {
+  const responseInterceptor = axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (error.response?.status === 401) {
+        // Thử refresh token
+        const newToken = await refreshAuthToken();
+        if (newToken) {
+          // Retry request với token mới
+          error.config.headers['Authorization'] = `Bearer ${newToken}`;
+          return axios.request(error.config);
+        }
+      }
+      return Promise.reject(error);
+    }
+  );
+
+  // Cleanup
+  return () => {
+    axios.interceptors.response.eject(responseInterceptor);
+  };
+}, [refreshAuthToken]);
 
   // Client-side filtering với performance tối ưu
   const filteredReceipts = useMemo(() => {
