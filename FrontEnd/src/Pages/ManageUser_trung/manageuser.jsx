@@ -8,7 +8,11 @@ import {
 } from 'lucide-react';
 import userService from '../../Services/userService.js';
 
-
+// Add this at the top of the file (after imports)
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+}
 
 // Header Component
 const Header = () => {
@@ -728,8 +732,6 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
     );
 };
 
-
-
 // Main Dashboard Component
 const Dashboard = () => {
     const [currentPage, setCurrentPage] = useState('overview');
@@ -767,7 +769,8 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
         try {
-            const userData = await userService.getAllUsers();
+            const token = getCookie('authToken');
+            const userData = await userService.getAllUsers({}, token);
             setUsers(userData);
         } catch (err) {
             setError('Không thể tải danh sách user. Sử dụng dữ liệu mẫu.');
