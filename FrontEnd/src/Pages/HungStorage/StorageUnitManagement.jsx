@@ -37,7 +37,7 @@ import { vi } from "date-fns/locale"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement)
 
-const API_BASE = "http://localhost:8083/api/storage-units"
+const API_BASE = "http://localhost:8083/api/storage-units";
 
 const Header = React.memo(() => (
   <header className="fixed w-full top-0 bg-white shadow-lg z-10">
@@ -648,30 +648,40 @@ export default function StorageUnitManagement() {
   const [viewingStorage, setViewingStorage] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null)
 
-  // API Helper
   const getAuthHeaders = () => {
-    const getCookie = (name) => {
-      const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"))
-      return match ? match[2] : null
-    }
-    const token = getCookie("authToken")
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  }
+      const getCookie = (name) => {
+        const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+        return match ? match[2] : null;
+      };
+      const token = getCookie("authToken");
+      if (!token) {
+        setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        return {};
+      }
+      return { Authorization: `Bearer ${token}` };
+    };
 
-  const fetchInitialData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await axios.get(API_BASE, {
-        headers: getAuthHeaders(),
-      })
-      setStorages(response.data || [])
-    } catch (err) {
-      setError("Không thể tải dữ liệu từ API. Vui lòng kiểm tra kết nối và quyền truy cập.")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    const fetchInitialData = useCallback(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get(API_BASE, {
+          headers: getAuthHeaders(),
+        });
+        setStorages(response.data || []);
+      } catch (err) {
+        console.error("Chi tiết lỗi:", err.response?.status, err.response?.data);
+        const errorMessage = err.response?.data?.message || err.message;
+        setError(`Lỗi khi tải dữ liệu: ${errorMessage}`);
+        if (err.response?.status === 403) {
+          setError("Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.");
+        } else if (err.response?.status === 401) {
+          setError("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }, []);
 
   // CRUD Operations
   const handleCreate = async (formData) => {
