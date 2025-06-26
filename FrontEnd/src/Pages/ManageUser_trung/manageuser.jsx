@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Search, Plus, Edit, Trash2, Eye, UserCheck, UserX,
     Mail, Phone, MapPin, User, BarChart, List, Settings,
-    Truck, Home, Shield, CheckCircle, AlertCircle, X, Save
+    Truck, Home, Shield, CheckCircle, AlertCircle, X, Save, Calendar
 } from 'lucide-react';
 import userService from '../../Services/userService.js';
 
@@ -91,26 +91,26 @@ const UserOverview = ({ users }) => (
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-                { 
-                    label: 'Tổng số User', 
+                {
+                    label: 'Tổng số User',
                     value: users.length,
                     color: 'blue',
                     icon: Users
                 },
-                { 
-                    label: 'Quản lý', 
+                {
+                    label: 'Quản lý',
                     value: users.filter(u => u.role === 'MANAGER').length,
                     color: 'purple',
                     icon: Shield
                 },
-                { 
-                    label: 'Nhân viên', 
+                {
+                    label: 'Nhân viên',
                     value: users.filter(u => u.role === 'STAFF').length,
                     color: 'blue',
                     icon: User
                 },
-                { 
-                    label: 'Khách hàng', 
+                {
+                    label: 'Khách hàng',
                     value: users.filter(u => u.role === 'CUSTOMER').length,
                     color: 'green',
                     icon: Users
@@ -142,19 +142,19 @@ const UserOverview = ({ users }) => (
                 {[
                     {
                         label: 'User Hoạt động',
-                        value: users.filter(u => u.status === 'active').length,
+                        value: users.filter(u => u.status === 'ACTIVE').length,
                         color: 'green',
                         icon: UserCheck
                     },
                     {
                         label: 'User Bị khóa',
-                        value: users.filter(u => u.status === 'blocked').length,
+                        value: users.filter(u => u.status === 'BLOCKED').length,
                         color: 'red',
                         icon: UserX
                     },
                     {
                         label: 'Tỷ lệ hoạt động',
-                        value: users.length > 0 ? Math.round((users.filter(u => u.status === 'active').length / users.length) * 100) + '%' : '0%',
+                        value: users.length > 0 ? Math.round((users.filter(u => u.status === 'ACTIVE').length / users.length) * 100) + '%' : '0%',
                         color: 'blue',
                         icon: BarChart
                     }
@@ -194,86 +194,88 @@ const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => (
         <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
             <table className="w-full border-collapse">
                 <thead>
-                    <tr className="bg-gray-100">
-                        <th className="border p-3 text-left text-gray-700">ID</th>
-                        <th className="border p-3 text-left text-gray-700">Họ Tên</th>
-                        <th className="border p-3 text-left text-gray-700">Username</th>
-                        <th className="border p-3 text-left text-gray-700">Email</th>
-                        <th className="border p-3 text-left text-gray-700">Vai Trò</th>
-                        <th className="border p-3 text-left text-gray-700">Số Điện Thoại</th>
-                        <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
-                        <th className="border p-3 text-left text-gray-700">Hành Động</th>
-                    </tr>
+                <tr className="bg-gray-100">
+                    <th className="border p-3 text-left text-gray-700">ID</th>
+                    <th className="border p-3 text-left text-gray-700">Họ Tên</th>
+                    <th className="border p-3 text-left text-gray-700">Username</th>
+                    <th className="border p-3 text-left text-gray-700">Email</th>
+                    <th className="border p-3 text-left text-gray-700">Vai Trò</th>
+                    <th className="border p-3 text-left text-gray-700">Số Điện Thoại</th>
+                    <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
+                    <th className="border p-3 text-left text-gray-700">Ngày Tạo</th>
+                    <th className="border p-3 text-left text-gray-700">Hành Động</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {users.map(user => (
-                        <motion.tr
-                            key={user.id}
-                            whileHover={{ backgroundColor: '#f3f4f6' }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <td className="border p-3">{user.id}</td>
-                            <td className="border p-3">
-                                <div className="flex items-center">
-                                    <User className="w-4 h-4 mr-2 text-gray-500" />
-                                    {user.fullName}
-                                </div>
-                            </td>
-                            <td className="border p-3 text-gray-600">{user.username}</td>
-                            <td className="border p-3">{user.email}</td>
-                            <td className="border p-3">
+                {users.map(user => (
+                    <motion.tr
+                        key={user.id}
+                        whileHover={{ backgroundColor: '#f3f4f6' }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <td className="border p-3">{user.id}</td>
+                        <td className="border p-3">
+                            <div className="flex items-center">
+                                <User className="w-4 h-4 mr-2 text-gray-500" />
+                                {user.fullName}
+                            </div>
+                        </td>
+                        <td className="border p-3 text-gray-600">{user.username}</td>
+                        <td className="border p-3">{user.email}</td>
+                        <td className="border p-3">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    user.role === 'MANAGER' 
-                                        ? 'bg-purple-100 text-purple-800' 
+                                    user.role === 'MANAGER'
+                                        ? 'bg-purple-100 text-purple-800'
                                         : user.role === 'STAFF'
-                                        ? 'bg-blue-100 text-blue-800'
-                                        : 'bg-gray-100 text-gray-800'
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : 'bg-gray-100 text-gray-800'
                                 }`}>
-                                    {user.role === 'MANAGER' ? 'Quản lý' : 
-                                     user.role === 'STAFF' ? 'Nhân viên' : 'Khách hàng'}
+                                    {user.role === 'MANAGER' ? 'Quản lý' :
+                                        user.role === 'STAFF' ? 'Nhân viên' : 'Khách hàng'}
                                 </span>
-                            </td>
-                            <td className="border p-3">{user.phone}</td>
-                            <td className="border p-3">
+                        </td>
+                        <td className="border p-3">{user.phone}</td>
+                        <td className="border p-3">
                                 <span className={`px-2 py-1 rounded-full text-sm ${
-                                    user.status === 'active' 
-                                        ? 'bg-green-100 text-green-700' 
+                                    user.status === 'ACTIVE'
+                                        ? 'bg-green-100 text-green-700'
                                         : 'bg-red-100 text-red-700'
                                 }`}>
-                                    {user.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
+                                    {user.status === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
                                 </span>
-                            </td>
-                            <td className="border p-3">
-                                <div className="flex space-x-2">
-                                    <button 
-                                        onClick={() => onEditUser(user)}
-                                        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                        title="Chỉnh sửa"
-                                    >
-                                        <Edit size={16} />
-                                    </button>
-                                    <button 
-                                        onClick={() => onToggleStatus(user.id)}
-                                        className={`p-2 text-white rounded transition-colors ${
-                                            user.status === 'active' 
-                                                ? 'bg-orange-500 hover:bg-orange-600' 
-                                                : 'bg-green-500 hover:bg-green-600'
-                                        }`}
-                                        title={user.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
-                                    >
-                                        {user.status === 'active' ? <UserX size={16} /> : <UserCheck size={16} />}
-                                    </button>
-                                    <button 
-                                        onClick={() => onDeleteUser(user.id)}
-                                        className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                        title="Xóa"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                            </td>
-                        </motion.tr>
-                    ))}
+                        </td>
+                        <td className="border p-3">{new Date(user.createdAt).toLocaleDateString()}</td>
+                        <td className="border p-3">
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={() => onEditUser(user)}
+                                    className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                    title="Chỉnh sửa"
+                                >
+                                    <Edit size={16} />
+                                </button>
+                                <button
+                                    onClick={() => onToggleStatus(user.id)}
+                                    className={`p-2 text-white rounded transition-colors ${
+                                        user.status === 'ACTIVE'
+                                            ? 'bg-orange-500 hover:bg-orange-600'
+                                            : 'bg-green-500 hover:bg-green-600'
+                                    }`}
+                                    title={user.status === 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+                                >
+                                    {user.status === 'ACTIVE' ? <UserX size={16} /> : <UserCheck size={16} />}
+                                </button>
+                                <button
+                                    onClick={() => onDeleteUser(user.id)}
+                                    className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                    title="Xóa"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </td>
+                    </motion.tr>
+                ))}
                 </tbody>
             </table>
         </div>
@@ -307,7 +309,7 @@ const SearchUsers = ({ users, searchParams, setSearchParams }) => {
             <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
                 <Search className="mr-2" /> Tìm Kiếm User
             </h2>
-            
+
             {/* Search Form */}
             <div className="bg-white p-6 rounded-xl shadow-lg mb-6 border border-gray-100">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -409,12 +411,15 @@ const SearchUsers = ({ users, searchParams, setSearchParams }) => {
                                 <p className="text-sm text-gray-600 flex items-center mb-2">
                                     <MapPin className="w-4 h-4 mr-1" /> {user.address}
                                 </p>
+                                <p className="text-sm text-gray-600 flex items-center mb-2">
+                                    <Calendar className="w-4 h-4 mr-1" /> {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                                </p>
                                 <span className={`px-2 py-1 rounded-full text-xs ${
-                                    user.status === 'active' 
-                                        ? 'bg-green-100 text-green-700' 
+                                    user.status === 'ACTIVE'
+                                        ? 'bg-green-100 text-green-700'
                                         : 'bg-red-100 text-red-700'
                                 }`}>
-                                    {user.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
+                                    {user.status === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
                                 </span>
                             </motion.div>
                         ))}
@@ -441,7 +446,7 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
         role: user?.role || 'CUSTOMER',
         gender: user?.gender || 'OTHER',
         password: '',
-        status: user?.status || 'active'
+        status: user?.status || 'ACTIVE'
     });
 
     const [errors, setErrors] = useState({});
@@ -449,14 +454,14 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
 
     const validateForm = () => {
         const newErrors = {};
-        
+
         // Full Name validation
         if (!formData.fullName.trim()) {
             newErrors.fullName = 'Họ tên không được để trống';
         } else if (formData.fullName.length > 50) {
             newErrors.fullName = 'Họ tên không được vượt quá 50 ký tự';
         }
-        
+
         // Username validation (only for create)
         if (!isEdit) {
             if (!formData.username.trim()) {
@@ -465,7 +470,7 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
                 newErrors.username = 'Username phải có từ 4-100 ký tự';
             }
         }
-        
+
         // Email validation
         if (!formData.email.trim()) {
             newErrors.email = 'Email không được để trống';
@@ -474,7 +479,7 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
         } else if (formData.email.length > 100) {
             newErrors.email = 'Email không được vượt quá 100 ký tự';
         }
-        
+
         // Phone validation (Vietnamese format)
         if (!formData.phone.trim()) {
             newErrors.phone = 'Số điện thoại không được để trống';
@@ -483,19 +488,19 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
         } else if (formData.phone.length > 20) {
             newErrors.phone = 'Số điện thoại không được vượt quá 20 ký tự';
         }
-        
+
         // Address validation
         if (formData.address && formData.address.length > 255) {
             newErrors.address = 'Địa chỉ không được vượt quá 255 ký tự';
         }
-        
+
         // Role validation
         if (!formData.role) {
             newErrors.role = 'Vai trò không được để trống';
         } else if (!['STAFF', 'MANAGER', 'CUSTOMER'].includes(formData.role)) {
             newErrors.role = 'Vai trò phải là STAFF, MANAGER hoặc CUSTOMER';
         }
-        
+
         // Password validation (only for create)
         if (!isEdit) {
             if (!formData.password.trim()) {
@@ -527,7 +532,7 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
             <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
                 <Plus className="mr-2" /> {isEdit ? 'Cập Nhật User' : 'Thêm User Mới'}
             </h2>
-            
+
             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
                 <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -684,8 +689,8 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
                                     onChange={(e) => setFormData({...formData, status: e.target.value})}
                                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
-                                    <option value="active">Hoạt động</option>
-                                    <option value="blocked">Bị khóa</option>
+                                    <option value="ACTIVE">Hoạt động</option>
+                                    <option value="BLOCKED">Bị khóa</option>
                                 </select>
                             </div>
                         )}
@@ -771,7 +776,13 @@ const Dashboard = () => {
         try {
             const token = getCookie('authToken');
             const userData = await userService.getAllUsers({}, token);
-            setUsers(userData);
+            // Sort users by createdAt date (newest first)
+            const sortedUsers = userData.sort((a, b) => {
+                const dateA = new Date(a.createdAt);
+                const dateB = new Date(b.createdAt);
+                return dateB - dateA; // Descending order (newest first)
+            });
+            setUsers(sortedUsers);
         } catch (err) {
             setError('Không thể tải danh sách user. Sử dụng dữ liệu mẫu.');
             console.error('Error loading users:', err);
@@ -785,7 +796,8 @@ const Dashboard = () => {
     const handleAddUser = async (userData) => {
         setLoading(true);
         try {
-            const newUser = await userService.createUser(userData);
+            const token = getCookie('authToken');
+            const newUser = await userService.createUser(userData, token);
             setUsers([...users, newUser]);
             setShowUserForm(false);
             setCurrentPage('list');
@@ -810,24 +822,37 @@ const Dashboard = () => {
         try {
             console.log('Updating user with ID:', editingUser.id);
             console.log('Update data:', userData);
-            
-            const updatedUser = await userService.updateUser(editingUser.id, userData);
-            
+
+            // Filter out fields that shouldn't be sent in update request
+            const updateData = {
+                fullName: userData.fullName,
+                email: userData.email,
+                phone: userData.phone,
+                address: userData.address,
+                role: userData.role,
+                gender: userData.gender
+            };
+
+            console.log('Filtered update data:', updateData);
+
+            const token = getCookie('authToken');
+            const updatedUser = await userService.updateUser(editingUser.id, updateData, token);
+
             console.log('Update successful, received:', updatedUser);
-            
+
             // Cập nhật state với user đã được cập nhật
-            setUsers(users.map(user => 
+            setUsers(users.map(user =>
                 user.id === editingUser.id ? { ...editingUser, ...userData } : user
             ));
-            
+
             setEditingUser(null);
             setShowUserForm(false);
             setCurrentPage('list');
             setSuccess('User đã được cập nhật thành công');
-            
+
             // Hiển thị thông báo thành công
             console.log('User updated successfully');
-            
+
         } catch (err) {
             console.error('Update error details:', err);
             setError(`Không thể cập nhật user: ${err.message}`);
@@ -840,7 +865,8 @@ const Dashboard = () => {
         if (window.confirm('Bạn có chắc chắn muốn xóa user này?')) {
             setLoading(true);
             try {
-                await userService.deleteUser(userId);
+                const token = getCookie('authToken');
+                await userService.deleteUser(userId, token);
                 setUsers(users.filter(user => user.id !== userId));
                 setSuccess('User đã được xóa thành công');
             } catch (err) {
@@ -855,10 +881,11 @@ const Dashboard = () => {
     const handleToggleStatus = async (userId) => {
         setLoading(true);
         try {
-            await userService.changeUserStatus(userId);
-            setUsers(users.map(user => 
-                user.id === userId 
-                    ? { ...user, status: user.status === 'active' ? 'blocked' : 'active' }
+            const token = getCookie('authToken');
+            await userService.changeUserStatus(userId, token);
+            setUsers(users.map(user =>
+                user.id === userId
+                    ? { ...user, status: user.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE' }
                     : user
             ));
             setSuccess('Trạng thái user đã được thay đổi thành công');
@@ -928,7 +955,7 @@ const Dashboard = () => {
                     >
                         <AlertCircle className="w-5 h-5 mr-2" />
                         {error}
-                        <button 
+                        <button
                             onClick={() => setError(null)}
                             className="ml-auto text-red-700 hover:text-red-900"
                         >
@@ -936,7 +963,7 @@ const Dashboard = () => {
                         </button>
                     </motion.div>
                 )}
-                
+
                 {/* Loading Indicator */}
                 {loading && (
                     <motion.div
@@ -961,7 +988,7 @@ const Dashboard = () => {
                     >
                         <CheckCircle className="w-5 h-5 mr-2" />
                         {success}
-                        <button 
+                        <button
                             onClick={() => setSuccess(null)}
                             className="ml-auto text-green-700 hover:text-green-900"
                         >
