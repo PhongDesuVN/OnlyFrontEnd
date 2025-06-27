@@ -20,7 +20,24 @@ import {
 } from "lucide-react"
 import { Link } from "react-router-dom"
 
-const API_BASE = "http://localhost:8083/api/storage-units"
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from "chart.js"
+import { Line, Pie } from "react-chartjs-2"
+import { format, subDays, parseISO } from "date-fns"
+import { vi } from "date-fns/locale"
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement)
+
+const API_BASE = "http://localhost:8083/api/storage-units";
 
 const Header = React.memo(() => (
   <header className="fixed w-full top-0 bg-white shadow-lg z-10">
@@ -141,7 +158,7 @@ const StorageUnitForm = React.memo(({ storageUnit, onSubmit, onCancel, loading, 
     address: storageUnit?.address || "",
     managerId: storageUnit?.managerId || "",
     phone: storageUnit?.phone || "",
-    status: storageUnit?.status || "ACTIVE",
+    status: storageUnit?.status || "AVAILABLE",
     note: storageUnit?.note || "",
   })
 
@@ -214,9 +231,9 @@ const StorageUnitForm = React.memo(({ storageUnit, onSubmit, onCancel, loading, 
                 errors.status ? "border-red-500" : "border-gray-300"
               }`}
             >
-              <option value="ACTIVE">Hoạt động</option>
-              <option value="INACTIVE">Ngừng hoạt động</option>
-              <option value="MAINTENANCE">Bảo trì</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
             {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status}</p>}
           </div>
@@ -304,6 +321,159 @@ const StorageUnitForm = React.memo(({ storageUnit, onSubmit, onCancel, loading, 
   )
 })
 
+// Charts Components
+const DailyStorageChart = React.memo(({ storages }) => {
+  const chartData = useMemo(() => {
+    // Tạo dữ liệu cho 30 ngày gần nhất
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = subDays(new Date(), 29 - i)
+      return format(date, "yyyy-MM-dd")
+    })
+
+    // Đếm số kho được tạo mỗi ngày
+    const dailyCounts = last30Days.map((date) => {
+      const count = storages.filter((storage) => {
+        if (!storage.createdAt) return false
+        const storageDate = format(parseISO(storage.createdAt), "yyyy-MM-dd")
+        return storageDate === date
+      }).length
+      return count
+    })
+
+    return {
+      labels: last30Days.map((date) => format(parseISO(date), "dd/MM", { locale: vi })),
+      datasets: [
+        {
+          label: "Số kho được thêm",
+          data: dailyCounts,
+          borderColor: "rgb(59, 130, 246)",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    }
+  }, [storages])
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Số Lượng Kho Được Thêm Mỗi Ngày (30 ngày gần nhất)",
+        font: {
+          size: 16,
+          weight: "bold",
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
+      },
+    },
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <div style={{ height: "400px" }}>
+        <Line data={chartData} options={options} />
+      </div>
+    </div>
+  )
+})
+
+const StorageStatusChart = React.memo(({ storages }) => {
+  const chartData = useMemo(() => {
+    const statusCounts = storages.reduce((acc, storage) => {
+      const status = storage.status || "UNKNOWN"
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+
+    // Định nghĩa màu sắc cho từng trạng thái
+    const statusColors = {
+      ACTIVE: "#10B981", // Green
+      AVAILABLE: "#F59E0B", // Yellow
+      INACTIVE: "#EF4444", // Red
+      UNKNOWN: "#6B7280", // Gray
+    }
+
+    const labels = Object.keys(statusCounts)
+    const data = Object.values(statusCounts)
+    const backgroundColor = labels.map((label) => statusColors[label] || statusColors.UNKNOWN)
+
+    return {
+      labels: labels.map((label) => {
+        switch (label) {
+          case "ACTIVE":
+            return "Đang hoạt động"
+          case "AVAILABLE":
+            return "Có sẵn"
+          case "INACTIVE":
+            return "Ngừng hoạt động"
+          default:
+            return label
+        }
+      }),
+      datasets: [
+        {
+          data,
+          backgroundColor,
+          borderColor: backgroundColor.map((color) => color),
+          borderWidth: 2,
+        },
+      ],
+    }
+  }, [storages])
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+        },
+      },
+      title: {
+        display: true,
+        text: "Phân Bố Trạng Thái Kho",
+        font: {
+          size: 16,
+          weight: "bold",
+        },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+            const percentage = ((context.parsed * 100) / total).toFixed(1)
+            return `${context.label}: ${context.parsed} kho (${percentage}%)`
+          },
+        },
+      },
+    },
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <div style={{ height: "400px" }}>
+        <Pie data={chartData} options={options} />
+      </div>
+    </div>
+  )
+})
+
 // Enhanced StorageTable with CRUD actions
 const StorageTable = React.memo(
   ({
@@ -368,9 +538,9 @@ const StorageTable = React.memo(
                         className={`px-3 py-1 rounded-full text-sm font-medium ${
                           storage.status === "ACTIVE"
                             ? "bg-green-100 text-green-700"
-                            : storage.status === "INACTIVE"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-yellow-100 text-yellow-700"
+                            : storage.status === "AVAILABLE"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
                         }`}
                       >
                         {storage.status}
@@ -423,8 +593,8 @@ const StatsCards = React.memo(({ stats }) => (
     {[
       { label: "Tổng số kho", value: stats.total, color: "blue" },
       { label: "Kho đang hoạt động", value: stats.active, color: "green" },
+      { label: "Kho có sẵn", value: stats.available, color: "yellow" },
       { label: "Kho ngừng hoạt động", value: stats.inactive, color: "red" },
-      { label: "Kho khác", value: stats.other, color: "yellow" },
     ].map((item, idx) => (
       <motion.div
         key={idx}
@@ -478,30 +648,40 @@ export default function StorageUnitManagement() {
   const [viewingStorage, setViewingStorage] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null)
 
-  // API Helper
   const getAuthHeaders = () => {
-    const getCookie = (name) => {
-      const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"))
-      return match ? match[2] : null
-    }
-    const token = getCookie("authToken")
-    return token ? { Authorization: `Bearer ${token}` } : {}
-  }
+      const getCookie = (name) => {
+        const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+        return match ? match[2] : null;
+      };
+      const token = getCookie("authToken");
+      if (!token) {
+        setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        return {};
+      }
+      return { Authorization: `Bearer ${token}` };
+    };
 
-  const fetchInitialData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await axios.get(API_BASE, {
-        headers: getAuthHeaders(),
-      })
-      setStorages(response.data || [])
-    } catch (err) {
-      setError("Không thể tải dữ liệu từ API. Vui lòng kiểm tra kết nối và quyền truy cập.")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    const fetchInitialData = useCallback(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axios.get(API_BASE, {
+          headers: getAuthHeaders(),
+        });
+        setStorages(response.data || []);
+      } catch (err) {
+        console.error("Chi tiết lỗi:", err.response?.status, err.response?.data);
+        const errorMessage = err.response?.data?.message || err.message;
+        setError(`Lỗi khi tải dữ liệu: ${errorMessage}`);
+        if (err.response?.status === 403) {
+          setError("Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.");
+        } else if (err.response?.status === 401) {
+          setError("Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }, []);
 
   // CRUD Operations
   const handleCreate = async (formData) => {
@@ -614,9 +794,9 @@ export default function StorageUnitManagement() {
   const stats = useMemo(() => {
     const total = storages.length
     const active = storages.filter((r) => r.status === "ACTIVE").length
+    const available = storages.filter((r) => r.status === "AVAILABLE").length
     const inactive = storages.filter((r) => r.status === "INACTIVE").length
-    const other = storages.filter((r) => r.status !== "ACTIVE" && r.status !== "INACTIVE").length
-    return { total, active, inactive, other }
+    return { total, active, available, inactive }
   }, [storages])
 
   const searchProps = useMemo(
@@ -637,10 +817,16 @@ export default function StorageUnitManagement() {
           <BarChart className="mr-2" /> Tổng Quan Kho Lưu Trữ
         </h2>
         <StatsCards stats={stats} />
+
         {loading ? (
           <LoadingSpinner />
+        ) : error ? (
+          <ErrorMessage error={error} onRetry={fetchInitialData} />
         ) : (
-          <StorageTable storages={storages.slice(0, 10)} loading={loading} error={error} onRetry={fetchInitialData} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <DailyStorageChart storages={storages} />
+            <StorageStatusChart storages={storages} />
+          </div>
         )}
       </motion.div>
     ),
@@ -768,9 +954,9 @@ export default function StorageUnitManagement() {
                   className={`px-3 py-1 rounded-full text-sm font-medium ${
                     viewingStorage.status === "ACTIVE"
                       ? "bg-green-100 text-green-700"
-                      : viewingStorage.status === "INACTIVE"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700"
+                      : viewingStorage.status === "AVAILABLE"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-red-100 text-red-700"
                   }`}
                 >
                   {viewingStorage.status}
