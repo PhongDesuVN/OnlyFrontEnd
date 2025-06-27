@@ -32,6 +32,9 @@ import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
 
+import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
+import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
+
 export default function AppRoutes() {
     return (
         <Routes>
@@ -49,8 +52,8 @@ export default function AppRoutes() {
 
             {/* Management */}
             <Route path="/manageorder" element={<ManageOrder />} />
-            <Route path="/manageuser" element={<ManageUser />} />
-            <Route path="/managerevenue" element={<ManageRevenue />} />
+            <Route path="/manageuser" element={<ManageUser />} /> 
+            <Route path="/managerevenue" element={<ManageRevenue />} /> 
 
             {/* Manager */}
             <Route path="/manager" element={<ManagerDashboard />} />
@@ -73,6 +76,10 @@ export default function AppRoutes() {
 
             {/* Fallback route */}
             <Route path="*" element={<Navigate to="/" replace />} />
+
+            <Route path="/receipts" element={<ReceiptsManagement />} />
+            <Route path="/storage-units" element={<StorageUnitManagement />} />
+
         </Routes>
     );
 }
