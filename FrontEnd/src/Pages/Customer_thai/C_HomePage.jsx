@@ -108,11 +108,14 @@ const Booking = ({ isLoggedIn }) => {
         note: '',
         transportId: null,
         storageId: null,
+        operatorId: null,
+        total: '',
     });
     const [loading, setLoading] = useState(false);
     const [transportUnits, setTransportUnits] = useState([]);
     const [storageUnits, setStorageUnits] = useState([]);
-    const [dropdownOpen, setDropdownOpen] = useState({ transport: false, storage: false });
+    const [staffMembers, setStaffMembers] = useState([]);
+    const [dropdownOpen, setDropdownOpen] = useState({ transport: false, storage: false, staff: false });
     const [hoveredItem, setHoveredItem] = useState(null);
     const hoverTimeout = useRef(null);
 
@@ -122,13 +125,15 @@ const Booking = ({ isLoggedIn }) => {
 
             try {
                 const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-                const [transportRes, storageRes] = await Promise.all([
+                const [transportRes, storageRes, staffRes] = await Promise.all([
                     fetch('http://localhost:8083/api/customer/transport-units', { headers }),
-                    fetch('http://localhost:8083/api/customer/storage-units', { headers })
+                    fetch('http://localhost:8083/api/customer/storage-units', { headers }),
+                    fetch('http://localhost:8083/api/customer/operator-staff', { headers })
                 ]);
 
                 if (transportRes.ok) setTransportUnits(await transportRes.json());
                 if (storageRes.ok) setStorageUnits(await storageRes.json());
+                if (staffRes.ok) setStaffMembers(await staffRes.json());
 
             } catch (error) {
                 console.error("Lỗi khi tải tùy chọn đặt xe:", error);
@@ -147,7 +152,10 @@ const Booking = ({ isLoggedIn }) => {
     
     const handleSelect = (type, value) => {
         setBookingData(prev => ({ ...prev, [type]: value }));
-        setDropdownOpen(prev => ({ ...prev, [type === 'transportId' ? 'transport' : 'storage']: false }));
+        setDropdownOpen(prev => ({ 
+            ...prev, 
+            [type === 'transportId' ? 'transport' : type === 'storageId' ? 'storage' : 'staff']: false 
+        }));
         setHoveredItem(null);
     };
 
@@ -160,13 +168,18 @@ const Booking = ({ isLoggedIn }) => {
             return;
         }
 
+        if (!bookingData.operatorId) {
+            alert('Vui lòng chọn nhân viên hỗ trợ.');
+            return;
+        }
+
         setLoading(true);
 
-        // Chuẩn bị payload, thêm operatorId mặc định và định dạng lại ngày
+        // Chuẩn bị payload, sử dụng operatorId từ form thay vì hardcode
         const payload = {
             ...bookingData,
             deliveryDate: bookingData.deliveryDate ? `${bookingData.deliveryDate}T00:00:00` : null,
-            operatorId: 2,
+            total: bookingData.total ? parseFloat(bookingData.total) : null, // Chuyển đổi total thành số
         };
 
         try {
@@ -187,7 +200,7 @@ const Booking = ({ isLoggedIn }) => {
 
             alert('Đặt xe thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.');
             // Reset state với tên mới
-            setBookingData({ pickupLocation: '', deliveryLocation: '', deliveryDate: '', note: '', transportId: null, storageId: null });
+            setBookingData({ pickupLocation: '', deliveryLocation: '', deliveryDate: '', note: '', transportId: null, storageId: null, operatorId: null, total: '' });
             setSelectedService(null);
         } catch (err) {
             alert(err.message);
@@ -198,8 +211,14 @@ const Booking = ({ isLoggedIn }) => {
     
     // Dropdown tùy chỉnh
     const CustomSelect = ({ label, type, options, selectedId, placeholder, isRequired }) => {
-        const selectedOption = options.find(opt => opt[type === 'transport' ? 'transportId' : 'storageId'] === selectedId);
-        const displayField = type === 'transport' ? 'nameCompany' : 'name';
+        const selectedOption = options.find(opt => {
+            if (type === 'transport') return opt.transportId === selectedId;
+            if (type === 'storage') return opt.storageId === selectedId;
+            if (type === 'staff') return opt.operatorId === selectedId;
+            return false;
+        });
+        
+        const displayField = type === 'transport' ? 'nameCompany' : type === 'storage' ? 'name' : 'fullName';
 
         return (
             <div className="relative">
@@ -230,8 +249,8 @@ const Booking = ({ isLoggedIn }) => {
                             <ul className="py-1" style={{ maxHeight: '8.5rem', overflowY: 'auto' }}>
                                 {options.length > 0 ? options.map(option => (
                                     <li
-                                        key={option[type === 'transport' ? 'transportId' : 'storageId']}
-                                        onClick={() => handleSelect(type === 'transport' ? 'transportId' : 'storageId', option[type === 'transport' ? 'transportId' : 'storageId'])}
+                                        key={option[type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : 'operatorId']}
+                                        onClick={() => handleSelect(type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : 'operatorId', option[type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : 'operatorId'])}
                                         onMouseEnter={() => setHoveredItem({ type, data: option })}
                                         onMouseLeave={() => setHoveredItem(null)}
                                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800"
@@ -274,6 +293,18 @@ const Booking = ({ isLoggedIn }) => {
                     <p><strong>Địa chỉ:</strong> {data.address}</p>
                     <p><strong>SĐT:</strong> {data.phone}</p>
                     <p><strong>Trạng thái:</strong> <span className="font-semibold">{data.status}</span></p>
+                </div>
+            );
+        }
+        if (item.type === 'staff') {
+            const { data } = item;
+            image = data.img || data.image || '';
+            content = (
+                <div className="flex flex-col justify-center">
+                    <p><strong>Họ tên:</strong> {data.fullName}</p>
+                    <p><strong>Operator ID:</strong> {data.operatorId}</p>
+                    <p><strong>Email:</strong> {data.email}</p>
+                    <p><strong>SĐT:</strong> {data.phone}</p>
                 </div>
             );
         }
@@ -385,6 +416,31 @@ const Booking = ({ isLoggedIn }) => {
                                     placeholder="Không thuê kho"
                                     isRequired={false}
                                 />
+
+                                <CustomSelect
+                                    label="Chọn nhân viên hỗ trợ"
+                                    type="staff"
+                                    options={staffMembers}
+                                    selectedId={bookingData.operatorId}
+                                    placeholder="Bắt buộc chọn một nhân viên"
+                                    isRequired={true}
+                                />
+
+                                <div>
+                                    <label className="block text-gray-700 font-medium mb-2">
+                                        Tổng tiền (VNĐ)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="total"
+                                        value={bookingData.total}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Nhập tổng tiền vận chuyển"
+                                        min="0"
+                                        step="1000"
+                                    />
+                                </div>
 
                                 <div>
                                     <label className="block text-gray-700 font-medium mb-2">
