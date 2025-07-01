@@ -76,7 +76,6 @@ export default function AppRoutes() {
 
             {/* Fallback route */}
             <Route path="*" element={<Navigate to="/" replace />} />
-
             <Route path="/receipts" element={<ReceiptsManagement />} />
             <Route path="/storage-units" element={<StorageUnitManagement />} />
 

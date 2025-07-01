@@ -3,7 +3,7 @@ const API_BASE_URL = 'http://localhost:8083/api/users';
 
 class UserService {
     // Lấy tất cả users hoặc tìm kiếm theo query parameters
-    async getAllUsers(searchParams = {}) {
+    async getAllUsers(searchParams = {}, token = null) {
         try {
             const queryString = new URLSearchParams();
             
@@ -19,11 +19,13 @@ class UserService {
 
             console.log('GET Request URL:', url);
 
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             const response = await fetch(url, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
             });
 
             if (!response.ok) {
@@ -40,14 +42,16 @@ class UserService {
     }
 
     // Lấy user theo ID
-    async getUserById(id) {
+    async getUserById(id, token = null) {
         try {
             console.log('Getting user by ID:', id);
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             const response = await fetch(`${API_BASE_URL}/${id}`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
             });
 
             if (!response.ok) {
@@ -64,14 +68,16 @@ class UserService {
     }
 
     // Tạo user mới
-    async createUser(userData) {
+    async createUser(userData, token = null) {
         try {
             console.log('Creating user with data:', userData);
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             const response = await fetch(API_BASE_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify(userData),
             });
 
@@ -91,14 +97,16 @@ class UserService {
     }
 
     // Cập nhật user
-    async updateUser(id, userData) {
+    async updateUser(id, userData, token = null) {
         try {
             console.log('Updating user ID:', id, 'with data:', userData);
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             const response = await fetch(`${API_BASE_URL}/${id}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify(userData),
             });
 
@@ -120,14 +128,16 @@ class UserService {
     }
 
     // Xóa user
-    async deleteUser(id) {
+    async deleteUser(id, token = null) {
         try {
             console.log('Deleting user ID:', id);
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             const response = await fetch(`${API_BASE_URL}/${id}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
             });
 
             console.log('Delete response status:', response.status);
@@ -146,14 +156,16 @@ class UserService {
     }
 
     // Thay đổi status user (block/unblock)
-    async changeUserStatus(id) {
+    async changeUserStatus(id, token = null) {
         try {
             console.log('Changing status for user ID:', id);
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             const response = await fetch(`${API_BASE_URL}/${id}/status`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
             });
 
             console.log('Change status response status:', response.status);
@@ -172,8 +184,8 @@ class UserService {
     }
 
     // Tìm kiếm nâng cao
-    async advancedSearch(searchParams) {
-        return this.getAllUsers(searchParams);
+    async advancedSearch(searchParams, token = null) {
+        return this.getAllUsers(searchParams, token);
     }
 }
 
