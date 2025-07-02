@@ -21,6 +21,7 @@ import ManageRevenue from '../Pages/ManageRevenue_trung/managerevenue.jsx';
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
+import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
 
 // --- Transport Unit Pages ---
 import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.jsx';
@@ -60,7 +61,7 @@ export default function AppRoutes() {
             <Route path="/manager-dashboard" element={<ManagerDashboard />} />
             <Route path="/managerstaff" element={<StaffManagement />} />
             <Route path="/promotions" element={<PromotionManagement />} />
-
+                <Route path="/staffperformance" element={<StaffPerformance />} />
             {/* Transport Unit */}
             <Route path="/transport-units" element={<TransportLayout />}>
                 <Route index element={<TransportUnitManagement />} />
