@@ -350,6 +350,7 @@ const refreshAuthToken = useCallback(async () => {
 
 // 7. Thêm interceptor để tự động handle 401 errors
 useEffect(() => {
+  fetchInitialData();
   const responseInterceptor = axios.interceptors.response.use(
     (response) => response,
     async (error) => {
