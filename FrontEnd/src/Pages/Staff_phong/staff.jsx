@@ -1,6 +1,7 @@
 "use client"
 import RequireAuth from "../../Components/RequireAuth";
 import { useState, useRef, useEffect } from "react"
+import { NavLink } from "react-router-dom";
 import {
     Truck,
     Home,
@@ -370,12 +371,16 @@ const Staff = () => {
                                                     <p className="text-sm text-gray-500 leading-tight">Nhân viên</p>
                                                 </div>
                                             </div>
-                                            <button
-                                                className="w-full px-4 py-2 rounded-lg bg-blue-50 text-blue-600 font-semibold hover:bg-blue-100 transition mt-2"
-                                                onClick={() => { setCurrentPage('main'); navigate('/profile') }}
+                                            <NavLink
+                                                to="/profile/main"
+                                                className={({ isActive }) =>
+                                                    `w-full block text-center px-4 py-2 rounded-lg font-semibold transition mt-2 ${
+                                                        isActive ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                                                    }`
+                                                }
                                             >
-                                                Xem thông tin cá nhân
-                                            </button>
+                                                Thông tin cá nhân
+                                            </NavLink>
                                             <button
                                                 className="w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition"
                                                 onClick={handleLogout}

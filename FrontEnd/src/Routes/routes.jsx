@@ -16,6 +16,8 @@ import Dashboard from '../Pages/Staff_phong/DashBoard.jsx';
 import ManageOrder from '../Pages/ManageOrder_phong/manageorder.jsx';
 import ManageUser from '../Pages/ManageUser_trung/manageuser.jsx';
 import ManageRevenue from '../Pages/ManageRevenue_trung/managerevenue.jsx';
+import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
+
 
 // --- Manager Pages ---
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
@@ -49,6 +51,8 @@ export default function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/dashboard" element={<Dashboard />} />
+        
+            <Route path="/profile/main" element={<ProfileMainPage />} />
 
             {/* Management */}
             <Route path="/manageorder" element={<ManageOrder />} />
@@ -78,6 +82,7 @@ export default function AppRoutes() {
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/receipts" element={<ReceiptsManagement />} />
             <Route path="/storage-units" element={<StorageUnitManagement />} />
+
 
         </Routes>
     );
