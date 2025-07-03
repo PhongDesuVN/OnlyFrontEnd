@@ -23,6 +23,7 @@ import {
     CheckCircle,
     XCircle
 } from 'lucide-react';
+import NotificationBell from '../../components/NotificationBell';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -705,6 +706,13 @@ const C_CustomerInfo = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <style jsx>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+            `}</style>
             {/* Header */}
             <header className="bg-white shadow-sm border-b">
                 <div className="flex items-center justify-between px-6 py-4">
@@ -720,13 +728,16 @@ const C_CustomerInfo = () => {
                             <h1 className="text-xl font-bold text-gray-800">Thông Tin Khách Hàng</h1>
                         </div>
                     </div>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center space-x-2 px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"
-                    >
-                        <LogOut className="w-4 h-4" />
-                        <span>Đăng Xuất</span>
-                    </button>
+                    <div className="flex items-center space-x-3">
+                        <NotificationBell />
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center space-x-2 px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            <span>Đăng Xuất</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 

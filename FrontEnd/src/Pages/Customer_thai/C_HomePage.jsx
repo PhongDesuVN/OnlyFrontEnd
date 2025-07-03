@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import NotificationBell from '../../components/NotificationBell';
 
 const Header = ({ isLoggedIn, handleLogout }) => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -36,11 +37,6 @@ const Header = ({ isLoggedIn, handleLogout }) => {
                                         Đăng Nhập
                                     </button>
                                 </Link>
-                                {/* <Link to="/c_register">
-                                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
-                                        Đăng Ký
-                                    </button>
-                                </Link> */}
                             </>
                         )}
                         {isLoggedIn && (
@@ -58,7 +54,13 @@ const Header = ({ isLoggedIn, handleLogout }) => {
                     </div>
                 </div>
             </div>
+            {isLoggedIn && (
+                <div className="absolute top-1/2 right-4 transform -translate-y-1/2" style={{ right: '40px' }}>
+                    <NotificationBell />
+                </div>
+            )}
         </header>
+
     );
 };
 
@@ -1196,6 +1198,12 @@ const C_HomePage = () => {
         .animate-fade-in { animation: fade-in 1s ease-out; }
         .animate-fade-in-delay { animation: fade-in 1s ease-out 0.3s both; }
         .animate-fade-in-delay-2 { animation: fade-in 1s ease-out 0.6s both; }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
       `}</style>
             <Header isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
             <Hero />
