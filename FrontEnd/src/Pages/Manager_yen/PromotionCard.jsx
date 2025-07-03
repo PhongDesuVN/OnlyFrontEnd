@@ -12,7 +12,8 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
         name: promo.name || "",
         description: promo.description || "",
         startDate: new Date(promo.startDate).toISOString().split("T")[0],
-        endDate: new Date(promo.endDate).toISOString().split("T")[0]
+        endDate: new Date(promo.endDate).toISOString().split("T")[0],
+        status: promo.status || "Active" // Added status to editedPromo
     })
 
     const getStatusColor = (status) => {
@@ -49,7 +50,7 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                 <span>{new Date(promo.startDate).toLocaleDateString()} - {new Date(promo.endDate).toLocaleDateString()}</span>
             </div>
             <div className="w-1/5">
-                <span className="break-words">{promo.description || "Chưa có mô tả"}</span> {/* Loại bỏ truncate, dùng break-words */}
+                <span className="break-words">{promo.description || "Chưa có mô tả"}</span>
             </div>
             <div className={`w-1/5 flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(promo.status)}`}>
                 {getStatusIcon(promo.status)} {promo.status}
@@ -117,6 +118,20 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                     onChange={(e) => setEditedPromo({ ...editedPromo, description: e.target.value })}
                                     className="mt-1 p-2 w-full border rounded"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                                <select
+                                    value={editedPromo.status}
+                                    onChange={(e) => setEditedPromo({ ...editedPromo, status: e.target.value })}
+                                    className="mt-1 p-2 w-full border rounded"
+                                >
+                                    <option value="Active">Active</option>
+                                    <option value="Expired">Expired</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Sắp bắt đầu">Sắp bắt đầu</option>
+                                </select>
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-4">

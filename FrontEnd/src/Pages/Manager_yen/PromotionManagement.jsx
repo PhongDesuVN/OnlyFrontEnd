@@ -53,44 +53,92 @@ const LeftMenu = ({ onLogout }) => {
 
 const PromotionManager = () => {
     const [promotions, setPromotions] = useState([])
+    const [allPromotions, setAllPromotions] = useState([]) // Lưu toàn bộ danh sách để lọc client-side
     const [loading, setLoading] = useState(false)
     const [keyword, setKeyword] = useState("")
+    const [status, setStatus] = useState("")
     const [dialog, setDialog] = useState({ open: false, type: "", promo: null, data: null })
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-    const [newPromotion, setNewPromotion] = useState({ name: "", startDate: "", endDate: "", description: "" })
+    const [newPromotion, setNewPromotion] = useState({ name: "", startDate: "", endDate: "", description: "", status: "Active" })
     const [filtered, setFiltered] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
     const itemsPerPage = 6
 
+    // Lấy toàn bộ danh sách khi tải trang
     useEffect(() => {
-        fetchPromotions()
+        fetchAllPromotions()
     }, [])
 
     const handleLogout = () => {
         Cookies.remove("authToken")
-        window.location.replace("/login") // Sử dụng replace để tránh giữ lịch sử
+        window.location.replace("/login")
     }
 
-    const fetchPromotions = async () => {
+    // Hàm lấy toàn bộ danh sách
+    const fetchAllPromotions = async () => {
         setLoading(true)
         try {
-            const response = await axios.get("/api/promotions", { params: { keyword } })
-            const data = Array.isArray(response.data) ? response.data : response.data.content || []
-            data.forEach(promo => console.log("Promo item:", promo))
+            const response = await axios.get("/api/promotions")
+            const data = Array.isArray(response.data) ? response.data : (response.data.content || [])
+            console.log("Dữ liệu toàn bộ từ API:", data)
             setPromotions(data)
-            setFiltered(!!keyword.trim())
+            setAllPromotions(data) // Lưu toàn bộ để dùng cho lọc client-side
         } catch (error) {
-            console.error("Lỗi tải dữ liệu:", error)
-            alert("❌ Không thể tải danh sách khuyến mãi")
+            console.error("Lỗi tải dữ liệu toàn bộ:", error.response ? error.response.data : error.message)
+            alert("❌ Không thể tải danh sách khuyến mãi. Vui lòng kiểm tra kết nối hoặc backend.")
             setPromotions([])
+            setAllPromotions([])
         } finally {
             setLoading(false)
         }
     }
 
+    // Hàm áp dụng bộ lọc
+    const fetchPromotions = async () => {
+        setLoading(true)
+        try {
+            console.log("Gửi request với params:", { keyword, status })
+            const response = await axios.get("/api/promotions", {
+                params: { keyword: keyword.trim() || undefined, status: status.trim() || undefined }
+            })
+            let data = Array.isArray(response.data) ? response.data : (response.data.content || [])
+            console.log("Dữ liệu từ server sau khi lọc:", data)
+
+            if (data.length === 0 && (keyword.trim() || status.trim())) {
+                console.log("Không có kết quả từ server, áp dụng lọc client-side");
+                data = allPromotions.filter(promo =>
+                    (!keyword.trim() || promo.name.toLowerCase().includes(keyword.trim().toLowerCase())) &&
+                    (!status.trim() || promo.status === status.trim())
+                );
+            }
+
+            console.log("Dữ liệu sau khi lọc (server hoặc client):", data)
+            setPromotions(data)
+            setFiltered(!!keyword.trim() || !!status.trim())
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu khi lọc:", error.response ? error.response.data : error.message)
+            alert(`❌ Lỗi khi lọc danh sách: ${error.response?.data?.message || error.message}. Sử dụng lọc client-side thay thế.`)
+            const filteredData = allPromotions.filter(promo =>
+                (!keyword.trim() || promo.name.toLowerCase().includes(keyword.trim().toLowerCase())) &&
+                (!status.trim() || promo.status === status.trim())
+            );
+            console.log("Dữ liệu lọc client-side:", filteredData)
+            setPromotions(filteredData)
+            setFiltered(!!keyword.trim() || !!status.trim())
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Hàm xóa lọc và quay lại danh sách toàn bộ
     const resetFilter = async () => {
-        setKeyword("")
-        await fetchPromotions()
+        setLoading(true) // Bắt đầu loading để tạo hiệu ứng mượt mà
+        setKeyword("") // Reset ngay lập tức để UI phản hồi nhanh
+        setStatus("")
+        setFiltered(false)
+        setCurrentPage(1)
+        await fetchAllPromotions() // Tải lại toàn bộ danh sách
+        setLoading(false) // Kết thúc loading
     }
 
     const openConfirm = (promo, type, data = null) => {
@@ -108,7 +156,8 @@ const PromotionManager = () => {
                     name: data.name,
                     description: data.description,
                     startDate: data.startDate,
-                    endDate: data.endDate
+                    endDate: data.endDate,
+                    status: data.status
                 })
             } else if (type === "cancel") {
                 response = await axios.post("/api/promotions/cancel", { id: promo })
@@ -118,7 +167,7 @@ const PromotionManager = () => {
                     description: data.description
                 })
             }
-            await fetchPromotions()
+            await fetchAllPromotions() // Sau khi cập nhật, tải lại toàn bộ danh sách
             alert("✅ Thao tác thành công")
         } catch (error) {
             console.error("Lỗi cập nhật:", error.response?.data || error.message)
@@ -129,7 +178,7 @@ const PromotionManager = () => {
     }
 
     const handleAddPromotion = async () => {
-        if (!newPromotion.name || !newPromotion.startDate || !newPromotion.endDate) {
+        if (!newPromotion.name || !newPromotion.startDate || !newPromotion.endDate || !newPromotion.status) {
             alert("Vui lòng điền đầy đủ thông tin!")
             return
         }
@@ -144,11 +193,12 @@ const PromotionManager = () => {
                 name: newPromotion.name,
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
-                description: newPromotion.description
+                description: newPromotion.description,
+                status: newPromotion.status
             })
-            await fetchPromotions()
+            await fetchAllPromotions() // Sau khi thêm, tải lại toàn bộ danh sách
             setIsAddModalOpen(false)
-            setNewPromotion({ name: "", startDate: "", endDate: "", description: "" })
+            setNewPromotion({ name: "", startDate: "", endDate: "", description: "", status: "Active" })
             alert("✅ Thêm khuyến mãi thành công")
         } catch (error) {
             console.error("Lỗi thêm khuyến mãi:", error)
@@ -156,19 +206,17 @@ const PromotionManager = () => {
         }
     }
 
-    // Phân trang nâng cao
     const indexOfLastItem = currentPage * itemsPerPage
     const indexOfFirstItem = indexOfLastItem - itemsPerPage
     const currentPromotions = promotions.slice(indexOfFirstItem, indexOfLastItem)
     const totalPages = Math.ceil(promotions.length / itemsPerPage)
-    const maxPageButtons = 5
     const getPageNumbers = () => {
         const pages = []
-        let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2))
-        let endPage = Math.min(totalPages, startPage + maxPageButtons - 1)
+        let startPage = Math.max(1, currentPage - Math.floor(5 / 2))
+        let endPage = Math.min(totalPages, startPage + 5 - 1)
 
-        if (endPage - startPage < maxPageButtons - 1) {
-            startPage = Math.max(1, endPage - maxPageButtons + 1)
+        if (endPage - startPage < 5 - 1) {
+            startPage = Math.max(1, endPage - 5 + 1)
         }
 
         for (let i = startPage; i <= endPage; i++) {
@@ -199,6 +247,18 @@ const PromotionManager = () => {
                                 />
                                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-600 w-5 h-5 transition-transform duration-300 hover:scale-110" />
                             </div>
+                            <select
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value)}
+                                className="px-5 py-3 bg-white/50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all duration-300 ease-in-out text-gray-800"
+                            >
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Active">Active</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Sắp bắt đầu">Sắp bắt đầu</option>
+                            </select>
                             <button
                                 onClick={fetchPromotions}
                                 className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-lg hover:from-indigo-800 hover:to-purple-800 transition-all duration-300 shadow-md hover:shadow-lg"
@@ -209,15 +269,15 @@ const PromotionManager = () => {
                                 <>
                                     <button
                                         onClick={resetFilter}
-                                        className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-lg hover:from-indigo-800 hover:to-purple-800 transition-all duration-300 shadow-md"
+                                        className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-lg hover:from-indigo-800 hover:to-purple-800 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
                                     >
-                                        Xóa lọc
+                                        <X className="w-5 h-5" /> Xóa lọc
                                     </button>
                                     <button
                                         onClick={resetFilter}
-                                        className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-lg hover:from-indigo-800 hover:to-purple-800 transition-all duration-300 shadow-md"
+                                        className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-lg hover:from-indigo-800 hover:to-purple-800 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
                                     >
-                                        <ArrowLeft className="w-5 h-5 mr-2 inline" /> Quay lại
+                                        <ArrowLeft className="w-5 h-5" /> Quay lại
                                     </button>
                                 </>
                             )}
@@ -232,6 +292,10 @@ const PromotionManager = () => {
                             <div className="flex justify-center items-center py-12">
                                 <div className="animate-spin rounded-full h-12 w-12 border-t-3 border-b-3 border-indigo-600"></div>
                             </div>
+                        ) : promotions.length === 0 ? (
+                            <div className="text-center text-gray-600 py-12">
+                                Không có khuyến mãi nào để hiển thị. Vui lòng thêm khuyến mãi hoặc kiểm tra bộ lọc.
+                            </div>
                         ) : (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-5 gap-4 p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm rounded-t-xl shadow-md">
@@ -245,7 +309,7 @@ const PromotionManager = () => {
                                     {currentPromotions.map(promo => (
                                         <div
                                             key={promo.id}
-                                            className="bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                                            className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                                         >
                                             <PromotionCard
                                                 promo={promo}
@@ -346,6 +410,20 @@ const PromotionManager = () => {
                                     onChange={(e) => setNewPromotion({ ...newPromotion, description: e.target.value })}
                                     className="mt-1 p-2 w-full border rounded"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                                <select
+                                    value={newPromotion.status}
+                                    onChange={(e) => setNewPromotion({ ...newPromotion, status: e.target.value })}
+                                    className="mt-1 p-2 w-full border rounded"
+                                >
+                                    <option value="Active">Active</option>
+                                    <option value="Expired">Expired</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Sắp bắt đầu">Sắp bắt đầu</option>
+                                </select>
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-4">
