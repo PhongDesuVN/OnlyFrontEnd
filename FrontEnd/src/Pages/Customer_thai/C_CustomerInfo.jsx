@@ -23,6 +23,19 @@ import {
     CheckCircle,
     XCircle
 } from 'lucide-react';
+import { Bar, Pie } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Title
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
 const C_CustomerInfo = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -52,6 +65,15 @@ const C_CustomerInfo = () => {
     });
     const [forceUpdate, setForceUpdate] = useState(0);
     const intervalRef = useRef();
+    const [filter, setFilter] = useState({
+        from: '',
+        to: '',
+        exclude: {
+            COMPLETED: false,
+            CANCELLED: false,
+            PENDING: false
+        }
+    });
 
     useEffect(() => {
         fetchCustomerData();
@@ -246,9 +268,121 @@ const C_CustomerInfo = () => {
         }
     };
 
+    const getCustomerLevel = (totalOrders) => {
+        if (totalOrders >= 20) return { level: 'VIP', color: 'text-purple-600', bgColor: 'bg-purple-100' };
+        if (totalOrders >= 10) return { level: 'Thân thiết', color: 'text-orange-600', bgColor: 'bg-orange-100' };
+        if (totalOrders >= 5) return { level: 'Thành viên', color: 'text-blue-600', bgColor: 'bg-blue-100' };
+        return { level: 'Khách hàng', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+    };
+
+    const getBarChartData = () => {
+        // Group by date (yyyy-mm-dd) and sum totalAmount
+        const dateMap = {};
+        orderHistory.forEach(order => {
+            const date = new Date(order.createdAt).toLocaleDateString('vi-VN');
+            if (!dateMap[date]) dateMap[date] = 0;
+            dateMap[date] += order.totalAmount || 0;
+        });
+        const labels = Object.keys(dateMap);
+        const data = Object.values(dateMap);
+        return {
+            labels,
+            datasets: [
+                {
+                    label: 'Tổng chi tiêu (VNĐ)',
+                    data,
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1,
+                },
+            ],
+        };
+    };
+
+    const getPieChartData = () => {
+        return {
+            labels: ['Hoàn thành', 'Đang xử lý', 'Đã hủy'],
+            datasets: [
+                {
+                    data: [
+                        customerStats.completedOrders,
+                        customerStats.pendingOrders,
+                        customerStats.cancelledOrders
+                    ],
+                    backgroundColor: [
+                        'rgba(34,197,94,0.7)', // green
+                        'rgba(253,224,71,0.7)', // yellow
+                        'rgba(239,68,68,0.7)' // red
+                    ],
+                    borderColor: [
+                        'rgba(34,197,94,1)',
+                        'rgba(253,224,71,1)',
+                        'rgba(239,68,68,1)'
+                    ],
+                    borderWidth: 1,
+                },
+            ],
+        };
+    };
+
+    const handleFilterChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        if (name in filter.exclude) {
+            setFilter(prev => ({
+                ...prev,
+                exclude: { ...prev.exclude, [name]: checked }
+            }));
+        } else {
+            setFilter(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const filteredOrderHistory = orderHistory.filter(order => {
+        // Lọc theo ngày
+        let passDate = true;
+        if (filter.from) {
+            passDate = passDate && new Date(order.createdAt) >= new Date(filter.from);
+        }
+        if (filter.to) {
+            passDate = passDate && new Date(order.createdAt) <= new Date(filter.to);
+        }
+        // Lọc loại trừ trạng thái
+        let passStatus = true;
+        if (filter.exclude.COMPLETED && order.status === 'COMPLETED') passStatus = false;
+        if (filter.exclude.CANCELLED && order.status === 'CANCELLED') passStatus = false;
+        if (filter.exclude.PENDING && order.status === 'PENDING') passStatus = false;
+        return passDate && passStatus;
+    });
+
     const renderDashboard = () => (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Thống Kê Khách Hàng</h2>
+            {/* Charts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 flex flex-col items-center">
+                    <h4 className="text-lg font-semibold mb-2">Tổng chi tiêu theo thời gian</h4>
+                    <Bar data={getBarChartData()} options={{
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: false },
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }} height={220} />
+                </div>
+                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 flex flex-col items-center">
+                    <h4 className="text-lg font-semibold mb-2">Tỉ lệ trạng thái đơn hàng</h4>
+                    <Pie data={getPieChartData()} options={{
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            title: { display: false },
+                        },
+                    }} height={220} />
+                </div>
+            </div>
             
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -353,13 +487,38 @@ const C_CustomerInfo = () => {
     const renderOrderHistory = () => (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Lịch Sử Đơn Hàng</h2>
+            {/* Bộ lọc */}
+            <div className="flex flex-wrap gap-4 items-end mb-4 bg-white p-4 rounded-lg shadow border border-gray-200">
+                <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-1">Từ ngày</label>
+                    <input type="date" name="from" value={filter.from} onChange={handleFilterChange} className="px-3 py-2 border border-gray-300 rounded-lg" />
+                </div>
+                <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-1">Đến ngày</label>
+                    <input type="date" name="to" value={filter.to} onChange={handleFilterChange} className="px-3 py-2 border border-gray-300 rounded-lg" />
+                </div>
+                <div className="flex items-center gap-3 ml-4">
+                    <label className="flex items-center gap-1">
+                        <input type="checkbox" name="COMPLETED" checked={filter.exclude.COMPLETED} onChange={handleFilterChange} className="accent-red-500" />
+                        Loại trừ Đặt
+                    </label>
+                    <label className="flex items-center gap-1">
+                        <input type="checkbox" name="CANCELLED" checked={filter.exclude.CANCELLED} onChange={handleFilterChange} className="accent-red-500" />
+                        Loại trừ Hủy
+                    </label>
+                    <label className="flex items-center gap-1">
+                        <input type="checkbox" name="PENDING" checked={filter.exclude.PENDING} onChange={handleFilterChange} className="accent-red-500" />
+                        Loại trừ Chờ giao hàng
+                    </label>
+                </div>
+            </div>
             {loading ? (
                 <div className="text-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                     <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
                 </div>
-            ) : orderHistory.length > 0 ? (
-                orderHistory.map((order) => {
+            ) : filteredOrderHistory.length > 0 ? (
+                [...filteredOrderHistory].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((order) => {
                     // Tính toán thời gian còn lại để xóa
                     const createdAt = new Date(order.createdAt).getTime();
                     const now = Date.now();
@@ -472,7 +631,7 @@ const C_CustomerInfo = () => {
                         </div>
                         <div>
                             <h3 className="text-xl font-semibold text-gray-800">{userInfo.name}</h3>
-                            <p className="text-gray-600">Khách hàng</p>
+
                         </div>
                     </div>
 
@@ -573,7 +732,7 @@ const C_CustomerInfo = () => {
 
             <div className="flex">
                 {/* Sidebar - 1/5 of screen */}
-                <div className="w-1/5 bg-white shadow-lg min-h-screen">
+                <div className="w-1/5 min-h-screen bg-gradient-to-b from-blue-500 to-purple-600 shadow-lg">
                     <div className="p-6">
                         {/* User Info */}
                         <div className="text-center mb-8">
@@ -585,7 +744,16 @@ const C_CustomerInfo = () => {
                                 )}
                             </div>
                             <h3 className="text-lg font-semibold text-gray-800">{userInfo.name}</h3>
-                            <p className="text-gray-600 text-sm">Khách hàng</p>
+                            <div className="flex justify-center">
+                                {(() => {
+                                    const customerLevel = getCustomerLevel(customerStats.totalOrders);
+                                    return (
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${customerLevel.bgColor} ${customerLevel.color}`}>
+                                            {customerLevel.level}
+                                        </span>
+                                    );
+                                })()}
+                            </div>
                         </div>
 
                         {/* Navigation Tabs */}
@@ -593,48 +761,45 @@ const C_CustomerInfo = () => {
                             <button
                                 onClick={() => setActiveTab('dashboard')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                                    activeTab === 'dashboard' 
-                                        ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600' 
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    activeTab === 'dashboard'
+                                        ? 'bg-yellow-100 text-yellow-700 border-l-4 border-yellow-400 font-semibold'
+                                        : 'text-white hover:bg-white/10'
                                 }`}
                             >
-                                <BarChart3 className="w-5 h-5" />
+                                <BarChart3 className={`w-5 h-5 ${activeTab === 'dashboard' ? 'text-yellow-500' : 'text-white'}`} />
                                 <span>Thống kê</span>
                             </button>
-                            
                             <button
                                 onClick={() => setActiveTab('history')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                                    activeTab === 'history' 
-                                        ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600' 
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    activeTab === 'history'
+                                        ? 'bg-yellow-100 text-yellow-700 border-l-4 border-yellow-400 font-semibold'
+                                        : 'text-white hover:bg-white/10'
                                 }`}
                             >
-                                <History className="w-5 h-5" />
+                                <History className={`w-5 h-5 ${activeTab === 'history' ? 'text-yellow-500' : 'text-white'}`} />
                                 <span>Lịch sử đơn hàng</span>
                             </button>
-                            
                             <button
                                 onClick={() => setActiveTab('edit')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                                    activeTab === 'edit' 
-                                        ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600' 
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    activeTab === 'edit'
+                                        ? 'bg-yellow-100 text-yellow-700 border-l-4 border-yellow-400 font-semibold'
+                                        : 'text-white hover:bg-white/10'
                                 }`}
                             >
-                                <Edit className="w-5 h-5" />
+                                <Edit className={`w-5 h-5 ${activeTab === 'edit' ? 'text-yellow-500' : 'text-white'}`} />
                                 <span>Chỉnh sửa thông tin</span>
                             </button>
-                            
                             <button
                                 onClick={() => setActiveTab('complaints')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
-                                    activeTab === 'complaints' 
-                                        ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600' 
-                                        : 'text-gray-600 hover:bg-gray-100'
+                                    activeTab === 'complaints'
+                                        ? 'bg-yellow-100 text-yellow-700 border-l-4 border-yellow-400 font-semibold'
+                                        : 'text-white hover:bg-white/10'
                                 }`}
                             >
-                                <MessageSquare className="w-5 h-5" />
+                                <MessageSquare className={`w-5 h-5 ${activeTab === 'complaints' ? 'text-yellow-500' : 'text-white'}`} />
                                 <span>Khiếu nại</span>
                             </button>
                         </nav>
@@ -894,7 +1059,7 @@ const BookingHistory = () => {
                     </div>
                 ) : (
                     <div className="grid gap-6 max-w-4xl mx-auto">
-                        {bookings.map((booking) => {
+                        {[...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((booking) => {
                             const bookingFeedbacks = feedbacks[booking.bookingId] || [];
                             const hasFeedback = bookingFeedbacks.length > 0;
                             return (

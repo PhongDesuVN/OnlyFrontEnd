@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {Mail, MapPin, Phone, Star, Truck, Home, Users, Shield, CheckCircle, Calendar, Package, MapPinIcon} from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 const Header = ({ isLoggedIn, handleLogout }) => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -109,15 +112,27 @@ const Booking = ({ isLoggedIn }) => {
         transportId: null,
         storageId: null,
         operatorId: null,
-        total: '',
+        promotionId: null,
+        itemCounts: {
+            small: 0,
+            medium: 0,
+            large: 0,
+            extraLarge: 0
+        },
+        total: 0,
+        distance: 0
     });
     const [loading, setLoading] = useState(false);
     const [transportUnits, setTransportUnits] = useState([]);
     const [storageUnits, setStorageUnits] = useState([]);
     const [staffMembers, setStaffMembers] = useState([]);
-    const [dropdownOpen, setDropdownOpen] = useState({ transport: false, storage: false, staff: false });
-    const [hoveredItem, setHoveredItem] = useState(null);
-    const hoverTimeout = useRef(null);
+        const [promotions, setPromotions] = useState([]);
+        const [dropdownOpen, setDropdownOpen] = useState({ transport: false, storage: false, staff: false, promotion: false });
+    const [mapData, setMapData] = useState({
+        pickupCoords: null,
+        deliveryCoords: null,
+        route: []
+    });
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -125,15 +140,17 @@ const Booking = ({ isLoggedIn }) => {
 
             try {
                 const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-                const [transportRes, storageRes, staffRes] = await Promise.all([
+                const [transportRes, storageRes, staffRes, promoRes] = await Promise.all([
                     fetch('http://localhost:8083/api/customer/transport-units', { headers }),
                     fetch('http://localhost:8083/api/customer/storage-units', { headers }),
-                    fetch('http://localhost:8083/api/customer/operator-staff', { headers })
+                    fetch('http://localhost:8083/api/customer/operator-staff', { headers }),
+                    fetch('http://localhost:8083/api/customer/promotions', { headers })
                 ]);
 
                 if (transportRes.ok) setTransportUnits(await transportRes.json());
                 if (storageRes.ok) setStorageUnits(await storageRes.json());
                 if (staffRes.ok) setStaffMembers(await staffRes.json());
+                if (promoRes.ok) setPromotions(await promoRes.json());
 
             } catch (error) {
                 console.error("Lỗi khi tải tùy chọn đặt xe:", error);
@@ -144,20 +161,153 @@ const Booking = ({ isLoggedIn }) => {
     }, [isLoggedIn, selectedService]);
 
     const handleInputChange = (e) => {
-        setBookingData({
-            ...bookingData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+        if (name.startsWith('item_')) {
+            const itemType = name.replace('item_', '');
+            setBookingData(prev => ({
+                ...prev,
+                itemCounts: {
+                    ...prev.itemCounts,
+                    [itemType]: parseInt(value) || 0
+                }
+            }));
+        } else {
+            setBookingData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
     
     const handleSelect = (type, value) => {
         setBookingData(prev => ({ ...prev, [type]: value }));
         setDropdownOpen(prev => ({ 
             ...prev, 
-            [type === 'transportId' ? 'transport' : type === 'storageId' ? 'storage' : 'staff']: false 
+            [type === 'transportId' ? 'transport' : type === 'storageId' ? 'storage' : type === 'operatorId' ? 'staff' : type === 'promotionId' ? 'promotion' : type]: false 
         }));
-        setHoveredItem(null);
     };
+
+    // Hàm tính toán tổng tiền dựa trên số lượng hàng hóa và quãng đường
+    const calculateTotal = async (pickupLocation, deliveryLocation, itemCounts) => {
+        try {
+            // Bước 1: Geocoding - chuyển địa chỉ thành tọa độ
+            const pickupCoords = await geocodeAddress(pickupLocation);
+            const deliveryCoords = await geocodeAddress(deliveryLocation);
+            
+            if (!pickupCoords || !deliveryCoords) {
+                throw new Error('Không thể xác định tọa độ địa chỉ');
+            }
+            
+            // Bước 2: Tính quãng đường bằng OSRM
+            const distance = await calculateDistance(pickupCoords, deliveryCoords);
+            
+            // Bước 3: Tính tổng tiền
+            const itemCost = (itemCounts.small * 50000) + 
+                           (itemCounts.medium * 100000) + 
+                           (itemCounts.large * 200000) + 
+                           (itemCounts.extraLarge * 400000);
+            const distanceCost = distance * 15000;
+            const total = itemCost + distanceCost;
+            
+            return { total, distance };
+        } catch (error) {
+            console.error('Lỗi tính toán:', error);
+            throw error;
+        }
+    };
+
+    // Hàm geocoding sử dụng OpenStreetMap Nominatim
+    const geocodeAddress = async (address) => {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+            );
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                return {
+                    lat: parseFloat(data[0].lat),
+                    lon: parseFloat(data[0].lon)
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error('Lỗi geocoding:', error);
+            return null;
+        }
+    };
+
+    // Hàm tính quãng đường sử dụng OSRM
+    const calculateDistance = async (pickup, delivery) => {
+        try {
+            const response = await fetch(
+                `http://router.project-osrm.org/route/v1/driving/${pickup.lon},${pickup.lat};${delivery.lon},${delivery.lat}?overview=false`
+            );
+            const data = await response.json();
+            
+            if (data && data.routes && data.routes.length > 0) {
+                // Chuyển đổi từ mét sang km
+                return data.routes[0].distance / 1000;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Lỗi tính quãng đường:', error);
+            return 0;
+        }
+    };
+
+    // Hàm tính toán tự động khi thay đổi địa chỉ hoặc số lượng hàng hóa
+    const updateTotal = async () => {
+        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+            try {
+                const { total, distance } = await calculateTotal(
+                    bookingData.pickupLocation,
+                    bookingData.deliveryLocation,
+                    bookingData.itemCounts
+                );
+                setBookingData(prev => ({
+                    ...prev,
+                    total,
+                    distance
+                }));
+            } catch (error) {
+                console.error('Lỗi cập nhật tổng tiền:', error);
+            }
+        }
+    };
+
+    // Theo dõi thay đổi để tính toán lại tổng tiền
+    useEffect(() => {
+        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+            const timeoutId = setTimeout(updateTotal, 1000); // Delay 1 giây để tránh gọi API quá nhiều
+            return () => clearTimeout(timeoutId);
+        }
+    }, [bookingData.pickupLocation, bookingData.deliveryLocation, bookingData.itemCounts]);
+
+    // Cập nhật mapData khi địa chỉ thay đổi
+    useEffect(() => {
+        const updateMap = async () => {
+            if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+                const pickup = await geocodeAddress(bookingData.pickupLocation);
+                const delivery = await geocodeAddress(bookingData.deliveryLocation);
+                let route = [];
+                if (pickup && delivery) {
+                    // Lấy route từ OSRM
+                    try {
+                        const res = await fetch(`http://router.project-osrm.org/route/v1/driving/${pickup.lon},${pickup.lat};${delivery.lon},${delivery.lat}?overview=full&geometries=geojson`);
+                        const data = await res.json();
+                        if (data && data.routes && data.routes[0]) {
+                            route = data.routes[0].geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+                        }
+                    } catch (e) { route = []; }
+                }
+                setMapData({ pickupCoords: pickup, deliveryCoords: delivery, route });
+            } else {
+                setMapData({ pickupCoords: null, deliveryCoords: null, route: [] });
+            }
+        };
+        updateMap();
+    }, [bookingData.pickupLocation, bookingData.deliveryLocation]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -179,7 +329,8 @@ const Booking = ({ isLoggedIn }) => {
         const payload = {
             ...bookingData,
             deliveryDate: bookingData.deliveryDate ? `${bookingData.deliveryDate}T00:00:00` : null,
-            total: bookingData.total ? parseFloat(bookingData.total) : null, // Chuyển đổi total thành số
+            total: bookingData.total || 0,
+            distance: bookingData.distance || 0
         };
 
         try {
@@ -200,7 +351,19 @@ const Booking = ({ isLoggedIn }) => {
 
             alert('Đặt xe thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.');
             // Reset state với tên mới
-            setBookingData({ pickupLocation: '', deliveryLocation: '', deliveryDate: '', note: '', transportId: null, storageId: null, operatorId: null, total: '' });
+            setBookingData({ 
+                pickupLocation: '', 
+                deliveryLocation: '', 
+                deliveryDate: '', 
+                note: '', 
+                transportId: null, 
+                storageId: null, 
+                operatorId: null, 
+                promotionId: null,
+                itemCounts: { small: 0, medium: 0, large: 0, extraLarge: 0 },
+                total: 0,
+                distance: 0
+            });
             setSelectedService(null);
         } catch (err) {
             alert(err.message);
@@ -215,11 +378,10 @@ const Booking = ({ isLoggedIn }) => {
             if (type === 'transport') return opt.transportId === selectedId;
             if (type === 'storage') return opt.storageId === selectedId;
             if (type === 'staff') return opt.operatorId === selectedId;
+            if (type === 'promotion') return opt.id === selectedId;
             return false;
         });
-        
-        const displayField = type === 'transport' ? 'nameCompany' : type === 'storage' ? 'name' : 'fullName';
-
+        const displayField = type === 'transport' ? 'nameCompany' : type === 'storage' ? 'name' : type === 'staff' ? 'fullName' : type === 'promotion' ? 'name' : '';
         return (
             <div className="relative">
                 <label className="block text-gray-700 font-medium mb-2">
@@ -234,25 +396,19 @@ const Booking = ({ isLoggedIn }) => {
                 </div>
                 {dropdownOpen[type] && (
                     <>
-                        {/* Overlay toàn màn hình để bắt sự kiện click/hover ra ngoài */}
                         <div
                             className="fixed inset-0 z-0"
-                            onMouseMove={() => setHoveredItem(null)}
                             onClick={() => setDropdownOpen(prev => ({ ...prev, [type]: false }))}
                             style={{ background: 'transparent' }}
                         />
                         <div
                             className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border"
-                            onMouseLeave={() => setHoveredItem(null)}
-                            onMouseEnter={() => { if (hoverTimeout.current) clearTimeout(hoverTimeout.current); }}
                         >
                             <ul className="py-1" style={{ maxHeight: '8.5rem', overflowY: 'auto' }}>
                                 {options.length > 0 ? options.map(option => (
                                     <li
-                                        key={option[type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : 'operatorId']}
-                                        onClick={() => handleSelect(type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : 'operatorId', option[type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : 'operatorId'])}
-                                        onMouseEnter={() => setHoveredItem({ type, data: option })}
-                                        onMouseLeave={() => setHoveredItem(null)}
+                                        key={option[type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : type === 'staff' ? 'operatorId' : type === 'promotion' ? 'id' : 'id']}
+                                        onClick={() => handleSelect(type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : type === 'staff' ? 'operatorId' : type === 'promotion' ? 'promotionId' : type, option[type === 'transport' ? 'transportId' : type === 'storage' ? 'storageId' : type === 'staff' ? 'operatorId' : type === 'promotion' ? 'id' : 'id'])}
                                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800"
                                     >
                                         {option[displayField]}
@@ -262,66 +418,6 @@ const Booking = ({ isLoggedIn }) => {
                         </div>
                     </>
                 )}
-                {hoveredItem && hoveredItem.type === type && <InfoPopover item={hoveredItem} />}
-            </div>
-        );
-    };
-
-    const InfoPopover = ({ item }) => {
-        if (!item) return null;
-        let image = '';
-        let content = null;
-        if (item.type === 'transport') {
-            const { data } = item;
-            image = data.imageTransportUnit || data.image || '';
-            content = (
-                <div className="flex flex-col justify-center">
-                    <p><strong>Công ty:</strong> {data.nameCompany}</p>
-                    <p><strong>Liên hệ:</strong> {data.namePersonContact}</p>
-                    <p><strong>SĐT:</strong> {data.phone}</p>
-                    <p><strong>Biển số:</strong> {data.licensePlate}</p>
-                    <p><strong>Trạng thái:</strong> <span className="font-semibold">{data.status}</span></p>
-                </div>
-            );
-        }
-        if (item.type === 'storage') {
-            const { data } = item;
-            image = data.imageStorageUnit || data.image || '';
-            content = (
-                <div className="flex flex-col justify-center">
-                    <p><strong>Tên kho:</strong> {data.name}</p>
-                    <p><strong>Địa chỉ:</strong> {data.address}</p>
-                    <p><strong>SĐT:</strong> {data.phone}</p>
-                    <p><strong>Trạng thái:</strong> <span className="font-semibold">{data.status}</span></p>
-                </div>
-            );
-        }
-        if (item.type === 'staff') {
-            const { data } = item;
-            image = data.img || data.image || '';
-            content = (
-                <div className="flex flex-col justify-center">
-                    <p><strong>Họ tên:</strong> {data.fullName}</p>
-                    <p><strong>Operator ID:</strong> {data.operatorId}</p>
-                    <p><strong>Email:</strong> {data.email}</p>
-                    <p><strong>SĐT:</strong> {data.phone}</p>
-                </div>
-            );
-        }
-        return (
-            <div
-                className="absolute left-0 z-50 w-full max-w-full -top-2 translate-y-[-100%] p-4 bg-white text-gray-800 rounded-lg shadow-2xl text-sm border border-gray-200 flex items-center"
-                style={{ minWidth: '300px' }}
-            >
-                {image && (
-                    <img
-                        src={image}
-                        alt="Hình ảnh"
-                        className="mr-4 w-24 h-24 object-cover rounded shadow border"
-                        style={{ background: '#fff' }}
-                    />
-                )}
-                {content}
             </div>
         );
     };
@@ -341,141 +437,325 @@ const Booking = ({ isLoggedIn }) => {
 
     if (selectedService) {
         return (
-            <section id="booking" className="py-20 bg-gray-50">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+            <section id="booking" className="py-20 bg-yellow-50 relative overflow-hidden">
+                <div className="w-full mx-auto px-[50px]">
+                    <div className="text-center mb-16 relative">
+                        <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-lg mb-4 flex items-center justify-center gap-3">
+                            <span>
+                                <svg className="inline w-12 h-12 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" /></svg>
+                            </span>
                             Đặt Xe Vận Chuyển
                         </h2>
-                        <p className="text-xl text-gray-600">
+                        <p className="text-xl text-gray-700 max-w-2xl mx-auto font-medium">
                             Vui lòng nhập thông tin vận chuyển
                         </p>
+                        <div className="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
+                            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="60" cy="60" r="60" fill="url(#paint0_radial)" />
+                                <defs>
+                                    <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientTransform="translate(60 60) scale(60)" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#FDE68A" />
+                                        <stop offset="1" stopColor="#F59E42" stopOpacity="0.5" />
+                                    </radialGradient>
+                                </defs>
+                            </svg>
+                        </div>
                     </div>
-                    
-                    <div className="max-w-2xl mx-auto relative">
-                        <div className="bg-white p-8 rounded-2xl shadow-lg">
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Thông tin vị trí nhận *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="pickupLocation"
-                                        value={bookingData.pickupLocation}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Nhập địa chỉ nhận hàng"
-                                        required
+                    <div className="flex flex-col md:flex-row gap-8 w-full mx-auto px-2">
+                    {/* Form booking 1/2 */}
+                        <div className="md:w-1/2 w-full relative">
+                            <div className="bg-white p-10 rounded-3xl shadow-2xl border border-yellow-100 relative">
+                                {/* Icon trang trí */}
+                                <div className="absolute -top-8 -left-8 opacity-20 text-yellow-300 text-[120px] pointer-events-none select-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-32 h-32">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" />
+                                    </svg>
+                                </div>
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div>
+                                        <label className="block text-gray-700 font-medium mb-2">
+                                            Thông tin vị trí nhận *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="pickupLocation"
+                                            value={bookingData.pickupLocation}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Nhập địa chỉ nhận hàng"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-gray-700 font-medium mb-2">
+                                            Thông tin vị trí đến *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="deliveryLocation"
+                                            value={bookingData.deliveryLocation}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Nhập địa chỉ giao hàng"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Thông tin kích cỡ đồ đạc */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-gray-700 font-medium mb-2">
+                                                Đồ đạc kích cỡ bé (50.000 VNĐ)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="item_small"
+                                                value={bookingData.itemCounts.small}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Số lượng"
+                                                min="0"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-700 font-medium mb-2">
+                                                Đồ đạc kích cỡ vừa (100.000 VNĐ)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="item_medium"
+                                                value={bookingData.itemCounts.medium}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Số lượng"
+                                                min="0"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-700 font-medium mb-2">
+                                                Đồ đạc kích cỡ lớn (200.000 VNĐ)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="item_large"
+                                                value={bookingData.itemCounts.large}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Số lượng"
+                                                min="0"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-700 font-medium mb-2">
+                                                Đồ đạc kích cỡ cực lớn (400.000 VNĐ)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="item_extraLarge"
+                                                value={bookingData.itemCounts.extraLarge}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Số lượng"
+                                                min="0"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Hiển thị thông tin tính toán */}
+                                    {(bookingData.total > 0 || bookingData.distance > 0) && (
+                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                            <h4 className="font-semibold text-blue-800 mb-2">Thông tin tính toán:</h4>
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <span className="text-gray-600">Quãng đường:</span>
+                                                    <span className="font-semibold text-blue-800 ml-2">{bookingData.distance.toFixed(1)} km</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-600">Tổng tiền:</span>
+                                                    <span className="font-semibold text-green-600 ml-2">{bookingData.total.toLocaleString()} VNĐ</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-gray-700 font-medium mb-2">
+                                            Ngày xuất phát *
+                                        </label>
+                                        <input
+                                            type="date"
+                                            name="deliveryDate"
+                                            value={bookingData.deliveryDate}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            required
+                                        />
+                                    </div>
+                                    
+                                    <CustomSelect
+                                        label="Chọn phương tiện vận chuyển"
+                                        type="transport"
+                                        options={transportUnits}
+                                        selectedId={bookingData.transportId}
+                                        placeholder="Bắt buộc chọn một phương tiện"
+                                        isRequired={true}
                                     />
-                                </div>
 
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Thông tin vị trí đến *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="deliveryLocation"
-                                        value={bookingData.deliveryLocation}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Nhập địa chỉ giao hàng"
-                                        required
+                                    <CustomSelect
+                                        label="Thuê kho (tùy chọn)"
+                                        type="storage"
+                                        options={storageUnits}
+                                        selectedId={bookingData.storageId}
+                                        placeholder="Không thuê kho"
+                                        isRequired={false}
                                     />
-                                </div>
 
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Ngày xuất phát *
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="deliveryDate"
-                                        value={bookingData.deliveryDate}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        required
+                                    <CustomSelect
+                                        label="Chọn nhân viên hỗ trợ (tùy chọn)"
+                                        type="staff"
+                                        options={staffMembers}
+                                        selectedId={bookingData.operatorId}
+                                        placeholder="Bắt buộc chọn một nhân viên"
+                                        isRequired={true}
                                     />
-                                </div>
-                                
-                                <CustomSelect
-                                    label="Chọn phương tiện vận chuyển"
-                                    type="transport"
-                                    options={transportUnits}
-                                    selectedId={bookingData.transportId}
-                                    placeholder="Bắt buộc chọn một phương tiện"
-                                    isRequired={true}
-                                />
 
-                                <CustomSelect
-                                    label="Thuê kho (tùy chọn)"
-                                    type="storage"
-                                    options={storageUnits}
-                                    selectedId={bookingData.storageId}
-                                    placeholder="Không thuê kho"
-                                    isRequired={false}
-                                />
-
-                                <CustomSelect
-                                    label="Chọn nhân viên hỗ trợ"
-                                    type="staff"
-                                    options={staffMembers}
-                                    selectedId={bookingData.operatorId}
-                                    placeholder="Bắt buộc chọn một nhân viên"
-                                    isRequired={true}
-                                />
-
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Tổng tiền (VNĐ)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="total"
-                                        value={bookingData.total}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Nhập tổng tiền vận chuyển"
-                                        min="0"
-                                        step="1000"
+                                    <CustomSelect
+                                        label="Chọn khuyến mãi (tùy chọn)"
+                                        type="promotion"
+                                        options={promotions}
+                                        selectedId={bookingData.promotionId}
+                                        placeholder="Không áp dụng khuyến mãi"
+                                        isRequired={false}
                                     />
-                                </div>
 
-                                <div>
-                                    <label className="block text-gray-700 font-medium mb-2">
-                                        Nội dung vận chuyển
-                                    </label>
-                                    <textarea
-                                        name="note"
-                                        value={bookingData.note}
-                                        onChange={handleInputChange}
-                                        rows="4"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="Mô tả chi tiết hàng hóa cần vận chuyển..."
-                                    ></textarea>
-                                </div>
+                                    <div>
+                                        <label className="block text-gray-700 font-medium mb-2">
+                                            Nội dung vận chuyển
+                                        </label>
+                                        <textarea
+                                            name="note"
+                                            value={bookingData.note}
+                                            onChange={handleInputChange}
+                                            rows="4"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="Mô tả chi tiết hàng hóa cần vận chuyển..."
+                                        ></textarea>
+                                    </div>
 
-                                <div className="flex gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedService(null)}
-                                        className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
+                                    <div className="flex gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedService(null)}
+                                            className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
+                                        >
+                                            Quay lại
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={!isLoggedIn || loading}
+                                            className={`flex-1 ${isLoggedIn ? 'bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-gray-900 shadow-lg' : 'bg-gray-300 text-white cursor-not-allowed'} py-3 px-6 rounded-xl font-semibold transition-all ${loading ? 'opacity-60' : ''}`}
+                                        >
+                                            {loading ? 'Đang gửi...' : 'Xác nhận'}
+                                        </button>
+                                    </div>
+                                    {!isLoggedIn && (
+                                        <div className="text-red-500 text-center font-semibold">Bạn cần đăng nhập để đặt xe!</div>
+                                    )}
+                                </form>
+                            </div>
+                        </div>
+                        {/* Thông tin chi tiết hoặc Map */}
+                        <div className="md:w-1/2 w-full flex flex-col gap-6">
+                            <div className="bg-white rounded-2xl shadow-lg overflow-auto p-6 flex flex-col gap-4">
+                                {/* Luôn hiện map ở trên */}
+                                {mapData.pickupCoords && mapData.deliveryCoords ? (
+                                    <MapContainer
+                                        center={mapData.pickupCoords ? [mapData.pickupCoords.lat, mapData.pickupCoords.lon] : [21.0285, 105.8542]}
+                                        zoom={13}
+                                        style={{ height: '300px', width: '100%' }}
+                                        scrollWheelZoom={true}
                                     >
-                                        Quay lại
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={!isLoggedIn || loading}
-                                        className={`flex-1 ${isLoggedIn ? 'bg-blue-600 hover:bg-blue-700 cursor-pointer' : 'bg-gray-300 cursor-not-allowed'} text-white py-3 px-6 rounded-lg font-semibold transition-all ${loading ? 'opacity-60' : ''}`}
-                                    >
-                                        {loading ? 'Đang gửi...' : 'Xác nhận'}
-                                    </button>
-                                </div>
-                                {!isLoggedIn && (
-                                    <div className="text-red-500 text-center font-semibold">Bạn cần đăng nhập để đặt xe!</div>
+                                        <TileLayer
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            attribution="&copy; OpenStreetMap contributors"
+                                        />
+                                        <Marker position={[mapData.pickupCoords.lat, mapData.pickupCoords.lon]} icon={L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] })} />
+                                        <Marker position={[mapData.deliveryCoords.lat, mapData.deliveryCoords.lon]} icon={L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] })} />
+                                        {mapData.route.length > 0 && (
+                                            <Polyline positions={mapData.route} color="blue" />
+                                        )}
+                                    </MapContainer>
+                                ) : (
+                                    <div className="flex items-center justify-center h-[300px] text-gray-400 text-lg">Nhập địa chỉ để xem bản đồ</div>
                                 )}
-                            </form>
+                            </div>
+                            {/* Container mới cho thông tin chi tiết, nằm ngoài map */}
+                            <div className="bg-white rounded-3xl shadow-xl p-8 flex flex-col gap-4 border border-yellow-100">
+                                {bookingData.transportId && (() => {
+                                    const t = transportUnits.find(x => x.transportId === bookingData.transportId);
+                                    return t ? (
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-2 flex flex-row gap-4 items-center">
+                                            <div className="flex-1">
+                                                <div className="font-semibold text-blue-800 mb-1">Thông tin phương tiện:</div>
+                                                <div className="text-gray-800"><strong>Công ty:</strong> {t.nameCompany}</div>
+                                                <div className="text-gray-800"><strong>Liên hệ:</strong> {t.namePersonContact}</div>
+                                                <div className="text-gray-800"><strong>SĐT:</strong> {t.phone}</div>
+                                                <div className="text-gray-800"><strong>Biển số:</strong> {t.licensePlate}</div>
+                                                <div className="text-gray-800"><strong>Trạng thái:</strong> {t.status}</div>
+                                            </div>
+                                            {t.imageTransportUnit || t.image ? (
+                                                <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
+                                                    <img src={t.imageTransportUnit || t.image} alt="Ảnh phương tiện" className="object-cover w-32 h-32 rounded shadow border bg-white" />
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    ) : null;
+                                })()}
+                                {bookingData.storageId && (() => {
+                                    const s = storageUnits.find(x => x.storageId === bookingData.storageId);
+                                    return s ? (
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-2 flex flex-row gap-4 items-center">
+                                            <div className="flex-1">
+                                                <div className="font-semibold text-green-800 mb-1">Thông tin kho:</div>
+                                                <div className="text-gray-800"><strong>Tên kho:</strong> {s.name}</div>
+                                                <div className="text-gray-800"><strong>Địa chỉ:</strong> {s.address}</div>
+                                                <div className="text-gray-800"><strong>SĐT:</strong> {s.phone}</div>
+                                                <div className="text-gray-800"><strong>Trạng thái:</strong> {s.status}</div>
+                                            </div>
+                                            {s.imageStorageUnit || s.image ? (
+                                                <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
+                                                    <img src={s.imageStorageUnit || s.image} alt="Ảnh kho" className="object-cover w-32 h-32 rounded shadow border bg-white" />
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    ) : null;
+                                })()}
+                                {bookingData.promotionId && (() => {
+                                    const promo = promotions.find(p => p.id === bookingData.promotionId);
+                                    return promo ? (
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-2">
+                                            <div className="font-semibold text-yellow-800 mb-1">Thông tin khuyến mãi:</div>
+                                            <div className="text-gray-800"><strong>Tên:</strong> {promo.name}</div>
+                                            <div className="text-gray-800"><strong>Mô tả:</strong> {promo.description}</div>
+                                            <div className="text-gray-800">
+                                                <strong>Áp dụng đến:</strong> {promo.endDate ? new Date(promo.endDate).toLocaleDateString('vi-VN') : 'Không xác định'}
+                                            </div>
+                                        </div>
+                                    ) : null;
+                                })()}
+                                {bookingData.operatorId && (() => {
+                                    const st = staffMembers.find(x => x.operatorId === bookingData.operatorId);
+                                    return st ? (
+                                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-2">
+                                            <div className="font-semibold text-purple-800 mb-1">Thông tin nhân viên:</div>
+                                            <div className="text-gray-800"><strong>Họ tên:</strong> {st.fullName}</div>
+                                            <div className="text-gray-800"><strong>Email:</strong> {st.email}</div>
+                                            <div className="text-gray-800"><strong>SĐT:</strong> {st.phone}</div>
+                                        </div>
+                                    ) : null;
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -484,15 +764,29 @@ const Booking = ({ isLoggedIn }) => {
     }
 
     return (
-        <section id="booking" className="py-20 bg-gray-50">
-            <div className="container mx-auto px-4">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+        <section id="booking" className="py-20 bg-yellow-50 relative overflow-hidden">
+            <div className="w-full mx-auto px-[100px]">
+                <div className="text-center mb-16 relative">
+                    <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-lg mb-4 flex items-center justify-center gap-3">
+                        <span>
+                            <svg className="inline w-12 h-12 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" /></svg>
+                        </span>
                         Đặt Xe Vận Chuyển
                     </h2>
-                    <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                        Chọn loại dịch vụ vận chuyển phù hợp với nhu cầu của bạn
+                    <p className="text-xl text-gray-700 max-w-2xl mx-auto font-medium">
+                        Vui lòng nhập thông tin vận chuyển
                     </p>
+                    <div className="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
+                        <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="60" cy="60" r="60" fill="url(#paint0_radial)" />
+                            <defs>
+                                <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientTransform="translate(60 60) scale(60)" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#FDE68A" />
+                                    <stop offset="1" stopColor="#F59E42" stopOpacity="0.5" />
+                                </radialGradient>
+                            </defs>
+                        </svg>
+                    </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                     <ServiceCard
