@@ -182,7 +182,7 @@ const Staff = () => {
                 },
                 credentials: "include",
             });
-        } catch (e) {}
+        } catch (e) { }
         window.location.href = "/login";
     };
 
@@ -628,7 +628,7 @@ const Staff = () => {
                                                             : stat.color === "emerald"
                                                                 ? "bg-emerald-50 border border-emerald-100"
                                                                 : "bg-purple-50 border border-purple-100"
-                                                            }`}
+                                                        }`}
                                                 >
                                                     <div className="flex items-center justify-between">
                                                         <div>
@@ -719,4 +719,5 @@ const Staff = () => {
 }
 
 export default Staff
+
 
