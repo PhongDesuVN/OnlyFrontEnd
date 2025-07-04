@@ -1,6 +1,6 @@
 "use client"
 import RequireAuth from "../../Components/RequireAuth";
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import {
     Truck,
     Home,
@@ -33,6 +33,8 @@ import {
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import Cookies from "js-cookie"
+import DashBoardApi from "../../utils/DashBoard_phongApi.js"
+import { jwtDecode } from "jwt-decode" // Sửa import thành named import
 
 // Component chính quản lý thông tin chức vụ
 const Staff = () => {
@@ -46,23 +48,56 @@ const Staff = () => {
         trangThai: "active",
     })
 
-    // State quản lý trạng thái loading và thông báo
+    // State quản lý trạng thái loading, thông báo và dữ liệu API
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [messageType, setMessageType] = useState("")
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const [dashboardExpanded, setDashboardExpanded] = useState(true)
     const [currentPage, setCurrentPage] = useState('main')
+    const [stats, setStats] = useState({
+        newReceipts: 0,
+        pendingOrders: 0,
+        newCustomers: 0,
+        pendingSupport: 0,
+    })
+    const [activities, setActivities] = useState([])
     const username = Cookies.get("username") || "Staff User"
     const navigate = useNavigate()
 
+    // Lấy dữ liệu thống kê và hoạt động gần đây
     useEffect(() => {
         const token = Cookies.get("authToken");
         if (!token) {
-            // Nếu không có token thì chuyển về trang login
             navigate("/login", { replace: true });
+            return;
         }
-    }, [navigate]);
+
+        const fetchData = async () => {
+            setIsLoading(true)
+            try {
+                // Lấy thống kê
+                const statsData = await DashBoardApi.getDashboardStats()
+                setStats({
+                    newReceipts: statsData.newReceipts || 0,
+                    pendingOrders: statsData.pendingOrders || 0,
+                    newCustomers: statsData.newCustomers || 0,
+                    pendingSupport: statsData.pendingSupport || 0,
+                })
+
+                // Lấy hoạt động gần đây
+                const activitiesData = await DashBoardApi.getRecentActivities()
+                setActivities(Array.isArray(activitiesData) ? activitiesData : [])
+            } catch (error) {
+                setMessage(error.message || "Lỗi khi tải dữ liệu thống kê hoặc hoạt động")
+                setMessageType("error")
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [navigate])
 
     // ==================== FUNCTIONS ====================
     // Hàm xử lý thay đổi giá trị input
@@ -106,12 +141,23 @@ const Staff = () => {
         setIsLoading(true)
 
         try {
-            // Giả lập gửi dữ liệu lên server
-            await new Promise((resolve) => setTimeout(resolve, 2000))
+            // Lấy staffId từ token
+            const token = Cookies.get("authToken")
+            const decodedToken = jwtDecode(token)
+            const userId = decodedToken.staffId // Lấy staffId từ token
 
-            console.log("Thông tin chức vụ:", staff)
+            const positionData = {
+                title: staff.tenChucVu,
+                secondaryTitle: staff.tenChucVuPhu || "",
+                description: staff.moTa || "",
+                baseSalary: Number.parseFloat(staff.luongCoBan),
+                status: staff.trangThai === "active" ? "đang hoạt động" : "Tạm ngưng",
+                userId: userId,
+            }
 
-            setMessage("Thêm chức vụ thành công!")
+            const response = await DashBoardApi.addPosition(positionData)
+
+            setMessage(response.message || "Thêm/Cập nhật chức vụ thành công!")
             setMessageType("success")
 
             // Reset form
@@ -123,7 +169,11 @@ const Staff = () => {
                 trangThai: "active",
             })
         } catch (error) {
-            setMessage("Có lỗi xảy ra. Vui lòng thử lại!")
+            if (error.message.includes("Người dùng này đã có một chức vụ")) {
+                setMessage("Người dùng đã có chức vụ. Vui lòng cập nhật hoặc xóa chức vụ hiện tại.")
+            } else {
+                setMessage(error.message || "Có lỗi xảy ra. Vui lòng thử lại!")
+            }
             setMessageType("error")
         } finally {
             setIsLoading(false)
@@ -145,7 +195,7 @@ const Staff = () => {
         return new Intl.NumberFormat("vi-VN").format(number) + " VNĐ"
     }
 
-    // Dữ liệu menu - cập nhật với icon Lucide React
+    // Dữ liệu menu
     const menuItems = [
         { name: "Trang Chủ", icon: Home, path: "/", hasLink: true },
         {
@@ -156,21 +206,20 @@ const Staff = () => {
             hasSubmenu: true,
             submenu: [
                 { name: "Hiệu suất bán hàng", icon: TrendingUp, path: "/dashboard", hasLink: true },
-
             ],
         },
         { name: 'Quản Lý Biên Lai', icon: Receipt, path: '/receipts', hasLink: true },
         { name: 'Quản Lý Đơn Vị Lưu Trữ', icon: Package, hasLink: true, path: '/storage-units' },
         { name: "Quản Lý Đơn Vị Vận Chuyển", icon: Truck, hasLink: false },
         { name: "Quản Lý Đơn Hàng", icon: ShoppingCart, path: "/manageorder", hasLink: true },
-        { name: "Quản Lý Khách Hàng", icon: Users, hasLink: false },
+        { name: "Quản Lý Khách Hàng", icon: Users, path: "/manageuser", hasLink: true },
+        { name: "Quản Lý Doanh Thu", icon: TrendingUp, path: "/managerevenue", hasLink: true },
         { name: "Hỗ Trợ Khách Hàng", icon: Headphones, hasLink: false },
         { name: "Báo Cáo", icon: TrendingUp, hasLink: false },
         { name: "Cài Đặt", icon: Settings, hasLink: false },
     ]
 
     const handleLogout = async () => {
-        // Xóa cookies trước
         Cookies.remove("authToken");
         Cookies.remove("userRole");
         Cookies.remove("username");
@@ -401,7 +450,7 @@ const Staff = () => {
                     <header className="bg-white shadow-sm border-b border-gray-200 px-8 py-6">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900 mb-2">Bảng Điều Khiển Staff</h1>
+                                <h1 className="text-3xl font-bold text-gray-900 mb-2">Thông Tin Nhân Viên</h1>
                                 <nav className="flex items-center space-x-2 text-sm">
                                     <Link to="/" className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
                                         Trang Chủ
@@ -612,10 +661,10 @@ const Staff = () => {
 
                                     <div className="space-y-4">
                                         {[
-                                            { label: "Biên Lai Mới", value: "12", color: "blue", icon: Receipt },
-                                            { label: "Đơn Hàng Chờ", value: "8", color: "amber", icon: ShoppingCart },
-                                            { label: "Khách Hàng Mới", value: "24", color: "emerald", icon: UserPlus },
-                                            { label: "Hỗ Trợ Chờ", value: "3", color: "purple", icon: MessageCircle },
+                                            { label: "Biên Lai Mới", value: stats.newReceipts, color: "blue", icon: Receipt },
+                                            { label: "Đơn Hàng Chờ", value: stats.pendingOrders, color: "amber", icon: ShoppingCart },
+                                            { label: "Khách Hàng Mới", value: stats.newCustomers, color: "emerald", icon: UserPlus },
+                                            { label: "Hỗ Trợ Chờ", value: stats.pendingSupport, color: "purple", icon: MessageCircle },
                                         ].map((stat, index) => {
                                             const IconComponent = stat.icon
                                             return (
@@ -693,20 +742,19 @@ const Staff = () => {
                                     </h3>
 
                                     <div className="space-y-4">
-                                        {[
-                                            { action: "Xử lý biên lai #1234", time: "2 phút trước" },
-                                            { action: "Cập nhật đơn hàng KH001", time: "15 phút trước" },
-                                            { action: "Phản hồi hỗ trợ khách hàng", time: "30 phút trước" },
-                                            { action: "Thêm khách hàng mới", time: "1 giờ trước" },
-                                        ].map((activity, index) => (
-                                            <div key={index} className="flex items-center justify-between border-b border-gray-100 pb-3">
-                                                <div className="flex items-center">
-                                                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                                                    <p className="text-gray-700">{activity.action}</p>
+                                        {activities.length > 0 ? (
+                                            activities.map((activity, index) => (
+                                                <div key={index} className="flex items-center justify-between border-b border-gray-100 pb-3">
+                                                    <div className="flex items-center">
+                                                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                                                        <p className="text-gray-700">{activity.action}</p>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">{activity.timeAgo}</p>
                                                 </div>
-                                                <p className="text-xs text-gray-500">{activity.time}</p>
-                                            </div>
-                                        ))}
+                                            ))
+                                        ) : (
+                                            <p className="text-gray-500 text-sm">Không có hoạt động gần đây</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -719,5 +767,3 @@ const Staff = () => {
 }
 
 export default Staff
-
-
