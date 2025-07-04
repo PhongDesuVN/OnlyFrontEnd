@@ -7,6 +7,7 @@ import {
     Truck, Home, Shield, CheckCircle, AlertCircle, X, Save, Calendar
 } from 'lucide-react';
 import { getPagedUsers } from '../../Services/userService.js';
+import userService from '../../Services/userService.js';
 
 // Add this at the top of the file (after imports)
 function getCookie(name) {
@@ -764,11 +765,17 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(null);
+    const [editingUser, setEditingUser] = useState(null);
 
     // Load users on component mount
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    // Refetch users when filter or page changes
+    useEffect(() => {
+        fetchUsers();
+    }, [filter, page, size]);
 
     // Auto clear success message after 3 seconds
     useEffect(() => {
@@ -784,6 +791,7 @@ const Dashboard = () => {
         setLoading(true);
         setError('');
         try {
+            console.log('Fetching users with params:', { filter, page, size });
             const token = getCookie('authToken');
             const params = {
                 ...filter,
@@ -793,10 +801,13 @@ const Dashboard = () => {
             Object.keys(params).forEach(key => {
                 if (params[key] === '' || params[key] === null) delete params[key];
             });
+            console.log('Final params for API call:', params);
             const res = await getPagedUsers(params, token);
+            console.log('API response:', res);
             setUsers(res.content || []);
             setTotalPages(res.totalPages || 1);
         } catch (err) {
+            console.error('Error fetching users:', err);
             setError('Không thể tải dữ liệu user');
         } finally {
             setLoading(false);
@@ -821,6 +832,7 @@ const Dashboard = () => {
     };
 
     const handleEditUser = (user) => {
+        setEditingUser(user);
         setCurrentPage('add');
     };
 
@@ -918,6 +930,7 @@ const Dashboard = () => {
                     onSave={editingUser ? handleUpdateUser : handleAddUser}
                     onCancel={() => {
                         setCurrentPage('list');
+                        setEditingUser(null);
                     }}
                 />
             );
@@ -949,7 +962,20 @@ const Dashboard = () => {
                     />
                 );
             case 'settings':
-                return <SettingsPage />;
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
+                            <Settings className="mr-2" /> Cài Đặt
+                        </h2>
+                        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <p className="text-gray-600">Trang cài đặt đang được phát triển...</p>
+                        </div>
+                    </motion.div>
+                );
             default:
                 return <UserOverview users={users} />;
         }
