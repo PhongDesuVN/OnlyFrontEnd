@@ -1,14 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     BarChart2, Search, Download, Edit, Trash2, Eye,
     DollarSign, Calendar, Filter, AlertCircle, X, Save,
-    TrendingUp, FileText, List, Settings, CheckCircle
+    TrendingUp, FileText, List, Settings, CheckCircle, Crown
 } from 'lucide-react';
+import { getPagedRevenues, exportExcelV2 } from '../../Services/revenueService';
 import revenueService from '../../Services/revenueService';
-import { Card, Row, Col } from 'antd';
-import { Bar, Pie, Line } from '@ant-design/charts';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error('Error caught by boundary:', error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md">
+                            <div className="text-center">
+                                <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2">Đã xảy ra lỗi</h2>
+                                <p className="text-gray-600 mb-4">
+                                    Có lỗi xảy ra khi tải trang. Vui lòng thử lại sau.
+                                </p>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Tải lại trang
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}
 
 // Add this at the top of the file (after imports)
 function getCookie(name) {
@@ -16,8 +61,24 @@ function getCookie(name) {
   return match ? match[2] : null;
 }
 
-// Header Component
+// Header Component with Manager Role Indicator
 const Header = () => {
+    const [userRole, setUserRole] = useState('');
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        try {
+            const token = getCookie('authToken');
+            if (token) {
+                const decoded = jwtDecode(token);
+                setUserRole(decoded.role || getCookie('userRole'));
+                setUsername(decoded.username || 'Manager');
+            }
+        } catch (error) {
+            console.error('Error decoding token:', error);
+        }
+    }, []);
+
     return (
         <header className="fixed w-full top-0 bg-white shadow-lg z-40">
             <div className="container mx-auto px-4 py-4">
@@ -25,8 +86,19 @@ const Header = () => {
                     <div className="flex items-center space-x-2">
                         <DollarSign className="w-8 h-8 text-blue-600" />
                         <h1 className="text-xl font-bold text-black">Quản Lý Doanh Thu</h1>
+                        {userRole === 'MANAGER' && (
+                            <div className="flex items-center ml-4 px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm">
+                                <Crown className="w-4 h-4 mr-1" />
+                                Manager
+                            </div>
+                        )}
                     </div>
-                    <div className="flex space-x-3">
+                    <div className="flex items-center space-x-3">
+                        {username && (
+                            <span className="text-sm text-gray-600">
+                                Xin chào, <span className="font-semibold">{username}</span>
+                            </span>
+                        )}
                         <Link to="/">
                             <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
                                 Trang Chủ
@@ -44,8 +116,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
     const pageLabels = {
         overview: 'Tổng Quan',
         list: 'Danh Sách Doanh Thu',
-        search: 'Tìm Kiếm',
-        export: 'Xuất Báo Cáo'
+        search: 'Tìm Kiếm'
     };
 
     return (
@@ -72,7 +143,6 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
                         {page === 'overview' && <BarChart2 className="mr-2" size={20} />}
                         {page === 'list' && <List className="mr-2" size={20} />}
                         {page === 'search' && <Search className="mr-2" size={20} />}
-                        {page === 'export' && <Download className="mr-2" size={20} />}
                         {pageLabels[page]}
                     </motion.button>
                 ))}
@@ -91,6 +161,16 @@ const RevenueOverview = ({ revenues }) => {
     const todayRevenue = safeRevenues.filter(rev => 
         rev.date && new Date(rev.date).toDateString() === new Date().toDateString()
     ).reduce((sum, rev) => sum + (typeof rev.amount === 'number' ? rev.amount : 0), 0);
+
+    // Format currency to VND
+    const formatVND = (amount) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
 
     // Chart: Revenue by Day (Line)
     const revenueByDay = safeRevenues.reduce((acc, rev) => {
@@ -128,6 +208,26 @@ const RevenueOverview = ({ revenues }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
         >
+            {/* Manager Welcome Section */}
+            <div className="mb-8 p-6 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl text-white">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold mb-2 flex items-center">
+                            <Crown className="w-8 h-8 mr-3" />
+                            Chào mừng Quản lý
+                        </h1>
+                        <p className="text-purple-100 text-lg">
+                            Đây là trang quản lý doanh thu dành riêng cho Quản lý. Bạn có thể xem tổng quan, 
+                            quản lý danh sách và xuất báo cáo doanh thu.
+                        </p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-purple-100">Quyền truy cập: Manager</p>
+                        <p className="text-sm text-purple-200">Cập nhật lần cuối: {new Date().toLocaleDateString()}</p>
+                    </div>
+                </div>
+            </div>
+
             <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
                 <BarChart2 className="mr-2" /> Tổng Quan Doanh Thu
             </h2>
@@ -135,27 +235,31 @@ const RevenueOverview = ({ revenues }) => {
                 {[
                     { 
                         label: 'Tổng Doanh Thu', 
-                        value: `$${totalRevenue.toFixed(2)}`,
+                        value: formatVND(totalRevenue),
                         color: 'green',
-                        icon: DollarSign
+                        icon: DollarSign,
+                        description: 'Tổng doanh thu từ tất cả nguồn'
                     },
                     { 
                         label: 'Doanh Thu Hôm Nay', 
-                        value: `$${todayRevenue.toFixed(2)}`,
+                        value: formatVND(todayRevenue),
                         color: 'blue',
-                        icon: TrendingUp
+                        icon: TrendingUp,
+                        description: 'Doanh thu trong ngày hôm nay'
                     },
                     { 
                         label: 'Trung Bình/Đơn', 
-                        value: `$${averageRevenue.toFixed(2)}`,
+                        value: formatVND(averageRevenue),
                         color: 'purple',
-                        icon: BarChart2
+                        icon: BarChart2,
+                        description: 'Trung bình doanh thu mỗi đơn hàng'
                     },
                     { 
                         label: 'Tổng Số Đơn', 
                         value: safeRevenues.length,
                         color: 'blue',
-                        icon: FileText
+                        icon: FileText,
+                        description: 'Tổng số đơn hàng đã xử lý'
                     }
                 ].map((item, idx) => {
                     const IconComponent = item.icon;
@@ -165,127 +269,250 @@ const RevenueOverview = ({ revenues }) => {
                             whileHover={{ scale: 1.05 }}
                             className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
                         >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between mb-3">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600">{item.label}</p>
                                     <p className={`text-3xl font-bold text-${item.color}-600`}>{item.value}</p>
                                 </div>
                                 <IconComponent className={`w-10 h-10 text-${item.color}-500`} />
                             </div>
+                            <p className="text-xs text-gray-500">{item.description}</p>
                         </motion.div>
                     );
                 })}
             </div>
-            {/* Biểu đồ tổng quan bằng antd charts */}
-            <Row gutter={[24, 24]}>
-                <Col xs={24} lg={12}>
-                    <Card title="Doanh Thu Theo Ngày" bordered={false}>
-                        <Line
-                            data={lineData}
-                            xField="date"
-                            yField="amount"
-                            point={{ size: 5, shape: 'diamond' }}
-                            color="#1677ff"
-                            height={260}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} lg={6}>
-                    <Card title="Tỉ Lệ Nguồn Thu" bordered={false}>
-                        <Pie
-                            data={pieData}
-                            angleField="value"
-                            colorField="type"
-                            radius={0.9}
-                            label={{ type: 'outer', content: '{name} {percentage}' }}
-                            height={260}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} lg={6}>
-                    <Card title="Doanh Thu Theo Loại Người Hưởng" bordered={false}>
-                        <Bar
-                            data={barData}
-                            xField="type"
-                            yField="value"
-                            color="#52c41a"
-                            height={260}
-                        />
-                    </Card>
-                </Col>
-            </Row>
+            {/* Simple HTML/CSS Charts instead of Ant Design Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Revenue by Day Chart */}
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Doanh Thu Theo Ngày</h3>
+                    <div className="space-y-2">
+                        {lineData.slice(0, 7).map((item, index) => (
+                            <div key={index} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">{item.date}</span>
+                                <div className="flex items-center">
+                                    <div 
+                                        className="bg-blue-500 rounded h-2 mr-2" 
+                                        style={{ width: `${Math.min((item.amount / Math.max(...lineData.map(d => d.amount))) * 200, 200)}px` }}
+                                    ></div>
+                                    <span className="text-sm font-medium">{formatVND(item.amount)}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Revenue by Source Type Chart */}
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Tỉ Lệ Nguồn Thu</h3>
+                    <div className="space-y-3">
+                        {pieData.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <div 
+                                        className="w-4 h-4 rounded-full mr-2"
+                                        style={{ backgroundColor: `hsl(${index * 60}, 70%, 50%)` }}
+                                    ></div>
+                                    <span className="text-sm text-gray-600">{item.type}</span>
+                                </div>
+                                <span className="text-sm font-medium">{formatVND(item.value)}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Revenue by Beneficiary Type Chart */}
+                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-800">Doanh Thu Theo Loại Người Hưởng</h3>
+                    <div className="space-y-3">
+                        {barData.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">{item.type}</span>
+                                <div className="flex items-center">
+                                    <div 
+                                        className="bg-green-500 rounded h-2 mr-2" 
+                                        style={{ width: `${Math.min((item.value / Math.max(...barData.map(d => d.value))) * 150, 150)}px` }}
+                                    ></div>
+                                    <span className="text-sm font-medium">{formatVND(item.value)}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </motion.div>
     );
 };
 
 // Revenue List Component
-const RevenueList = ({ revenues, onExport }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-    >
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <List className="mr-2" /> Danh Sách Doanh Thu
-        </h2>
-        <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
-            <table className="w-full border-collapse">
-                <thead>
-                    <tr className="bg-gray-100">
-                        <th className="border p-3 text-left text-gray-700">ID</th>
-                        <th className="border p-3 text-left text-gray-700">Loại Người Hưởng</th>
-                        <th className="border p-3 text-left text-gray-700">ID Người Hưởng</th>
-                        <th className="border p-3 text-left text-gray-700">Loại Nguồn</th>
-                        <th className="border p-3 text-left text-gray-700">ID Nguồn</th>
-                        <th className="border p-3 text-left text-gray-700">Số Tiền</th>
-                        <th className="border p-3 text-left text-gray-700">Ngày</th>
-                        <th className="border p-3 text-left text-gray-700">Mô Tả</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {revenues.map(revenue => (
-                        <motion.tr
-                            key={revenue.revenueId}
-                            whileHover={{ backgroundColor: '#f3f4f6' }}
-                            transition={{ duration: 0.2 }}
+const RevenueList = ({ revenues, onExport, filter, handleFilterChange, handleExportExcel, page, setPage, totalPages }) => {
+    // Safety check for revenues
+    const safeRevenues = Array.isArray(revenues) ? revenues : [];
+    
+    // Format currency to VND
+    const formatVND = (amount) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
+    
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+        >
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-4xl font-bold flex items-center text-gray-800">
+                    <List className="mr-2" /> Danh Sách Doanh Thu
+                </h2>
+                <div className="flex items-center space-x-2">
+                    <div className="flex items-center px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm">
+                        <Crown className="w-4 h-4 mr-1" />
+                        Manager Access
+                    </div>
+                </div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
+                {/* Manager Quick Actions */}
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <Settings className="w-5 h-5 mr-2" />
+                        Quản lý Nhanh (Manager)
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                        <button 
+                            onClick={handleExportExcel} 
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
                         >
-                            <td className="border p-3">{revenue.revenueId}</td>
-                            <td className="border p-3">{revenue.beneficiaryType}</td>
-                            <td className="border p-3">{revenue.beneficiaryId}</td>
-                            <td className="border p-3">{revenue.sourceType}</td>
-                            <td className="border p-3">{revenue.sourceId}</td>
-                            <td className="border p-3 text-green-600 font-medium">
-                                ${revenue.amount.toFixed(2)}
-                            </td>
-                            <td className="border p-3">
-                                {new Date(revenue.date).toLocaleDateString()}
-                            </td>
-                            <td className="border p-3">{revenue.description}</td>
-                        </motion.tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </motion.div>
-);
+                            <Download className="w-4 h-4 mr-2" />
+                            Xuất Excel
+                        </button>
+                        <button 
+                            onClick={() => window.print()} 
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                        >
+                            <FileText className="w-4 h-4 mr-2" />
+                            In Báo Cáo
+                        </button>
+                        <button 
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+                        >
+                            <BarChart2 className="w-4 h-4 mr-2" />
+                            Phân Tích Chi Tiết
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4 mb-4">
+                    <input type="date" name="startDate" value={filter.startDate} onChange={handleFilterChange} className="border p-2 rounded" />
+                    <input type="date" name="endDate" value={filter.endDate} onChange={handleFilterChange} className="border p-2 rounded" />
+                    <input type="text" name="sourceType" placeholder="Loại nguồn" value={filter.sourceType} onChange={handleFilterChange} className="border p-2 rounded" />
+                    <input type="text" name="beneficiaryId" placeholder="Beneficiary ID" value={filter.beneficiaryId} onChange={handleFilterChange} className="border p-2 rounded" />
+                    <input type="text" name="bookingId" placeholder="Booking ID" value={filter.bookingId} onChange={handleFilterChange} className="border p-2 rounded" />
+                    <input type="number" name="minAmount" placeholder="Số tiền tối thiểu" value={filter.minAmount} onChange={handleFilterChange} className="border p-2 rounded" />
+                    <input type="number" name="maxAmount" placeholder="Số tiền tối đa" value={filter.maxAmount} onChange={handleFilterChange} className="border p-2 rounded" />
+                </div>
+                {safeRevenues.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                        <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                        <p>Không có dữ liệu doanh thu để hiển thị</p>
+                        <p className="text-sm text-gray-400 mt-2">Vui lòng kiểm tra lại bộ lọc hoặc thử lại sau</p>
+                    </div>
+                ) : (
+                    <>
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="border p-3 text-left text-gray-700">ID</th>
+                                    <th className="border p-3 text-left text-gray-700">Loại Người Hưởng</th>
+                                    <th className="border p-3 text-left text-gray-700">ID Người Hưởng</th>
+                                    <th className="border p-3 text-left text-gray-700">Loại Nguồn</th>
+                                    <th className="border p-3 text-left text-gray-700">ID Nguồn</th>
+                                    <th className="border p-3 text-left text-gray-700">Số Tiền</th>
+                                    <th className="border p-3 text-left text-gray-700">Ngày</th>
+                                    <th className="border p-3 text-left text-gray-700">Mô Tả</th>
+                                    <th className="border p-3 text-left text-gray-700">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {safeRevenues.map(revenue => (
+                                    <motion.tr
+                                        key={revenue.revenueId}
+                                        whileHover={{ backgroundColor: '#f3f4f6' }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <td className="border p-3">{revenue.revenueId}</td>
+                                        <td className="border p-3">{revenue.beneficiaryType}</td>
+                                        <td className="border p-3">{revenue.beneficiaryId}</td>
+                                        <td className="border p-3">{revenue.sourceType}</td>
+                                        <td className="border p-3">{revenue.sourceId}</td>
+                                        <td className="border p-3 text-green-600 font-medium">
+                                            {formatVND(revenue.amount)}
+                                        </td>
+                                        <td className="border p-3">
+                                            {revenue.date ? new Date(revenue.date).toLocaleDateString() : 'N/A'}
+                                        </td>
+                                        <td className="border p-3">{revenue.description}</td>
+                                        <td className="border p-3">
+                                            <div className="flex space-x-2">
+                                                <button className="p-1 text-blue-600 hover:text-blue-800" title="Xem chi tiết">
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                <button className="p-1 text-green-600 hover:text-green-800" title="Xuất chi tiết">
+                                                    <Download className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div className="flex justify-center items-center gap-2 mt-4">
+                            <button disabled={page === 0} onClick={() => setPage(page - 1)} className="px-3 py-1 border rounded disabled:opacity-50">Trước</button>
+                            <span>Trang {page + 1} / {totalPages}</span>
+                            <button disabled={page + 1 >= totalPages} onClick={() => setPage(page + 1)} className="px-3 py-1 border rounded disabled:opacity-50">Sau</button>
+                        </div>
+                    </>
+                )}
+            </div>
+        </motion.div>
+    );
+};
 
 // Search Revenue Component
 const SearchRevenue = ({ revenues, searchParams, setSearchParams }) => {
-    const [filteredRevenues, setFilteredRevenues] = useState(revenues);
+    // Safety check for revenues
+    const safeRevenues = Array.isArray(revenues) ? revenues : [];
+    const [filteredRevenues, setFilteredRevenues] = useState(safeRevenues);
+    
+    // Format currency to VND
+    const formatVND = (amount) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
 
     useEffect(() => {
-        const filtered = revenues.filter(revenue => {
+        const filtered = safeRevenues.filter(revenue => {
             return (
-                (!searchParams.startDate || new Date(revenue.date) >= new Date(searchParams.startDate)) &&
-                (!searchParams.endDate || new Date(revenue.date) <= new Date(searchParams.endDate)) &&
+                (!searchParams.startDate || (revenue.date && new Date(revenue.date) >= new Date(searchParams.startDate))) &&
+                (!searchParams.endDate || (revenue.date && new Date(revenue.date) <= new Date(searchParams.endDate))) &&
                 (!searchParams.beneficiaryType || revenue.beneficiaryType === searchParams.beneficiaryType) &&
                 (!searchParams.sourceType || revenue.sourceType === searchParams.sourceType) &&
-                (!searchParams.minAmount || revenue.amount >= searchParams.minAmount) &&
-                (!searchParams.maxAmount || revenue.amount <= searchParams.maxAmount)
+                (!searchParams.minAmount || (revenue.amount && revenue.amount >= searchParams.minAmount)) &&
+                (!searchParams.maxAmount || (revenue.amount && revenue.amount <= searchParams.maxAmount))
             );
         });
         setFilteredRevenues(filtered);
-    }, [revenues, searchParams]);
+    }, [safeRevenues, searchParams]);
 
     return (
         <motion.div
@@ -409,10 +636,10 @@ const SearchRevenue = ({ revenues, searchParams, setSearchParams }) => {
                                         <td className="border p-3">{revenue.sourceType}</td>
                                         <td className="border p-3">{revenue.sourceId}</td>
                                         <td className="border p-3 text-green-600 font-medium">
-                                            ${revenue.amount.toFixed(2)}
+                                            {formatVND(revenue.amount)}
                                         </td>
                                         <td className="border p-3">
-                                            {new Date(revenue.date).toLocaleDateString()}
+                                            {revenue.date ? new Date(revenue.date).toLocaleDateString() : 'N/A'}
                                         </td>
                                         <td className="border p-3">{revenue.description}</td>
                                     </tr>
@@ -431,47 +658,9 @@ const SearchRevenue = ({ revenues, searchParams, setSearchParams }) => {
     );
 };
 
-// Export Revenue Component
-const ExportRevenue = ({ onExport }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-    >
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <Download className="mr-2" /> Xuất Báo Cáo Doanh Thu
-        </h2>
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h3 className="text-xl font-semibold mb-4">Xuất Báo Cáo Excel</h3>
-                    <p className="text-gray-600 mb-4">
-                        Xuất báo cáo doanh thu theo khoảng thời gian được chọn. Báo cáo sẽ bao gồm tất cả các thông tin chi tiết về doanh thu trong khoảng thời gian đó.
-                    </p>
-                    <button
-                        onClick={onExport}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                    >
-                        <Download className="w-4 h-4 mr-2" />
-                        Xuất Báo Cáo Excel
-                    </button>
-                </div>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                    <h4 className="font-semibold mb-2">Hướng Dẫn</h4>
-                    <ul className="list-disc list-inside text-gray-600 space-y-2">
-                        <li>Chọn khoảng thời gian cần xuất báo cáo</li>
-                        <li>Nhấn nút "Xuất Báo Cáo Excel"</li>
-                        <li>File Excel sẽ được tải về máy của bạn</li>
-                        <li>Báo cáo bao gồm tất cả thông tin chi tiết về doanh thu</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </motion.div>
-);
-
 // Main Dashboard Component
 const Dashboard = () => {
+    const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState('overview');
     const [revenues, setRevenues] = useState([]);
     const [searchParams, setSearchParams] = useState({
@@ -485,10 +674,55 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [filter, setFilter] = useState({
+        startDate: '',
+        endDate: '',
+        sourceType: '',
+        beneficiaryId: '',
+        bookingId: '',
+        minAmount: '',
+        maxAmount: ''
+    });
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [userRole, setUserRole] = useState('');
+
+    // Check user role on component mount
+    useEffect(() => {
+        const checkUserRole = () => {
+            try {
+                const token = getCookie('authToken');
+                if (!token) {
+                    navigate('/login', { replace: true });
+                    return;
+                }
+
+                const decoded = jwtDecode(token);
+                const role = decoded.role || getCookie('userRole');
+                
+                if (role !== 'MANAGER') {
+                    console.log('❌ Access denied - User role is not MANAGER:', role);
+                    navigate('/unauthorized', { replace: true });
+                    return;
+                }
+
+                setUserRole(role);
+                console.log('✅ Manager access granted');
+            } catch (error) {
+                console.error('Error checking user role:', error);
+                navigate('/login', { replace: true });
+            }
+        };
+
+        checkUserRole();
+    }, [navigate]);
 
     useEffect(() => {
-        loadRevenues();
-    }, []);
+        if (userRole === 'MANAGER') {
+            loadRevenues();
+        }
+    }, [userRole]);
 
     useEffect(() => {
         if (success) {
@@ -504,11 +738,36 @@ const Dashboard = () => {
         setError(null);
         try {
             const token = getCookie('authToken');
-            const revenueData = await revenueService.getAllRevenues(token);
-            setRevenues(revenueData);
+            console.log('🔍 Loading revenues with token:', token ? 'Token exists' : 'No token');
+            
+            // Debug: Decode token to see what's in it
+            if (token) {
+                try {
+                    const decoded = jwtDecode(token);
+                    console.log('🔍 Decoded token:', decoded);
+                    console.log('🔍 Role from token:', decoded.role);
+                } catch (e) {
+                    console.error('❌ Error decoding token:', e);
+                }
+            }
+            
+            const params = {
+                ...filter,
+                page,
+                size
+            };
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) delete params[key];
+            });
+            
+            console.log('🔍 API params:', params);
+            const revenueData = await revenueService.getPagedRevenues(params, token);
+            console.log('✅ Revenue data received:', revenueData);
+            setRevenues(revenueData.content || []);
+            setTotalPages(revenueData.totalPages || 1);
         } catch (err) {
+            console.error('❌ Error loading revenues:', err);
             setError('Không thể tải danh sách doanh thu. Vui lòng thử lại sau.');
-            console.error('Error loading revenues:', err);
         } finally {
             setLoading(false);
         }
@@ -527,12 +786,75 @@ const Dashboard = () => {
         }
     };
 
+    const fetchRevenues = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const token = getCookie('authToken');
+            const params = {
+                ...filter,
+                page,
+                size
+            };
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) delete params[key];
+            });
+            const res = await getPagedRevenues(params, token);
+            setRevenues(res.content || []);
+            setTotalPages(res.totalPages || 1);
+        } catch (err) {
+            setError('Không thể tải dữ liệu doanh thu');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchRevenues();
+        // eslint-disable-next-line
+    }, [filter, page, size]);
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilter(prev => ({ ...prev, [name]: value }));
+        setPage(0); // reset về trang đầu khi filter
+    };
+
+    const handleExportExcel = async () => {
+        try {
+            setLoading(true);
+            const token = getCookie('authToken');
+            const params = { ...filter };
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) delete params[key];
+            });
+            await exportExcelV2(params, token);
+            setSuccess('Xuất Excel thành công!');
+        } catch (err) {
+            setError('Xuất Excel thất bại! Vui lòng thử lại.');
+            console.error('Error exporting Excel:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const renderPage = () => {
         switch (currentPage) {
             case 'overview':
                 return <RevenueOverview revenues={revenues} />;
             case 'list':
-                return <RevenueList revenues={revenues} onExport={handleExport} />;
+                return (
+                    <RevenueList
+                        revenues={revenues}
+                        onExport={handleExport}
+                        filter={filter}
+                        handleFilterChange={handleFilterChange}
+                        handleExportExcel={handleExportExcel}
+                        page={page}
+                        setPage={setPage}
+                        totalPages={totalPages}
+                    />
+                );
             case 'search':
                 return (
                     <SearchRevenue
@@ -541,8 +863,6 @@ const Dashboard = () => {
                         setSearchParams={setSearchParams}
                     />
                 );
-            case 'export':
-                return <ExportRevenue onExport={handleExport} />;
             default:
                 return <RevenueOverview revenues={revenues} />;
         }
@@ -553,61 +873,63 @@ const Dashboard = () => {
             <Header />
             <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
             <main className="flex-1 ml-64 pt-20 p-8">
-                {/* Error Message */}
-                {error && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                    >
-                        <AlertCircle className="w-5 h-5 mr-2" />
-                        {error}
-                        <button 
-                            onClick={() => setError(null)}
-                            className="ml-auto text-red-700 hover:text-red-900"
+                <ErrorBoundary>
+                    {/* Error Message */}
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center"
                         >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </motion.div>
-                )}
-                
-                {/* Loading Indicator */}
-                {loading && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
-                    >
-                        <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-3">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                            <span className="text-gray-700">Đang xử lý...</span>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* Success Message */}
-                {success && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                    >
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        {success}
-                        <button 
-                            onClick={() => setSuccess(null)}
-                            className="ml-auto text-green-700 hover:text-green-900"
+                            <AlertCircle className="w-5 h-5 mr-2" />
+                            {error}
+                            <button 
+                                onClick={() => setError(null)}
+                                className="ml-auto text-red-700 hover:text-red-900"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </motion.div>
+                    )}
+                    
+                    {/* Loading Indicator */}
+                    {loading && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
                         >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </motion.div>
-                )}
+                            <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-3">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                <span className="text-gray-700">Đang xử lý...</span>
+                            </div>
+                        </motion.div>
+                    )}
 
-                <AnimatePresence mode="wait">
-                    {renderPage()}
-                </AnimatePresence>
+                    {/* Success Message */}
+                    {success && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center"
+                        >
+                            <CheckCircle className="w-5 h-5 mr-2" />
+                            {success}
+                            <button 
+                                onClick={() => setSuccess(null)}
+                                className="ml-auto text-green-700 hover:text-green-900"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </motion.div>
+                    )}
+
+                    <AnimatePresence mode="wait">
+                        {renderPage()}
+                    </AnimatePresence>
+                </ErrorBoundary>
             </main>
         </div>
     );

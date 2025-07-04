@@ -176,8 +176,119 @@ class RevenueService {
             throw error;
         }
     }
+
+    // Lấy danh sách doanh thu có phân trang/filter
+    async getPagedRevenues(params, token = null) {
+        try {
+            const queryString = new URLSearchParams();
+            Object.keys(params).forEach(key => {
+                if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                    queryString.append(key, params[key]);
+                }
+            });
+            
+            const url = `${API_BASE_URL}/filtered?${queryString.toString()}`;
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            
+            console.log('🔍 Making request to:', url);
+            console.log('🔍 Headers:', headers);
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers,
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching paged revenues:', error);
+            throw error;
+        }
+    }
 }
 
 // Export instance của service
 const revenueService = new RevenueService();
+
+// Lấy danh sách doanh thu có phân trang/filter
+export const getPagedRevenues = async (params, token = null) => {
+    try {
+        const queryString = new URLSearchParams();
+        Object.keys(params).forEach(key => {
+            if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                queryString.append(key, params[key]);
+            }
+        });
+        
+        const url = `${API_BASE_URL}/filtered?${queryString.toString()}`;
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers,
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching paged revenues:', error);
+        throw error;
+    }
+};
+
+// Xuất excel với filter
+export const exportExcelV2 = async (params, token = null) => {
+    try {
+        const queryString = new URLSearchParams();
+        Object.keys(params).forEach(key => {
+            if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                queryString.append(key, params[key]);
+            }
+        });
+        
+        const url = `${API_BASE_URL}/export/excel?${queryString.toString()}`;
+        const headers = {
+            'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type': 'application/json'
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers,
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        // Tải file về
+        const url_download = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url_download;
+        link.setAttribute('download', 'revenue_report.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        throw error;
+    }
+};
+
 export default revenueService; 

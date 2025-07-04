@@ -16,6 +16,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Clock,
+    DollarSign,
 } from "lucide-react";
 import {
     XAxis,
@@ -131,6 +132,9 @@ const Dashboard = () => {
                         </button>
                         <button onClick={() => navigate("/transport-units/overview")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-orange-600 rounded-lg shadow hover:opacity-90">
                             <MapPin className="w-5 h-5" /> Quản lý vận chuyển
+                        </button>
+                        <button onClick={() => navigate("/managerevenue")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
+                            <DollarSign className="w-5 h-5" /> Quản lý doanh thu
                         </button>
                         <div className="mt-4">
                             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
