@@ -7,7 +7,19 @@ import RequireAuth from "../../Components/RequireAuth";
 import Header from "../../Components/FormLogin_yen/Header";
 import Footer from "../../Components/FormLogin_yen/Footer";
 import {
-    Users, Package, TrendingUp, MapPin, ChevronDown
+    TrendingUp,
+  MapPin, 
+  ChevronDown,
+
+    Users,
+    Package,
+    TrendingUp,
+    MapPin,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    DollarSign,
+
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
 import {
@@ -98,38 +110,54 @@ const Dashboard = () => {
                         <button onClick={() => navigate("/transport-units/overview")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-orange-600 rounded-lg shadow hover:opacity-90">
                             <MapPin className="w-5 h-5" /> Quản lý vận chuyển
                         </button>
+                          {/* Nút người dùng + dropdown */}
+                          <div className="mt-auto relative">
+                              <button
+                                  onClick={() => setMenuOpen(!menuOpen)}
+                                  className="flex items-center justify-between w-full px-4 py-3 bg-blue-500 rounded-lg hover:bg-blue-150"
+                              >
+                                  <span className="truncate text-white">{username || "Tài khoản"}</span>
+                                  <ChevronDown className="w-4 h-4 ml-2" />
+                              </button>
 
-                        {/* Nút người dùng + dropdown */}
-                        <div className="mt-auto relative">
-                            <button
-                                onClick={() => setMenuOpen(!menuOpen)}
-                                className="flex items-center justify-between w-full px-4 py-3 bg-blue-500 rounded-lg hover:bg-blue-150"
-                            >
-                                <span className="truncate text-white">{username || "Tài khoản"}</span>
-                                <ChevronDown className="w-4 h-4 ml-2" />
-                            </button>
+                              {menuOpen && (
+                                  <div className="absolute bottom-full left-0 w-full mb-2 bg-gray-100 border rounded-lg shadow-md z-50">
+                                      <button
+                                          onClick={() => navigate("/profile/main")}
+                                          className="block w-full text-left px-4 py-2 hover:bg-gray-200"
+                                      >
+                                          Thông tin cá nhân
+                                      </button>
+                                      <button
+                                          onClick={() => {
+                                              Cookies.remove("authToken");
+                                              Cookies.remove("managerId");
+                                              Cookies.remove("username");
+                                              navigate("/login");
+                                          }}
+                                          className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-200"
+                                      >
+                                          Đăng xuất
+                                      </button>
+                                  </div>
+                              )}
+                          </div>
 
-                            {menuOpen && (
-                                <div className="absolute bottom-full left-0 w-full mb-2 bg-gray-100 border rounded-lg shadow-md z-50">
-                                    <button
-                                        onClick={() => navigate("/profile/main")}
-                                        className="block w-full text-left px-4 py-2 hover:bg-gray-200"
-                                    >
-                                        Thông tin cá nhân
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            Cookies.remove("authToken");
-                                            Cookies.remove("managerId");
-                                            Cookies.remove("username");
-                                            navigate("/login");
-                                        }}
-                                        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-200"
-                                    >
-                                        Đăng xuất
-                                    </button>
-                                </div>
-                            )}
+                          <button onClick={() => navigate("/managerevenue")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
+                              <DollarSign className="w-5 h-5" /> Quản lý doanh thu
+                          </button>
+
+                          <div className="mt-4">
+                              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                  <Clock className="w-4 h-4" /> Thời gian
+                              </label>
+                              <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                  <option value="week">Tuần này</option>
+                                  <option value="month">Tháng này</option>
+                                  <option value="quarter">Quý này</option>
+                              </select>
+                          </div>
+
                         </div>
                     </div>
 

@@ -32,9 +32,17 @@ import {
     Plus,
     ChevronDown,
     ChevronRight,
+    Crown,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import Cookies from "js-cookie"
+import { jwtDecode } from 'jwt-decode'
+
+// Add this at the top of the file (after imports)
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+}
 
 // Component chính quản lý thông tin chức vụ
 const Staff = () => {
@@ -55,17 +63,29 @@ const Staff = () => {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const [dashboardExpanded, setDashboardExpanded] = useState(true)
     const [currentPage, setCurrentPage] = useState('main')
-    const [stats, setStats] = useState({
-        newReceipts: 0,
-        pendingOrders: 0,
-        newCustomers: 0,
-        pendingSupport: 0,
-    })
-    const [activities, setActivities] = useState([])
-    const username = Cookies.get("username") || "Staff User"
+const [stats, setStats] = useState({
+    newReceipts: 0,
+    pendingOrders: 0,
+    newCustomers: 0,
+    pendingSupport: 0,
+});
+const [activities, setActivities] = useState([]);
+
+const [userRole, setUserRole] = useState('');
+const [username, setUsername] = useState(Cookies.get("username") || "Staff User");
+
     const navigate = useNavigate()
 
     // Lấy dữ liệu thống kê và hoạt động gần đây
+    useEffect(() => {
+        const token = getCookie('authToken');
+        if (token) {
+            const decoded = jwtDecode(token);
+            setUserRole(decoded.role || getCookie('userRole'));
+            setUsername(decoded.username || 'User');
+        }
+    }, []);
+
     useEffect(() => {
         const token = Cookies.get("authToken");
         if (!token) {
@@ -196,7 +216,7 @@ const Staff = () => {
         return new Intl.NumberFormat("vi-VN").format(number) + " VNĐ"
     }
 
-    // Dữ liệu menu
+
     const menuItems = [
         { name: "Trang Chủ", icon: Home, path: "/", hasLink: true },
         {
@@ -214,7 +234,14 @@ const Staff = () => {
         { name: "Quản Lý Đơn Vị Vận Chuyển", icon: Truck, hasLink: false },
         { name: "Quản Lý Đơn Hàng", icon: ShoppingCart, path: "/manageorder", hasLink: true },
         { name: "Quản Lý Khách Hàng", icon: Users, path: "/manageuser", hasLink: true },
-        { name: "Quản Lý Doanh Thu", icon: TrendingUp, path: "/managerevenue", hasLink: true },
+        // Only show revenue management for MANAGER role
+        ...(userRole === 'MANAGER' ? [{ 
+            name: "Quản Lý Doanh Thu", 
+            icon: TrendingUp, 
+            path: "/managerevenue", 
+            hasLink: true,
+            managerOnly: true 
+        }] : []),
         { name: "Hỗ Trợ Khách Hàng", icon: Headphones, hasLink: false },
         { name: "Báo Cáo", icon: TrendingUp, hasLink: false },
         { name: "Cài Đặt", icon: Settings, hasLink: false },
@@ -353,9 +380,14 @@ const Staff = () => {
                                                     >
                                                         <IconComponent className="w-5 h-5 mr-4" />
                                                         {!sidebarCollapsed && (
-                                                            <span className="font-medium group-hover:translate-x-1 transition-transform">
-                                                                {item.name}
-                                                            </span>
+                                                            <div className="flex items-center flex-1">
+                                                                <span className="font-medium group-hover:translate-x-1 transition-transform">
+                                                                    {item.name}
+                                                                </span>
+                                                                {item.managerOnly && (
+                                                                    <Crown className="w-4 h-4 ml-2 text-yellow-500" title="Manager Only" />
+                                                                )}
+                                                            </div>
                                                         )}
                                                         {item.active && !sidebarCollapsed && (
                                                             <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
@@ -370,9 +402,14 @@ const Staff = () => {
                                                     >
                                                         <IconComponent className="w-5 h-5 mr-4" />
                                                         {!sidebarCollapsed && (
-                                                            <span className="font-medium group-hover:translate-x-1 transition-transform">
-                                                                {item.name}
-                                                            </span>
+                                                            <div className="flex items-center flex-1">
+                                                                <span className="font-medium group-hover:translate-x-1 transition-transform">
+                                                                    {item.name}
+                                                                </span>
+                                                                {item.managerOnly && (
+                                                                    <Crown className="w-4 h-4 ml-2 text-yellow-500" title="Manager Only" />
+                                                                )}
+                                                            </div>
                                                         )}
                                                         {item.active && !sidebarCollapsed && (
                                                             <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
@@ -397,7 +434,9 @@ const Staff = () => {
                                                 </div>
                                                 <div className="user-details">
                                                     <p className="font-semibold text-gray-800 leading-tight">{username}</p>
-                                                    <p className="text-sm text-gray-500 leading-tight">Nhân viên</p>
+                                                    <p className="text-sm text-gray-500 leading-tight">
+                                                        {userRole === 'MANAGER' ? 'Quản lý' : 'Nhân viên'}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <button
@@ -416,7 +455,9 @@ const Staff = () => {
                                                 </div>
                                                 <div className="user-details">
                                                     <p className="font-semibold text-gray-800 leading-tight">{username}</p>
-                                                    <p className="text-sm text-gray-500 leading-tight">Nhân viên</p>
+                                                    <p className="text-sm text-gray-500 leading-tight">
+                                                        {userRole === 'MANAGER' ? 'Quản lý' : 'Nhân viên'}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <NavLink

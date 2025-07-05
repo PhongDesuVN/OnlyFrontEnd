@@ -7,14 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        barlow: ['"Barlow Condensed"', 'sans-serif'],// add font chữ
-      }
-    },
-    extend: {},
-    extend: {
-      fontFamily: {
-        barlow: ['"Barlow Condensed"', 'sans-serif'],// add font chữ
-      }
+        barlow: ['Barlow Condensed', 'sans-serif'],
+      },
     },
   },
   plugins: [],

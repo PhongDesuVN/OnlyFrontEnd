@@ -191,4 +191,37 @@ class UserService {
 
 // Export instance của service
 const userService = new UserService();
-export default userService; 
+export default userService;
+
+// Lấy danh sách user có phân trang/filter
+export const getPagedUsers = async (params, token = null) => {
+    try {
+        const queryString = new URLSearchParams();
+        Object.keys(params).forEach(key => {
+            if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+                queryString.append(key, params[key]);
+            }
+        });
+        
+        const url = `${API_BASE_URL}/filtered?${queryString.toString()}`;
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers,
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching paged users:', error);
+        throw error;
+    }
+}; 

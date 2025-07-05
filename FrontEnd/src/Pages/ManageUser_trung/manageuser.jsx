@@ -6,6 +6,7 @@ import {
     Mail, Phone, MapPin, User, BarChart, List, Settings,
     Truck, Home, Shield, CheckCircle, AlertCircle, X, Save, Calendar
 } from 'lucide-react';
+import { getPagedUsers } from '../../Services/userService.js';
 import userService from '../../Services/userService.js';
 
 // Add this at the top of the file (after imports)
@@ -182,7 +183,7 @@ const UserOverview = ({ users }) => (
 );
 
 // User List Component
-const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => (
+const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus, filter, handleFilterChange, page, totalPages, setPage }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -191,6 +192,12 @@ const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => (
         <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
             <List className="mr-2" /> Danh Sách User
         </h2>
+        <div className="flex flex-wrap gap-4 mb-4">
+            <input type="text" name="fullname" placeholder="Họ tên" value={filter.fullname} onChange={handleFilterChange} className="border p-2 rounded" />
+            <input type="text" name="email" placeholder="Email" value={filter.email} onChange={handleFilterChange} className="border p-2 rounded" />
+            <input type="text" name="phone" placeholder="Số điện thoại" value={filter.phone} onChange={handleFilterChange} className="border p-2 rounded" />
+            <input type="text" name="address" placeholder="Địa chỉ" value={filter.address} onChange={handleFilterChange} className="border p-2 rounded" />
+        </div>
         <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
             <table className="w-full border-collapse">
                 <thead>
@@ -278,6 +285,11 @@ const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => (
                 ))}
                 </tbody>
             </table>
+        </div>
+        <div className="flex justify-center items-center gap-2 mt-4">
+            <button disabled={page === 0} onClick={() => setPage(page - 1)} className="px-3 py-1 border rounded disabled:opacity-50">Trước</button>
+            <span>Trang {page + 1} / {totalPages}</span>
+            <button disabled={page + 1 >= totalPages} onClick={() => setPage(page + 1)} className="px-3 py-1 border rounded disabled:opacity-50">Sau</button>
         </div>
     </motion.div>
 );
@@ -740,25 +752,30 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
 // Main Dashboard Component
 const Dashboard = () => {
     const [currentPage, setCurrentPage] = useState('overview');
-    const [users, setUsers] = useState([]);
-    const [searchParams, setSearchParams] = useState({
+    const [filter, setFilter] = useState({
         fullname: '',
-        username: '',
         email: '',
-        role: '',
         phone: '',
         address: ''
     });
-    const [editingUser, setEditingUser] = useState(null);
-    const [showUserForm, setShowUserForm] = useState(false);
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState('');
     const [success, setSuccess] = useState(null);
+    const [editingUser, setEditingUser] = useState(null);
 
     // Load users on component mount
     useEffect(() => {
-        loadUsers();
+        fetchUsers();
     }, []);
+
+    // Refetch users when filter or page changes
+    useEffect(() => {
+        fetchUsers();
+    }, [filter, page, size]);
 
     // Auto clear success message after 3 seconds
     useEffect(() => {
@@ -770,23 +787,28 @@ const Dashboard = () => {
         }
     }, [success]);
 
-    const loadUsers = async () => {
+    const fetchUsers = async () => {
         setLoading(true);
-        setError(null);
+        setError('');
         try {
+            console.log('Fetching users with params:', { filter, page, size });
             const token = getCookie('authToken');
-            const userData = await userService.getAllUsers({}, token);
-            // Sort users by createdAt date (newest first)
-            const sortedUsers = userData.sort((a, b) => {
-                const dateA = new Date(a.createdAt);
-                const dateB = new Date(b.createdAt);
-                return dateB - dateA; // Descending order (newest first)
+            const params = {
+                ...filter,
+                page,
+                size
+            };
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) delete params[key];
             });
-            setUsers(sortedUsers);
+            console.log('Final params for API call:', params);
+            const res = await getPagedUsers(params, token);
+            console.log('API response:', res);
+            setUsers(res.content || []);
+            setTotalPages(res.totalPages || 1);
         } catch (err) {
-            setError('Không thể tải danh sách user. Sử dụng dữ liệu mẫu.');
-            console.error('Error loading users:', err);
-            // Giữ dữ liệu mẫu nếu API không hoạt động
+            console.error('Error fetching users:', err);
+            setError('Không thể tải dữ liệu user');
         } finally {
             setLoading(false);
         }
@@ -799,7 +821,6 @@ const Dashboard = () => {
             const token = getCookie('authToken');
             const newUser = await userService.createUser(userData, token);
             setUsers([...users, newUser]);
-            setShowUserForm(false);
             setCurrentPage('list');
             setSuccess('User đã được thêm thành công');
         } catch (err) {
@@ -812,7 +833,6 @@ const Dashboard = () => {
 
     const handleEditUser = (user) => {
         setEditingUser(user);
-        setShowUserForm(true);
         setCurrentPage('add');
     };
 
@@ -845,8 +865,6 @@ const Dashboard = () => {
                 user.id === editingUser.id ? { ...editingUser, ...userData } : user
             ));
 
-            setEditingUser(null);
-            setShowUserForm(false);
             setCurrentPage('list');
             setSuccess('User đã được cập nhật thành công');
 
@@ -897,17 +915,22 @@ const Dashboard = () => {
         }
     };
 
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilter(prev => ({ ...prev, [name]: value }));
+        setPage(0); // reset về trang đầu khi filter
+    };
+
     const renderPage = () => {
-        if (currentPage === 'add' || showUserForm) {
+        if (currentPage === 'add') {
             return (
                 <UserForm
                     user={editingUser}
                     isEdit={!!editingUser}
                     onSave={editingUser ? handleUpdateUser : handleAddUser}
                     onCancel={() => {
-                        setShowUserForm(false);
-                        setEditingUser(null);
                         setCurrentPage('list');
+                        setEditingUser(null);
                     }}
                 />
             );
@@ -923,18 +946,36 @@ const Dashboard = () => {
                         onEditUser={handleEditUser}
                         onDeleteUser={handleDeleteUser}
                         onToggleStatus={handleToggleStatus}
+                        filter={filter}
+                        handleFilterChange={handleFilterChange}
+                        page={page}
+                        totalPages={totalPages}
+                        setPage={setPage}
                     />
                 );
             case 'search':
                 return (
                     <SearchUsers
                         users={users}
-                        searchParams={searchParams}
-                        setSearchParams={setSearchParams}
+                        searchParams={filter}
+                        setSearchParams={setFilter}
                     />
                 );
             case 'settings':
-                return <SettingsPage />;
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
+                            <Settings className="mr-2" /> Cài Đặt
+                        </h2>
+                        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <p className="text-gray-600">Trang cài đặt đang được phát triển...</p>
+                        </div>
+                    </motion.div>
+                );
             default:
                 return <UserOverview users={users} />;
         }
