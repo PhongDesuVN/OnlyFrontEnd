@@ -16,23 +16,27 @@ import Dashboard from '../Pages/Staff_phong/DashBoard.jsx';
 import ManageOrder from '../Pages/ManageOrder_phong/manageorder.jsx';
 import ManageUser from '../Pages/ManageUser_trung/manageuser.jsx';
 import ManageRevenue from '../Pages/ManageRevenue_trung/managerevenue.jsx';
+import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
 import Unauthorized from '../Pages/Unauthorized.jsx';
 
 // --- Manager Pages ---
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
+import StaffPerformance from '../Pages/Manager_yen/StaffPerformance.jsx';
 
 // --- Transport Unit Pages ---
 import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.jsx';
 import TransportUnitManagement from '../Pages/TransportUnit_TrungTran/TransportUnitManagement.jsx';
 import TransportUnitOverview from '../Pages/TransportUnit_TrungTran/TransportUnitOverview.jsx';
 
+// --- Customer Pages ---
 import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
 import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
 
+// --- Other Pages ---
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
 
@@ -54,25 +58,19 @@ export default function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile/main" element={<ProfileMainPage />} />
 
             {/* Management - Protected routes */}
             <Route path="/manageorder" element={<RequireAuth><ManageOrder /></RequireAuth>} />
-            <Route path="/manageuser" element={<RequireAuth><ManageUser /></RequireAuth>} /> 
-            
-            {/* Manager-only routes */}
-            <Route path="/managerevenue" element={
-                <RequireAuth>
-                    <RequireManagerRole>
-                        <ManageRevenue />
-                    </RequireManagerRole>
-                </RequireAuth>
-            } /> 
+            <Route path="/manageuser" element={<RequireAuth><ManageUser /></RequireAuth>} />
 
-            {/* Manager */}
+            {/* Manager-only routes */}
+            <Route path="/managerevenue" element={<RequireAuth><RequireManagerRole><ManageRevenue /></RequireManagerRole></RequireAuth>} />
             <Route path="/manager" element={<RequireAuth><RequireManagerRole><ManagerDashboard /></RequireManagerRole></RequireAuth>} />
             <Route path="/manager-dashboard" element={<RequireAuth><RequireManagerRole><ManagerDashboard /></RequireManagerRole></RequireAuth>} />
             <Route path="/managerstaff" element={<RequireAuth><RequireManagerRole><StaffManagement /></RequireManagerRole></RequireAuth>} />
             <Route path="/promotions" element={<RequireAuth><RequireManagerRole><PromotionManagement /></RequireManagerRole></RequireAuth>} />
+            <Route path="/staffperformance" element={<RequireAuth><RequireManagerRole><StaffPerformance /></RequireManagerRole></RequireAuth>} />
 
             {/* Transport Unit - Manager only */}
             <Route path="/transport-units" element={
@@ -88,9 +86,9 @@ export default function AppRoutes() {
 
             {/* Customer routes */}
             <Route path="/c_login" element={<CustomerLogin />} />
-            <Route path="/c_register" element={<C_Register/>}/>
-            <Route path="/c_homepage" element={<C_HomePage/>}/>
-            <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
+            <Route path="/c_register" element={<C_Register />} />
+            <Route path="/c_homepage" element={<C_HomePage />} />
+            <Route path="/c_customerinfo" element={<C_CustomerInfo />} />
 
             {/* Other routes */}
             <Route path="/receipts" element={<RequireAuth><ReceiptsManagement /></RequireAuth>} />

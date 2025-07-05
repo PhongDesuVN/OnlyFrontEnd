@@ -13,10 +13,20 @@ export const apiCall = async (endpoint, options = {}) => {
     const url = `${API_BASE_URL}${endpoint}`;
 
     // Chuẩn bị headers
+    // src/utils/api.js
+
     const headers = {
-        "Content-Type": "application/json",
         ...(options.headers || {}),
     };
+
+    if (options.body instanceof FormData) {
+        delete headers["Content-Type"];
+    } else {
+        headers["Content-Type"] = "application/json";
+    }
+    console.log("📦 Content-Type header:", headers["Content-Type"]);
+
+
 
     // Nếu cần xác thực thì thêm token vào headers
     if (options.auth) {
@@ -37,6 +47,11 @@ export const apiCall = async (endpoint, options = {}) => {
     };
 
     try {
+        console.log("FETCH to:", url);
+        console.log("Method:", config.method);
+        console.log("Headers:", config.headers);
+        console.log("Body type:", config.body instanceof FormData ? "FormData" : typeof config.body);
+
         const response = await fetch(url, config);
         return response;
     } catch (error) {
