@@ -283,7 +283,7 @@ const Dashboard = () => {
                     credentials: "include",
                 })
             }
-        } catch (e) {}
+        } catch (e) { }
         Cookies.remove("authToken")
         Cookies.remove("userRole")
         Cookies.remove("username")
