@@ -36,6 +36,7 @@ import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
 
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
+import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
 
 export default function AppRoutes() {
     return (
@@ -60,10 +61,11 @@ export default function AppRoutes() {
             <Route path="/managerevenue" element={<ManageRevenue />} /> 
 
             {/* Manager */}
-            <Route path="/manager" element={<ManagerDashboard />} />
-            <Route path="/manager-dashboard" element={<ManagerDashboard />} />
-            <Route path="/managerstaff" element={<StaffManagement />} />
-            <Route path="/promotions" element={<PromotionManagement />} />
+                <Route path="/manager" element={<ManagerDashboard />} />
+                <Route path="/manager-dashboard" element={<ManagerDashboard />} />
+                <Route path="/managerstaff" element={<StaffManagement />} />
+                <Route path="/promotions" element={<PromotionManagement />} />
+                <Route path="/staffperformance" element={<StaffPerformance />} />
 
             {/* Transport Unit */}
             <Route path="/transport-units" element={<TransportLayout />}>

@@ -1,124 +1,90 @@
-// Cleaned-up ManagerDashboard.jsx
-
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import RequireAuth from "../../Components/RequireAuth";
 import Header from "../../Components/FormLogin_yen/Header";
 import Footer from "../../Components/FormLogin_yen/Footer";
 import {
-    Users,
-    Package,
-    TrendingUp,
-    MapPin,
-    ChevronLeft,
-    ChevronRight,
-    Clock,
+    Users, Package, TrendingUp, MapPin, ChevronDown
 } from "lucide-react";
+import axiosInstance from "../../utils/axiosInstance.js";
 import {
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    LineChart,
-    Line,
-    PieChart,
-    Pie,
-    Cell,
+    XAxis, YAxis, CartesianGrid, Tooltip,
+    ResponsiveContainer, LineChart, Line
 } from "recharts";
 
-const performanceData = [
-    { month: "T6/2023", staff: 85, efficiency: 88, satisfaction: 92 },
-    { month: "T7/2023", staff: 90, efficiency: 85, satisfaction: 89 },
-    { month: "T8/2023", staff: 88, efficiency: 92, satisfaction: 94 },
-    { month: "T9/2023", staff: 92, efficiency: 89, satisfaction: 91 },
-    { month: "T10/2023", staff: 87, efficiency: 94, satisfaction: 93 },
-];
-
-const operationalData = [
-    { name: "Hoàn thành", value: 342, color: "#10B981" },
-    { name: "Đang xử lý", value: 45, color: "#F59E0B" },
-    { name: "Chậm trễ", value: 12, color: "#EF4444" },
-    { name: "Tạm dừng", value: 8, color: "#6B7280" },
-];
-
 const Dashboard = () => {
-    const [currentPage, setCurrentPage] = useState(0);
-    const [selectedPeriod, setSelectedPeriod] = useState("month");
-    const [showMenu, setShowMenu] = useState(false);
-    const menuRef = useRef(null);
+    const [dashboardData, setDashboardData] = useState({
+        overview: {},
+        recentIssues: [],
+        topOperators: [],
+        chartData: []
+    });
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
-
-    const cards = [
-        {
-            title: "Xu hướng hiệu suất",
-            icon: "📈",
-            content: (
-                <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={performanceData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="staff" stroke="#3B82F6" strokeWidth={2} name="Nhân viên" />
-                        <Line type="monotone" dataKey="efficiency" stroke="#10B981" strokeWidth={2} name="Hiệu suất" />
-                        <Line type="monotone" dataKey="satisfaction" stroke="#8B5CF6" strokeWidth={2} name="Hài lòng KH" />
-                    </LineChart>
-                </ResponsiveContainer>
-            ),
-        },
-        {
-            title: "Tình trạng vận hành",
-            icon: "🎯",
-            content: (
-                <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                        <Pie
-                            data={operationalData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={100}
-                            paddingAngle={5}
-                            dataKey="value"
-                        >
-                            {operationalData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                    </PieChart>
-                </ResponsiveContainer>
-            ),
-        },
-    ];
+    const username = Cookies.get("username");
 
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setShowMenu(false);
+        const fetchData = async () => {
+            try {
+                const managerId = Cookies.get("managerId");
+                const token = Cookies.get("authToken");
+
+                if (!managerId || !token) {
+                    navigate("/login");
+                    return;
+                }
+
+                const config = {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                };
+
+                const [overviewRes, issueRes, operatorRes, chartRes] = await Promise.all([
+                    axiosInstance.get("/api/dashboard/overview", config),
+                    axiosInstance.get("/api/dashboard/recent-issues?limit=5", config),
+                    axiosInstance.post("/api/dashboard/top-operators", { limit: 5 }, config),
+                    axiosInstance.post("/api/dashboard/chart", {
+                        type: "revenue",
+                        range: "month"
+                    }, config)
+                ]);
+
+                setDashboardData({
+                    overview: overviewRes.data,
+                    recentIssues: issueRes.data,
+                    topOperators: operatorRes.data,
+                    chartData: chartRes.data
+                });
+                setLoading(false);
+            } catch (err) {
+                setError("Không thể tải dữ liệu dashboard");
+                setLoading(false);
             }
         };
-        if (showMenu) document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [showMenu]);
 
-    const handleLogout = () => {
-        Cookies.remove("authToken");
-        Cookies.remove("userRole");
-        Cookies.remove("username");
-        navigate("/login");
-    };
+        fetchData();
+    }, [navigate]);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div className="text-red-600">{error}</div>;
+
+    const { overview, chartData, topOperators, recentIssues } = dashboardData;
 
     return (
         <RequireAuth>
-            <div className="manager-dashboard-root min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
-                <Header dashboardHideHome />
-                <div className="flex flex-row flex-1 overflow-hidden pt-20 gap-10">
-                    <div className="w-80 min-w-[260px] max-w-xs px-8 py-10 flex flex-col gap-6 bg-white/80 rounded-2xl shadow-lg mt-4 ml-4">
+            <div className="min-h-screen bg-blue-300 flex flex-col">
+                <Header />
+
+                <div className="flex flex-1 pt-24 px-6 gap-6">
+                    {/* Sidebar trái */}
+                    <div className="w-80 min-w-[260px] max-w-xs px-6 py-8 flex flex-col gap-6 bg-white rounded-2xl shadow-lg">
                         <h3 className="text-xl font-semibold text-gray-800 mb-2">Hành động nhanh</h3>
                         <button onClick={() => navigate("/managerstaff")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-blue-600 rounded-lg shadow hover:opacity-90">
                             <Users className="w-5 h-5" /> Quản lý nhân viên
@@ -132,46 +98,111 @@ const Dashboard = () => {
                         <button onClick={() => navigate("/transport-units/overview")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-orange-600 rounded-lg shadow hover:opacity-90">
                             <MapPin className="w-5 h-5" /> Quản lý vận chuyển
                         </button>
-                        <div className="mt-4">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                <Clock className="w-4 h-4" /> Thời gian
-                            </label>
-                            <select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                                <option value="week">Tuần này</option>
-                                <option value="month">Tháng này</option>
-                                <option value="quarter">Quý này</option>
-                            </select>
+
+                        {/* Nút người dùng + dropdown */}
+                        <div className="mt-auto relative">
+                            <button
+                                onClick={() => setMenuOpen(!menuOpen)}
+                                className="flex items-center justify-between w-full px-4 py-3 bg-blue-500 rounded-lg hover:bg-blue-150"
+                            >
+                                <span className="truncate text-white">{username || "Tài khoản"}</span>
+                                <ChevronDown className="w-4 h-4 ml-2" />
+                            </button>
+
+                            {menuOpen && (
+                                <div className="absolute bottom-full left-0 w-full mb-2 bg-gray-100 border rounded-lg shadow-md z-50">
+                                    <button
+                                        onClick={() => navigate("/profile/main")}
+                                        className="block w-full text-left px-4 py-2 hover:bg-gray-200"
+                                    >
+                                        Thông tin cá nhân
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            Cookies.remove("authToken");
+                                            Cookies.remove("managerId");
+                                            Cookies.remove("username");
+                                            navigate("/login");
+                                        }}
+                                        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-200"
+                                    >
+                                        Đăng xuất
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
-                        <div className="w-full max-w-4xl flex flex-col items-center">
-                            <div className="flex items-center justify-between w-full mb-6">
-                                <button onClick={() => setCurrentPage((prev) => (prev === 0 ? cards.length - 1 : prev - 1))} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                                    <ChevronLeft className="w-6 h-6" />
-                                </button>
-                                <h3 className="text-3xl font-bold text-gray-800">{cards[currentPage].title}</h3>
-                                <button onClick={() => setCurrentPage((prev) => (prev === cards.length - 1 ? 0 : prev + 1))} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-                                    <ChevronRight className="w-6 h-6" />
-                                </button>
+                    {/* Nội dung dashboard */}
+                    <div className="flex-1 flex flex-col gap-6 pb-10">
+                        {/* Thống kê tổng quan */}
+                        <div className="grid grid-cols-3 gap-6">
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h4 className="text-lg font-bold">Tổng số đơn hàng hôm nay</h4>
+                                <p className="text-2xl mt-2">{overview?.totalOrders || 0}</p>
                             </div>
-                            <div className="w-full bg-white rounded-3xl p-10 shadow-2xl flex items-center justify-center" style={{ minHeight: 350 }}>
-                                {cards[currentPage].content}
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h4 className="text-lg font-bold">Doanh thu hôm nay</h4>
+                                <p className="text-2xl mt-2">{(overview?.revenueToday || 0).toLocaleString()} VND</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow p-6">
+                                <h4 className="text-lg font-bold">Khuyến mãi đang chạy</h4>
+                                <p className="text-2xl mt-2">{overview?.activePromotions || 0}</p>
+                            </div>
+                        </div>
+
+                        {/* Biểu đồ doanh thu */}
+                        <div className="bg-white rounded-2xl shadow-lg p-6">
+                            <h4 className="text-xl font-bold mb-4">Biểu đồ doanh thu</h4>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart
+                                    data={chartData}
+                                    margin={{ top: 20, right: 20, left: 20, bottom: 0 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="date" />
+                                    <YAxis tickFormatter={(v) => v.toLocaleString('vi-VN')} />
+                                    <Tooltip formatter={(v) => `${v.toLocaleString('vi-VN')} VND`} />
+                                    <Line type="monotone" dataKey="value" stroke="#4F46E5" strokeWidth={2} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Grid ngang: Top 5 và Recent Issues */}
+                        <div className="grid grid-cols-2 gap-6">
+                            {/* Top 5 Operators */}
+                            <div className="bg-white p-6 rounded-xl shadow-lg">
+                                <h4 className="text-xl font-bold mb-4">Top 5 nhân viên có nhiều đơn hàng nhất</h4>
+                                <ul className="divide-y">
+                                    {topOperators.map((op, idx) => (
+                                        <li key={idx} className="flex justify-between py-2 font-medium">
+                                            <span className="w-1/2 truncate">{op.operatorName}</span>
+                                            <span className="w-1/4 text-right">{op.successOrders} đơn</span>
+                                            <span className="w-1/4 text-right">{op.onTimeRate?.toFixed(1)}%</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            {/* Vấn đề gần đây */}
+                            <div className="bg-white p-6 rounded-xl shadow-lg">
+                                <h4 className="text-xl font-bold mb-4">Vấn đề gần đây</h4>
+                                <ul className="divide-y">
+                                    {recentIssues.map((i, idx) => (
+                                        <li key={idx} className="flex justify-between py-2">
+                                            <span className="w-3/4 truncate">{i.description}</span>
+                                            <span className="w-1/4 text-right">{i.status}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {showMenu && (
-                    <div ref={menuRef} className="absolute top-20 right-6 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-50">
-                        <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Thông tin cá nhân</button>
-                        <button className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600" onClick={handleLogout}>
-                            Đăng xuất
-                        </button>
-                    </div>
-                )}
-
-                <Footer />
+                <div className="mt-10">
+                    <Footer />
+                </div>
             </div>
         </RequireAuth>
     );
