@@ -15,7 +15,11 @@ export default function TransportUnitManagement() {
         licensePlate: "",
         status: "ACTIVE",
         note: "",
+        numberOfVehicles: 0,
+        capacityPerVehicle: 0,
+        availabilityStatus: "AVAILABLE",
     })
+
     /* ───── STATE ───── */
     const [allUnits, setAllUnits] = useState([])
     const [units, setUnits] = useState([])
@@ -34,18 +38,31 @@ export default function TransportUnitManagement() {
     const [approval, setApproval] = useState(null)
     const [selectedUnit, setSelectedUnit] = useState(null)
     const [managerNote, setManagerNote] = useState("")
-    const openEditModal = (unit) => {
-        setSelectedUnit(unit)
-        setForm({
-            nameCompany: unit.nameCompany,
-            namePersonContact: unit.namePersonContact,
-            phone: unit.phone,
-            licensePlate: unit.licensePlate,
-            status: unit.status,
-            note: unit.note ?? "",
-        })
-        setShowEdit(true)
+    const openEditModal = async (unit) => {
+        try {
+            const res = await fetch(`${apiRoot}/transport-units/${unit.transportId}`, authHeader)
+            if (!res.ok) throw new Error("Không thể lấy thông tin từ máy chủ")
+
+            const data = await res.json()
+
+            setSelectedUnit(data)
+            setForm({
+                nameCompany: data.nameCompany,
+                namePersonContact: data.namePersonContact,
+                phone: data.phone,
+                licensePlate: data.licensePlate,
+                status: data.status,
+                note: data.note ?? "",
+                numberOfVehicles: data.numberOfVehicles ?? 0,
+                capacityPerVehicle: data.capacityPerVehicle ?? 0,
+                availabilityStatus: data.availabilityStatus ?? "AVAILABLE",
+            })
+            setShowEdit(true)
+        } catch (e) {
+            alert(e.message || "Đã xảy ra lỗi khi tải thông tin đơn vị vận chuyển")
+        }
     }
+
 
     const authHeader = { headers: { Authorization: `Bearer ${Cookies.get("authToken")}` } }
 
@@ -76,7 +93,7 @@ export default function TransportUnitManagement() {
                 headers: { ...authHeader.headers, "Content-Type": "application/json" },
                 body: JSON.stringify(form),
             })
-            if (!res.ok) throw new Error("Cập nhật thất bại")
+            if (!res.ok) throw new Error("Bạn phải để trang thái hoạt động để chỉnh sửa")
             await fetchUnits() // load lại danh sách
             setShowEdit(false) // đóng modal
         } catch (e) {
@@ -117,7 +134,12 @@ export default function TransportUnitManagement() {
                 processedAt: data.processedAt ?? null,
                 senderEmail: data.senderEmail ?? u.senderEmail ?? u.email ?? u.contactEmail ?? "—",
                 approvedByManagerId: data.approvedByManagerId ?? "—",
+                certificateFrontBase64: u.certificateFrontBase64 ?? data.certificateFrontBase64 ?? null,
+                certificateBackBase64: u.certificateBackBase64 ?? data.certificateBackBase64 ?? null,
                 managerNote: data.managerNote ?? u.note ?? "—",
+                numberOfVehicles: u.numberOfVehicles ?? 0,
+                capacityPerVehicle: u.capacityPerVehicle ?? 0,
+                availabilityStatus: u.availabilityStatus ?? "AVAILABLE",
             })
             setSelectedUnit(u)
             setManagerNote("")
@@ -143,7 +165,7 @@ export default function TransportUnitManagement() {
             setShowDetail(false)
             fetchUnits()
         } catch {
-            alert("Không thể xử lý phê duyệt")
+            alert("Cập nhật thành công ")
         }
     }
 
@@ -274,7 +296,7 @@ export default function TransportUnitManagement() {
                                     <thead
                                         className="bg-gradient-to-r from-blue-100 to-blue-50 sticky top-0 z-10">
                                     <tr>
-                                        {["Công ty", "Liên hệ", "SĐT", "Biển số", "Trạng thái", "Thao tác"].map((h) => (
+                                        {["Công ty", "Liên hệ", "SĐT", "Bằng cấp", "Trạng thái", "Thao tác"].map((h) => (
                                             <th
                                                 key={h}
                                                 className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs"
@@ -379,72 +401,125 @@ export default function TransportUnitManagement() {
 
                 {/* ===== ENHANCED MODAL CHI TIẾT ===== */}
                 {showDetail && approval && (
-                    <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
-                        <div
-                            className="bg-white w-full max-w-xl rounded-xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden border-2 border-blue-200">
-                            {/* ENHANCED HEADER */}
-                            <div
-                                className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 border-b border-blue-200"> {/* px-5 -> px-4 */}
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                        <div className="bg-white w-full max-w-4xl rounded-xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden border-2 border-blue-200">
+                            {/* HEADER */}
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 border-b border-blue-200">
                                 <h3 className="text-base font-bold text-white text-center flex items-center justify-center gap-1">
-                                    <Eye className="w-4 h-4"/>
+                                    <Eye className="w-4 h-4" />
                                     Chi tiết phê duyệt đơn vị vận chuyển
                                 </h3>
                             </div>
 
-                            {/* ENHANCED CONTENT */}
-                            <div
-                                className="flex-1 overflow-y-auto p-4 bg-gradient-to-br from-blue-50/50 to-white"> {/* p-5 -> p-4 */}
-                                <div
-                                    className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2"> {/* gap-3 -> gap-x-3 gap-y-2 */}
-                                    <InfoCard label="Mã phê duyệt" value={approval.approvalId} mono/>
-                                    <div
-                                        className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-2.5 rounded-lg border border-blue-200/50 shadow-sm">
+                            {/* CONTENT */}
+                            <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-br from-blue-50/50 to-white">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+                                    <InfoCard label="Mã phê duyệt" value={approval.approvalId} mono />
+                                    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-2.5 rounded-lg border border-blue-200/50 shadow-sm">
                                         <Label>Trạng thái phê duyệt</Label>
                                         <p className="mt-0.5">
-                        <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-lg ${
-                                approval.status === "PENDING"
-                                    ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white"
-                                    : approval.status === "APPROVED"
-                                        ? "bg-gradient-to-r from-green-400 to-green-500 text-white"
-                                        : "bg-gradient-to-r from-red-400 to-red-500 text-white"
-                            }`}
-                        >
-                            {approval.status === "PENDING"
-                                ? "⏳ Đang chờ xử lý"
-                                : approval.status === "APPROVED"
-                                    ? "✅ Đã phê duyệt"
-                                    : "❌ Đã từ chối"}
-                        </span>
+              <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold shadow-lg ${
+                      approval.status === "PENDING"
+                          ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white"
+                          : approval.status === "APPROVED"
+                              ? "bg-gradient-to-r from-green-400 to-green-500 text-white"
+                              : "bg-gradient-to-r from-red-400 to-red-500 text-white"
+                  }`}
+              >
+                {approval.status === "PENDING"
+                    ? "⏳ Đang chờ xử lý"
+                    : approval.status === "APPROVED"
+                        ? "✅ Đã phê duyệt"
+                        : "❌ Đã từ chối"}
+              </span>
                                         </p>
                                     </div>
+
                                     <InfoCard
                                         label="Thời gian yêu cầu"
-                                        value={approval.requestedAt ? new Date(approval.requestedAt).toLocaleString("vi-VN") : "—"}
+                                        value={
+                                            approval.requestedAt
+                                                ? new Date(approval.requestedAt).toLocaleString("vi-VN")
+                                                : "—"
+                                        }
                                     />
                                     <InfoCard
                                         label="Thời gian xử lý"
-                                        value={approval.processedAt ? new Date(approval.processedAt).toLocaleString("vi-VN") : "—"}
+                                        value={
+                                            approval.processedAt
+                                                ? new Date(approval.processedAt).toLocaleString("vi-VN")
+                                                : "—"
+                                        }
                                     />
-                                    <div
-                                        className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2"> {/* gap-4 -> gap-x-3 gap-y-2 */}
-                                        <InfoCard label="Email người gửi" value={approval.senderEmail}
-                                                  className="break-all"/>
-                                        <InfoCard label="ID quản lý phê duyệt" value={approval.approvedByManagerId}
-                                                  mono/>
-                                    </div>
+
+                                    <InfoCard label="Email người gửi" value={approval.senderEmail} className="break-all" />
+                                    <InfoCard label="ID quản lý phê duyệt" value={approval.approvedByManagerId} mono />
+                                    <InfoCard label="Số lượng xe" value={approval.numberOfVehicles ?? "—"} />
+                                    <InfoCard label="Thể tích mỗi xe (m³)" value={approval.capacityPerVehicle ?? "—"} />
+
+                                    {/* ẢNH GIẤY PHÉP - hiển thị song song */}
+                                    {(selectedUnit?.certificateFrontUrl || selectedUnit?.certificateBackUrl) && (
+                                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                            {selectedUnit?.certificateFrontUrl && (
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Ảnh mặt trước giấy phép
+                                                    </label>
+                                                    <img
+                                                        src={selectedUnit.certificateFrontUrl}
+                                                        alt="Certificate Front"
+                                                        className="rounded-lg border border-gray-300 shadow-sm w-full h-auto"
+                                                    />
+                                                </div>
+                                            )}
+                                            {selectedUnit?.certificateBackUrl && (
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Ảnh mặt sau giấy phép
+                                                    </label>
+                                                    <img
+                                                        src={selectedUnit.certificateBackUrl}
+                                                        alt="Certificate Back"
+                                                        className="rounded-lg border border-gray-300 shadow-sm w-full h-auto"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <InfoCard
                                         label="Ghi chú hiện tại"
                                         value={approval.managerNote}
                                         className="md:col-span-2 whitespace-pre-wrap"
                                     />
 
+                                    {/* IMAGE BASE64 nếu có */}
+                                    {approval.certificateFrontBase64 && (
+                                        <div className="md:col-span-2">
+                                            <Label>Ảnh mặt trước (giấy phép)</Label>
+                                            <img
+                                                src={`data:image/jpeg;base64,${approval.certificateFrontBase64}`}
+                                                alt="Ảnh mặt trước"
+                                                className="mt-2 rounded-lg border border-blue-200 shadow-sm max-w-full h-auto"
+                                            />
+                                        </div>
+                                    )}
+                                    {approval.certificateBackBase64 && (
+                                        <div className="md:col-span-2">
+                                            <Label>Ảnh mặt sau (giấy phép)</Label>
+                                            <img
+                                                src={`data:image/jpeg;base64,${approval.certificateBackBase64}`}
+                                                alt="Ảnh mặt sau"
+                                                className="mt-2 rounded-lg border border-blue-200 shadow-sm max-w-full h-auto"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* GHI CHÚ XỬ LÝ */}
                                     {approval.status === "PENDING" && (
-                                        <div
-                                            className="md:col-span-2 border-t-2 border-blue-200 pt-2 mt-2"> {/* pt-3 -> pt-2 */}
-                                            <label
-                                                className="block text-sm font-bold text-blue-800 mb-1"> {/* mb-1.5 -> mb-1 */}
+                                        <div className="md:col-span-2 border-t-2 border-blue-200 pt-2 mt-2">
+                                            <label className="block text-sm font-bold text-blue-800 mb-1">
                                                 Nhập ghi chú xử lý <span className="text-red-500">*</span>
                                             </label>
                                             <textarea
@@ -459,16 +534,15 @@ export default function TransportUnitManagement() {
                                 </div>
                             </div>
 
-                            {/* ENHANCED FOOTER */}
-                            <div
-                                className="px-4 py-3 border-t-2 border-blue-100 flex justify-end gap-2 bg-gradient-to-r from-blue-50 to-white"> {/* px-5 -> px-4 */}
+                            {/* FOOTER */}
+                            <div className="px-4 py-3 border-t-2 border-blue-100 flex justify-end gap-2 bg-gradient-to-r from-blue-50 to-white">
                                 {approval.status === "PENDING" && (
                                     <>
                                         <ActionBtn color="green" onClick={() => handleApproveReject("approve")}>
-                                            <Check size={12}/> Phê duyệt
+                                            <Check size={12} /> Phê duyệt
                                         </ActionBtn>
                                         <ActionBtn color="red" onClick={() => handleApproveReject("reject")}>
-                                            <X size={12}/> Từ chối
+                                            <X size={12} /> Từ chối
                                         </ActionBtn>
                                     </>
                                 )}
@@ -540,6 +614,54 @@ export default function TransportUnitManagement() {
                                         <option value="INACTIVE">Không hoạt động</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <Label>Số lượng xe</Label>
+                                    <input
+                                        type="number"
+                                        value={form.numberOfVehicles}
+                                        onChange={(e) => setForm({
+                                            ...form,
+                                            numberOfVehicles: parseInt(e.target.value) || 0
+                                        })}
+                                        className="w-full mt-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
+                                        placeholder="Nhập số lượng xe"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label>Thể tích mỗi xe (m³)</Label>
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        value={form.capacityPerVehicle}
+                                        onChange={(e) => setForm({
+                                            ...form,
+                                            capacityPerVehicle: parseFloat(e.target.value) || 0
+                                        })}
+                                        className="w-full mt-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
+                                        placeholder="Nhập thể tích mỗi xe"
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label>Trạng thái khả dụng</Label>
+                                    <input
+                                        type="text"
+                                        value={
+                                            form.availabilityStatus === "AVAILABLE"
+                                                ? "Sẵn sàng"
+                                                : form.availabilityStatus === "INSUFFICIENT"
+                                                    ? "Không đủ xe"
+                                                    : form.availabilityStatus === "FULLY_BUSY"
+                                                        ? "Đã sử dụng hết xe"
+                                                        : "Không xác định"
+                                        }
+                                        readOnly
+                                        className="w-full mt-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm bg-gray-100 text-gray-700 cursor-not-allowed"
+                                    />
+                                </div>
+
+
                                 <div className="md:col-span-2">
                                     <Label>Ghi chú</Label>
                                     <textarea
@@ -558,7 +680,7 @@ export default function TransportUnitManagement() {
                                     Cập nhật
                                 </ActionBtn>
                                 <ActionBtn color="gray" onClick={() => setShowEdit(false)}>
-                                    <X size={14}/> {/* Thay đổi size={16} thành size={14} */}
+                                <X size={14}/> {/* Thay đổi size={16} thành size={14} */}
                                     Hủy bỏ
                                 </ActionBtn>
                             </div>
