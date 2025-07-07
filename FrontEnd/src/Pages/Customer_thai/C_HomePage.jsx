@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import NotificationBell from '../../components/NotificationBell';
+import FurnitureSelector from '../../Components/FurnitureSelector';
 
 const Header = ({ isLoggedIn, handleLogout }) => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -115,26 +116,35 @@ const Booking = ({ isLoggedIn }) => {
         storageId: null,
         operatorId: null,
         promotionId: null,
-        itemCounts: {
-            small: 0,
-            medium: 0,
-            large: 0,
-            extraLarge: 0
-        },
+        promotionName: '',
+        homeType: '',
+        slotIndex: null,
         total: 0,
-        distance: 0
+        distance: 0,
+        totalVolume: 0,
+        vehicleType: null
     });
     const [loading, setLoading] = useState(false);
     const [transportUnits, setTransportUnits] = useState([]);
     const [storageUnits, setStorageUnits] = useState([]);
     const [staffMembers, setStaffMembers] = useState([]);
         const [promotions, setPromotions] = useState([]);
-        const [dropdownOpen, setDropdownOpen] = useState({ transport: false, storage: false, staff: false, promotion: false });
+    const [dropdownOpen, setDropdownOpen] = useState({ transport: false, storage: false, staff: false, promotion: false });
+    const [selectedFurniture, setSelectedFurniture] = useState([]);
+    const [slotStatus, setSlotStatus] = useState(null);
+    const [showSlotSelector, setShowSlotSelector] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
     const [mapData, setMapData] = useState({
         pickupCoords: null,
         deliveryCoords: null,
         route: []
     });
+    const [pickupSuggestions, setPickupSuggestions] = useState([]);
+    const [deliverySuggestions, setDeliverySuggestions] = useState([]);
+    const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
+    const [showDeliverySuggestions, setShowDeliverySuggestions] = useState(false);
+    const [loadingDistance, setLoadingDistance] = useState(false);
+    const [distanceError, setDistanceError] = useState(null);
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -164,87 +174,216 @@ const Booking = ({ isLoggedIn }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        if (name.startsWith('item_')) {
-            const itemType = name.replace('item_', '');
-            setBookingData(prev => ({
-                ...prev,
-                itemCounts: {
-                    ...prev.itemCounts,
-                    [itemType]: parseInt(value) || 0
-                }
-            }));
-        } else {
-            setBookingData(prev => ({
-                ...prev,
-                [name]: value
-            }));
-        }
+        setBookingData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
     
     const handleSelect = (type, value) => {
-        setBookingData(prev => ({ ...prev, [type]: value }));
-        setDropdownOpen(prev => ({ 
-            ...prev, 
-            [type === 'transportId' ? 'transport' : type === 'storageId' ? 'storage' : type === 'operatorId' ? 'staff' : type === 'promotionId' ? 'promotion' : type]: false 
-        }));
+        if (type === 'storageId') {
+            handleStorageSelect(value);
+        } else {
+            setBookingData(prev => ({ ...prev, [type]: value }));
+            setDropdownOpen(prev => ({ 
+                ...prev, 
+                [type === 'transportId' ? 'transport' : type === 'operatorId' ? 'staff' : type === 'promotionId' ? 'promotion' : type]: false 
+            }));
+        }
     };
 
-    // Hàm tính toán tổng tiền dựa trên số lượng hàng hóa và quãng đường
-    const calculateTotal = async (pickupLocation, deliveryLocation, itemCounts) => {
+    // Hàm tính toán tổng tiền dựa trên đồ đạc được chọn và quãng đường thực tế
+    const calculateTotal = async (pickupLocation, deliveryLocation, furniture) => {
         try {
-            // Bước 1: Geocoding - chuyển địa chỉ thành tọa độ
-            const pickupCoords = await geocodeAddress(pickupLocation);
-            const deliveryCoords = await geocodeAddress(deliveryLocation);
-            
-            if (!pickupCoords || !deliveryCoords) {
-                throw new Error('Không thể xác định tọa độ địa chỉ');
+            // Tổng thể tích
+            let totalVolume = 0;
+            if (furniture && furniture.length > 0) {
+                totalVolume = furniture.reduce((sum, item) => sum + (item.volume * item.quantity), 0);
             }
+
+            // Chọn loại xe
+            let vehicleType = 'Xe ba gác';
+            let vehicleFactor = 1;
+            if (totalVolume > 7 && totalVolume <= 11) {
+                vehicleType = 'Xe Tải Mini';
+                vehicleFactor = 1.4;
+            } else if (totalVolume > 11 && totalVolume <= 15) {
+                vehicleType = 'Xe tải tiêu chuẩn';
+                vehicleFactor = 1.8;
+            } else if (totalVolume > 15 && totalVolume <= 20) {
+                vehicleType = 'Xe tải lớn';
+                vehicleFactor = 2.1;
+            } else if (totalVolume > 20) {
+                vehicleType = 'Xe container';
+                vehicleFactor = 2.5;
+            }
+
+            // Tính quãng đường thực tế từ địa chỉ
+            let distance = 0;
+            let geocodingError = null;
             
-            // Bước 2: Tính quãng đường bằng OSRM
-            const distance = await calculateDistance(pickupCoords, deliveryCoords);
-            
-            // Bước 3: Tính tổng tiền
-            const itemCost = (itemCounts.small * 50000) + 
-                           (itemCounts.medium * 100000) + 
-                           (itemCounts.large * 200000) + 
-                           (itemCounts.extraLarge * 400000);
-            const distanceCost = distance * 15000;
-            const total = itemCost + distanceCost;
-            
-            return { total, distance };
+            if (pickupLocation && deliveryLocation) {
+                const pickupCoords = await geocodeAddress(pickupLocation);
+                const deliveryCoords = await geocodeAddress(deliveryLocation);
+                
+                if (!pickupCoords) {
+                    geocodingError = `Không tìm thấy địa chỉ pickup: "${pickupLocation}". Vui lòng nhập địa chỉ chi tiết hơn.`;
+                } else if (!deliveryCoords) {
+                    geocodingError = `Không tìm thấy địa chỉ delivery: "${deliveryLocation}". Vui lòng nhập địa chỉ chi tiết hơn.`;
+                } else {
+                    distance = await calculateDistance(pickupCoords, deliveryCoords);
+                    if (!distance || distance <= 0) {
+                        geocodingError = 'Không thể tính được khoảng cách giữa hai địa chỉ.';
+                    }
+                }
+            }
+
+            // Tính total theo công thức mới
+            const total = distance * 10 * vehicleFactor;
+
+            return { total, distance, vehicleType, totalVolume, geocodingError };
         } catch (error) {
             console.error('Lỗi tính toán:', error);
             throw error;
         }
     };
 
-    // Hàm geocoding sử dụng OpenStreetMap Nominatim
-    const geocodeAddress = async (address) => {
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
-            );
-            const data = await response.json();
-            
-            if (data && data.length > 0) {
-                return {
-                    lat: parseFloat(data[0].lat),
-                    lon: parseFloat(data[0].lon)
-                };
+    // Hàm tính toán tự động khi thay đổi địa chỉ hoặc đồ đạc
+    const updateTotal = async () => {
+        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+            setLoadingDistance(true);
+            setDistanceError(null);
+            try {
+                const { total, distance, vehicleType, totalVolume, geocodingError } = await calculateTotal(
+                    bookingData.pickupLocation,
+                    bookingData.deliveryLocation,
+                    selectedFurniture
+                );
+                
+                if (geocodingError) {
+                    setDistanceError(geocodingError);
+                    setBookingData(prev => ({ ...prev, total: 0, distance: 0, vehicleType: null, totalVolume: 0 }));
+                } else if (!distance || distance <= 0) {
+                    setDistanceError('Không thể tính được khoảng cách giữa hai địa chỉ.');
+                    setBookingData(prev => ({ ...prev, total: 0, distance: 0, vehicleType: null, totalVolume: 0 }));
+                } else {
+                    setDistanceError(null);
+                    setBookingData(prev => ({
+                        ...prev,
+                        total,
+                        distance,
+                        vehicleType,
+                        totalVolume
+                    }));
+                }
+            } catch (error) {
+                setDistanceError('Lỗi khi tính toán khoảng cách.');
+                setBookingData(prev => ({ ...prev, total: 0, distance: 0, vehicleType: null, totalVolume: 0 }));
+            } finally {
+                setLoadingDistance(false);
             }
-            return null;
-        } catch (error) {
-            console.error('Lỗi geocoding:', error);
-            return null;
         }
+    };
+
+    // Theo dõi thay đổi để tính toán lại tổng tiền (debounce)
+    useEffect(() => {
+        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+            setLoadingDistance(true);
+            setDistanceError(null);
+            const timeoutId = setTimeout(updateTotal, 800); // debounce 800ms
+            return () => clearTimeout(timeoutId);
+        }
+    }, [bookingData.pickupLocation, bookingData.deliveryLocation, selectedFurniture]);
+
+    // Cache cho geocoding để tránh gọi API nhiều lần
+    const geocodingCache = useRef(new Map());
+    
+    // Hàm geocoding sử dụng OpenStreetMap Nominatim với cache và email
+    const geocodeAddress = async (address) => {
+        if (!address || address.trim().length === 0) return null;
+        
+        // Kiểm tra cache trước
+        const cacheKey = address.trim().toLowerCase();
+        if (geocodingCache.current.has(cacheKey)) {
+            return geocodingCache.current.get(cacheKey);
+        }
+        
+        const maxRetries = 2;
+        let lastError;
+        
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                // Thêm delay để tuân thủ giới hạn 1 request/giây
+                if (attempt > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Tăng delay cho retry
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // Tạo AbortController để timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 giây timeout
+                
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&email=huynguyenthai2112@gmail.com`,
+                    {
+                        signal: controller.signal
+                    }
+                );
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    const result = {
+                        lat: parseFloat(data[0].lat),
+                        lon: parseFloat(data[0].lon)
+                    };
+                    
+                    // Lưu vào cache
+                    geocodingCache.current.set(cacheKey, result);
+                    
+                    return result;
+                } else {
+                    // Lưu null vào cache để tránh gọi lại địa chỉ không tìm thấy
+                    geocodingCache.current.set(cacheKey, null);
+                    return null;
+                }
+            } catch (error) {
+                lastError = error;
+                console.error(`Lỗi geocoding (attempt ${attempt + 1}):`, error);
+                
+                if (attempt === maxRetries) {
+                    // Lưu lỗi vào cache để tránh gọi lại liên tục
+                    geocodingCache.current.set(cacheKey, { error: true });
+                    return null;
+                }
+            }
+        }
+        
+        return null;
     };
 
     // Hàm tính quãng đường sử dụng OSRM
     const calculateDistance = async (pickup, delivery) => {
         try {
+            // Tạo AbortController để timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 giây timeout
+            
             const response = await fetch(
-                `http://router.project-osrm.org/route/v1/driving/${pickup.lon},${pickup.lat};${delivery.lon},${delivery.lat}?overview=false`
+                `http://router.project-osrm.org/route/v1/driving/${pickup.lon},${pickup.lat};${delivery.lon},${delivery.lat}?overview=false`,
+                {
+                    signal: controller.signal
+                }
             );
+            
+            clearTimeout(timeoutId);
             const data = await response.json();
             
             if (data && data.routes && data.routes.length > 0) {
@@ -258,33 +397,209 @@ const Booking = ({ isLoggedIn }) => {
         }
     };
 
-    // Hàm tính toán tự động khi thay đổi địa chỉ hoặc số lượng hàng hóa
-    const updateTotal = async () => {
-        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+    // Cache cho address suggestions
+    const suggestionsCache = useRef(new Map());
+    
+    // Hàm tìm kiếm địa chỉ gợi ý với cache và email
+    const searchAddressSuggestions = async (query) => {
+        if (!query || query.length < 3) return [];
+        
+        // Kiểm tra cache trước
+        const cacheKey = query.trim().toLowerCase();
+        if (suggestionsCache.current.has(cacheKey)) {
+            return suggestionsCache.current.get(cacheKey);
+        }
+        
+        const maxRetries = 2;
+        let lastError;
+        
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-                const { total, distance } = await calculateTotal(
-                    bookingData.pickupLocation,
-                    bookingData.deliveryLocation,
-                    bookingData.itemCounts
+                // Thêm delay để tuân thủ giới hạn 1 request/giây
+                if (attempt > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 2000 * attempt)); // Tăng delay cho retry
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                // Tạo AbortController để timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 giây timeout
+                
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&countrycodes=vn&email=huynguyenthai2112@gmail.com`,
+                    {
+                        signal: controller.signal
+                    }
                 );
-                setBookingData(prev => ({
-                    ...prev,
-                    total,
-                    distance
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const suggestions = data.map(item => ({
+                    display_name: item.display_name,
+                    lat: item.lat,
+                    lon: item.lon
                 }));
+                
+                // Lưu vào cache
+                suggestionsCache.current.set(cacheKey, suggestions);
+                
+                return suggestions;
             } catch (error) {
-                console.error('Lỗi cập nhật tổng tiền:', error);
+                lastError = error;
+                console.error(`Lỗi tìm kiếm địa chỉ (attempt ${attempt + 1}):`, error);
+                
+                if (attempt === maxRetries) {
+                    // Lưu lỗi vào cache để tránh gọi lại liên tục
+                    suggestionsCache.current.set(cacheKey, []);
+                    return [];
+                }
+            }
+        }
+        
+        return [];
+    };
+
+    // Xử lý thay đổi đồ đạc được chọn
+    const handleFurnitureChange = (furniture) => {
+        setSelectedFurniture(furniture);
+    };
+
+    // Xử lý thay đổi địa chỉ pickup (chỉ cập nhật state, không tìm kiếm)
+    const handlePickupLocationChange = (e) => {
+        const value = e.target.value;
+        setBookingData(prev => ({ ...prev, pickupLocation: value }));
+        setPickupSuggestions([]);
+        setShowPickupSuggestions(false);
+    };
+    // Xử lý nhấn Enter để tìm kiếm gợi ý pickup
+    const handlePickupLocationKeyDown = async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (bookingData.pickupLocation.length >= 3) {
+                try {
+                    const suggestions = await searchAddressSuggestions(bookingData.pickupLocation);
+                    setPickupSuggestions(suggestions);
+                    setShowPickupSuggestions(true);
+                    
+                    if (suggestions.length === 0) {
+                        alert('Không tìm thấy địa chỉ. Vui lòng nhập địa chỉ chi tiết hơn (ví dụ: "số 10 Trần Duy Hưng, Cầu Giấy, Hà Nội")');
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        alert('Kết nối bị timeout. Vui lòng kiểm tra mạng và thử lại sau.');
+                    } else {
+                        alert('Có lỗi khi tìm kiếm địa chỉ. Vui lòng thử lại sau.');
+                    }
+                }
+            } else {
+                alert('Vui lòng nhập ít nhất 3 ký tự để tìm kiếm địa chỉ.');
             }
         }
     };
 
-    // Theo dõi thay đổi để tính toán lại tổng tiền
-    useEffect(() => {
-        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
-            const timeoutId = setTimeout(updateTotal, 1000); // Delay 1 giây để tránh gọi API quá nhiều
-            return () => clearTimeout(timeoutId);
+    // Xử lý thay đổi địa chỉ delivery (chỉ cập nhật state, không tìm kiếm)
+    const handleDeliveryLocationChange = (e) => {
+        const value = e.target.value;
+        setBookingData(prev => ({ ...prev, deliveryLocation: value }));
+        setDeliverySuggestions([]);
+        setShowDeliverySuggestions(false);
+    };
+    // Xử lý nhấn Enter để tìm kiếm gợi ý delivery
+    const handleDeliveryLocationKeyDown = async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (bookingData.deliveryLocation.length >= 3) {
+                try {
+                    const suggestions = await searchAddressSuggestions(bookingData.deliveryLocation);
+                    setDeliverySuggestions(suggestions);
+                    setShowDeliverySuggestions(true);
+                    
+                    if (suggestions.length === 0) {
+                        alert('Không tìm thấy địa chỉ. Vui lòng nhập địa chỉ chi tiết hơn (ví dụ: "số 10 Trần Duy Hưng, Cầu Giấy, Hà Nội")');
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        alert('Kết nối bị timeout. Vui lòng kiểm tra mạng và thử lại sau.');
+                    } else {
+                        alert('Có lỗi khi tìm kiếm địa chỉ. Vui lòng thử lại sau.');
+                    }
+                }
+            } else {
+                alert('Vui lòng nhập ít nhất 3 ký tự để tìm kiếm địa chỉ.');
+            }
         }
-    }, [bookingData.pickupLocation, bookingData.deliveryLocation, bookingData.itemCounts]);
+    };
+
+    // Xử lý chọn gợi ý địa chỉ pickup
+    const handlePickupSuggestionSelect = (suggestion) => {
+        setBookingData(prev => ({ ...prev, pickupLocation: suggestion.display_name }));
+        setShowPickupSuggestions(false);
+        setPickupSuggestions([]);
+    };
+
+    // Xử lý chọn gợi ý địa chỉ delivery
+    const handleDeliverySuggestionSelect = (suggestion) => {
+        setBookingData(prev => ({ ...prev, deliveryLocation: suggestion.display_name }));
+        setShowDeliverySuggestions(false);
+        setDeliverySuggestions([]);
+    };
+
+    // Hàm chuyển đổi room sang RoomType enum
+    const mapRoomToRoomType = (room) => {
+        switch (room) {
+            case 'Phòng khách':
+                return 'LIVING_ROOM';
+            case 'Phòng ngủ':
+                return 'BEDROOM';
+            case 'Phòng ăn':
+                return 'DINING_ROOM';
+            case 'Phòng tắm':
+                return 'BATHROOM';
+            default:
+                return 'LIVING_ROOM';
+        }
+    };
+
+    // Hàm lấy trạng thái slot của kho
+    const fetchSlotStatus = async (storageId) => {
+        try {
+            const response = await fetch(`http://localhost:8083/api/customer/storage-units/${storageId}/slots`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setSlotStatus(data);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy trạng thái slot:', error);
+        }
+    };
+
+    // Xử lý chọn kho
+    const handleStorageSelect = (storageId) => {
+        setBookingData(prev => ({ ...prev, storageId }));
+        setDropdownOpen(prev => ({ ...prev, storage: false }));
+        if (storageId) {
+            fetchSlotStatus(storageId);
+            setShowSlotSelector(true);
+        } else {
+            setShowSlotSelector(false);
+            setSlotStatus(null);
+            setSelectedSlot(null);
+        }
+    };
+
+    // Xử lý chọn slot
+    const handleSlotSelect = (slotIndex) => {
+        setSelectedSlot(slotIndex);
+        setBookingData(prev => ({ ...prev, slotIndex }));
+    };
 
     // Cập nhật mapData khi địa chỉ thay đổi
     useEffect(() => {
@@ -311,6 +626,21 @@ const Booking = ({ isLoggedIn }) => {
         updateMap();
     }, [bookingData.pickupLocation, bookingData.deliveryLocation]);
 
+    // Ẩn gợi ý khi click ra ngoài
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (!event.target.closest('.relative')) {
+                setShowPickupSuggestions(false);
+                setShowDeliverySuggestions(false);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isLoggedIn) return;
@@ -325,14 +655,45 @@ const Booking = ({ isLoggedIn }) => {
             return;
         }
 
+        if (!bookingData.homeType) {
+            alert('Vui lòng chọn loại nhà.');
+            return;
+        }
+
+        if (bookingData.storageId && !bookingData.slotIndex) {
+            alert('Vui lòng chọn vị trí cất giữ trong kho.');
+            return;
+        }
+
         setLoading(true);
 
-        // Chuẩn bị payload, sử dụng operatorId từ form thay vì hardcode
+        // Chuẩn bị payload theo cấu trúc backend mới
+        const selectedPromotion = promotions.find(p => p.id === bookingData.promotionId);
+        
+        // Chuyển đổi furniture thành items theo format backend
+        const items = selectedFurniture.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            weight: item.weight,
+            volume: item.volume,
+            modular: item.modular,
+            bulky: item.bulky,
+            room: mapRoomToRoomType(item.room)
+        }));
+
         const payload = {
-            ...bookingData,
+            storageId: bookingData.storageId,
+            transportId: bookingData.transportId,
+            operatorId: bookingData.operatorId,
+            pickupLocation: bookingData.pickupLocation,
+            deliveryLocation: bookingData.deliveryLocation,
             deliveryDate: bookingData.deliveryDate ? `${bookingData.deliveryDate}T00:00:00` : null,
+            note: bookingData.note,
             total: bookingData.total || 0,
-            distance: bookingData.distance || 0
+            promotionName: selectedPromotion ? selectedPromotion.name : null,
+            homeType: bookingData.homeType,
+            slotIndex: bookingData.slotIndex,
+            items: items
         };
 
         try {
@@ -351,8 +712,10 @@ const Booking = ({ isLoggedIn }) => {
                 throw new Error('Đặt xe thất bại!');
             }
 
+            const result = await response.json();
             alert('Đặt xe thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.');
-            // Reset state với tên mới
+            
+            // Reset state
             setBookingData({ 
                 pickupLocation: '', 
                 deliveryLocation: '', 
@@ -362,11 +725,19 @@ const Booking = ({ isLoggedIn }) => {
                 storageId: null, 
                 operatorId: null, 
                 promotionId: null,
-                itemCounts: { small: 0, medium: 0, large: 0, extraLarge: 0 },
+                promotionName: '',
+                homeType: '',
+                slotIndex: null,
                 total: 0,
-                distance: 0
+                distance: 0,
+                totalVolume: 0,
+                vehicleType: null
             });
+            setSelectedFurniture([]);
             setSelectedService(null);
+            setShowSlotSelector(false);
+            setSlotStatus(null);
+            setSelectedSlot(null);
         } catch (err) {
             alert(err.message);
         } finally {
@@ -374,7 +745,7 @@ const Booking = ({ isLoggedIn }) => {
         }
     };
     
-    // Dropdown tùy chỉnh
+    // Dropdown tùy chỉnh với thông tin hiển thị bên dưới
     const CustomSelect = ({ label, type, options, selectedId, placeholder, isRequired }) => {
         const selectedOption = options.find(opt => {
             if (type === 'transport') return opt.transportId === selectedId;
@@ -384,6 +755,7 @@ const Booking = ({ isLoggedIn }) => {
             return false;
         });
         const displayField = type === 'transport' ? 'nameCompany' : type === 'storage' ? 'name' : type === 'staff' ? 'fullName' : type === 'promotion' ? 'name' : '';
+        
         return (
             <div className="relative">
                 <label className="block text-gray-700 font-medium mb-2">
@@ -396,6 +768,79 @@ const Booking = ({ isLoggedIn }) => {
                     <span className={selectedOption ? 'text-gray-800' : 'text-gray-400'}>{selectedOption ? selectedOption[displayField] : placeholder}</span>
                     <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
+                
+                {/* Hiển thị thông tin chi tiết bên dưới dropdown */}
+                {selectedOption && (
+                    <div className="mt-3 p-4 rounded-lg border">
+                        {type === 'transport' && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-row gap-4 items-center">
+                                <div className="flex-1">
+                                    <div className="font-semibold text-blue-800 mb-1">Thông tin phương tiện:</div>
+                                    <div className="text-gray-800"><strong>Công ty:</strong> {selectedOption.nameCompany}</div>
+                                    <div className="text-gray-800"><strong>Liên hệ:</strong> {selectedOption.namePersonContact}</div>
+                                    <div className="text-gray-800"><strong>SĐT:</strong> {selectedOption.phone}</div>
+                                    <div className="text-gray-800"><strong>Biển số:</strong> {selectedOption.licensePlate}</div>
+                                    <div className="text-gray-800"><strong>Trạng thái:</strong> {selectedOption.status}</div>
+                                </div>
+                                {selectedOption.imageTransportUnit || selectedOption.image ? (
+                                    <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
+                                        <img src={selectedOption.imageTransportUnit || selectedOption.image} alt="Ảnh phương tiện" className="object-cover w-32 h-32 rounded shadow border bg-white" />
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
+                        
+                        {type === 'storage' && (
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex flex-row gap-4 items-center">
+                                <div className="flex-1">
+                                    <div className="font-semibold text-green-800 mb-1">Thông tin kho:</div>
+                                    <div className="text-gray-800"><strong>Tên kho:</strong> {selectedOption.name}</div>
+                                    <div className="text-gray-800"><strong>Địa chỉ:</strong> {selectedOption.address}</div>
+                                    <div className="text-gray-800"><strong>SĐT:</strong> {selectedOption.phone}</div>
+                                    <div className="text-gray-800"><strong>Trạng thái:</strong> {selectedOption.status}</div>
+                                    <div className="text-gray-800"><strong>Số slot:</strong> {selectedOption.slotCount || 'N/A'}</div>
+                                </div>
+                                {selectedOption.imageStorageUnit || selectedOption.image ? (
+                                    <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
+                                        <img src={selectedOption.imageStorageUnit || selectedOption.image} alt="Ảnh kho" className="object-cover w-32 h-32 rounded shadow border bg-white" />
+                                    </div>
+                                ) : null}
+                                
+                                {/* Nút chọn vị trí cất giữ */}
+                                <div className="mt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSlotSelector(true)}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    >
+                                        Chọn vị trí cất giữ
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {type === 'staff' && (
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                                <div className="font-semibold text-purple-800 mb-1">Thông tin nhân viên:</div>
+                                <div className="text-gray-800"><strong>Họ tên:</strong> {selectedOption.fullName}</div>
+                                <div className="text-gray-800"><strong>Email:</strong> {selectedOption.email}</div>
+                                <div className="text-gray-800"><strong>SĐT:</strong> {selectedOption.phone}</div>
+                            </div>
+                        )}
+                        
+                        {type === 'promotion' && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <div className="font-semibold text-yellow-800 mb-1">Thông tin khuyến mãi:</div>
+                                <div className="text-gray-800"><strong>Tên:</strong> {selectedOption.name}</div>
+                                <div className="text-gray-800"><strong>Mô tả:</strong> {selectedOption.description}</div>
+                                <div className="text-gray-800">
+                                    <strong>Áp dụng đến:</strong> {selectedOption.endDate ? new Date(selectedOption.endDate).toLocaleDateString('vi-VN') : 'Không xác định'}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+                
                 {dropdownOpen[type] && (
                     <>
                         <div
@@ -449,7 +894,7 @@ const Booking = ({ isLoggedIn }) => {
                             Đặt Xe Vận Chuyển
                         </h2>
                         <p className="text-xl text-gray-700 max-w-2xl mx-auto font-medium">
-                            Vui lòng nhập thông tin vận chuyển
+                            Vui lòng nhập thông tin vận chuyển và chọn đồ đạc
                         </p>
                         <div className="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
                             <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -474,7 +919,7 @@ const Booking = ({ isLoggedIn }) => {
                                     </svg>
                                 </div>
                                 <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div>
+                                    <div className="relative">
                                         <label className="block text-gray-700 font-medium mb-2">
                                             Thông tin vị trí nhận *
                                         </label>
@@ -482,14 +927,33 @@ const Booking = ({ isLoggedIn }) => {
                                             type="text"
                                             name="pickupLocation"
                                             value={bookingData.pickupLocation}
-                                            onChange={handleInputChange}
+                                            onChange={handlePickupLocationChange}
+                                            onKeyDown={handlePickupLocationKeyDown}
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Nhập địa chỉ nhận hàng"
+                                            placeholder="Nhập địa chỉ nhận hàng (nhấn Enter để tìm kiếm)"
                                             required
                                         />
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            💡 Nhấn Enter để tìm kiếm địa chỉ. Nhập địa chỉ chi tiết để có kết quả chính xác hơn.
+                                        </div>
+                                        {/* Gợi ý địa chỉ pickup */}
+                                        {showPickupSuggestions && pickupSuggestions.length > 0 && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                {pickupSuggestions.map((suggestion, index) => (
+                                                    <button
+                                                        key={index}
+                                                        type="button"
+                                                        onClick={() => handlePickupSuggestionSelect(suggestion)}
+                                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
+                                                    >
+                                                        <div className="text-sm text-gray-800">{suggestion.display_name}</div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div>
+                                    <div className="relative">
                                         <label className="block text-gray-700 font-medium mb-2">
                                             Thông tin vị trí đến *
                                         </label>
@@ -497,86 +961,66 @@ const Booking = ({ isLoggedIn }) => {
                                             type="text"
                                             name="deliveryLocation"
                                             value={bookingData.deliveryLocation}
-                                            onChange={handleInputChange}
+                                            onChange={handleDeliveryLocationChange}
+                                            onKeyDown={handleDeliveryLocationKeyDown}
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Nhập địa chỉ giao hàng"
+                                            placeholder="Nhập địa chỉ giao hàng (nhấn Enter để tìm kiếm)"
                                             required
                                         />
-                                    </div>
-
-                                    {/* Thông tin kích cỡ đồ đạc */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-gray-700 font-medium mb-2">
-                                                Đồ đạc kích cỡ bé (50.000 VNĐ)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="item_small"
-                                                value={bookingData.itemCounts.small}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="Số lượng"
-                                                min="0"
-                                            />
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            💡 Nhấn Enter để tìm kiếm địa chỉ. Nhập địa chỉ chi tiết để có kết quả chính xác hơn.
                                         </div>
-                                        <div>
-                                            <label className="block text-gray-700 font-medium mb-2">
-                                                Đồ đạc kích cỡ vừa (100.000 VNĐ)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="item_medium"
-                                                value={bookingData.itemCounts.medium}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="Số lượng"
-                                                min="0"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-gray-700 font-medium mb-2">
-                                                Đồ đạc kích cỡ lớn (200.000 VNĐ)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="item_large"
-                                                value={bookingData.itemCounts.large}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="Số lượng"
-                                                min="0"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-gray-700 font-medium mb-2">
-                                                Đồ đạc kích cỡ cực lớn (400.000 VNĐ)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                name="item_extraLarge"
-                                                value={bookingData.itemCounts.extraLarge}
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                placeholder="Số lượng"
-                                                min="0"
-                                            />
-                                        </div>
+                                        {/* Gợi ý địa chỉ delivery */}
+                                        {showDeliverySuggestions && deliverySuggestions.length > 0 && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                {deliverySuggestions.map((suggestion, index) => (
+                                                    <button
+                                                        key={index}
+                                                        type="button"
+                                                        onClick={() => handleDeliverySuggestionSelect(suggestion)}
+                                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
+                                                    >
+                                                        <div className="text-sm text-gray-800">{suggestion.display_name}</div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Hiển thị thông tin tính toán */}
-                                    {(bookingData.total > 0 || bookingData.distance > 0) && (
+                                    {(loadingDistance || distanceError || bookingData.total > 0 || bookingData.distance > 0) && (
                                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                                             <h4 className="font-semibold text-blue-800 mb-2">Thông tin tính toán:</h4>
-                                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                                <div>
-                                                    <span className="text-gray-600">Quãng đường:</span>
-                                                    <span className="font-semibold text-blue-800 ml-2">{bookingData.distance.toFixed(1)} km</span>
+                                            {loadingDistance && (
+                                                <div className="text-blue-600 text-sm mb-2">Đang tính toán khoảng cách...</div>
+                                            )}
+                                            {distanceError && (
+                                                <div className="text-red-600 text-sm mb-2">{distanceError}</div>
+                                            )}
+                                            {!loadingDistance && !distanceError && (
+                                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                                    <div>
+                                                        <span className="text-gray-600">Quãng đường:</span>
+                                                        <span className="font-semibold text-blue-800 ml-2">{bookingData.distance.toFixed(1)} km</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-600">Tổng tiền:</span>
+                                                        <span className="font-semibold text-green-600 ml-2">{bookingData.total.toLocaleString()} VNĐ</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-600">Tổng thể tích:</span>
+                                                        <span className="font-semibold text-blue-800 ml-2">{bookingData.totalVolume ? bookingData.totalVolume.toFixed(2) : 0} m³</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-600">Loại xe:</span>
+                                                        <span className="font-semibold text-orange-600 ml-2">{bookingData.vehicleType || 'Chưa xác định'}</span>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <span className="text-gray-600">Tổng tiền:</span>
-                                                    <span className="font-semibold text-green-600 ml-2">{bookingData.total.toLocaleString()} VNĐ</span>
-                                                </div>
+                                            )}
+                                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-blue-200">
+                                                🔒 Sử dụng OpenStreetMap Nominatim API tuân thủ giới hạn 1 request/giây
+                                                <br />
+                                                ⚠️ Nếu gặp lỗi kết nối, vui lòng thử lại sau vài giây
                                             </div>
                                         </div>
                                     )}
@@ -593,6 +1037,36 @@ const Booking = ({ isLoggedIn }) => {
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                             required
                                         />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-gray-700 font-medium mb-2">
+                                            Loại nhà *
+                                        </label>
+                                        <div className="space-y-3">
+                                            <label className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="homeType"
+                                                    value="Chung cư"
+                                                    checked={bookingData.homeType === 'Chung cư'}
+                                                    onChange={handleInputChange}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <span className="text-gray-700">Chung cư</span>
+                                            </label>
+                                            <label className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="homeType"
+                                                    value="Nhà thường"
+                                                    checked={bookingData.homeType === 'Nhà thường'}
+                                                    onChange={handleInputChange}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <span className="text-gray-700">Nhà thường</span>
+                                            </label>
+                                        </div>
                                     </div>
                                     
                                     <CustomSelect
@@ -667,10 +1141,10 @@ const Booking = ({ isLoggedIn }) => {
                                 </form>
                             </div>
                         </div>
-                        {/* Thông tin chi tiết hoặc Map */}
+                        {/* Component chọn đồ đạc và bản đồ */}
                         <div className="md:w-1/2 w-full flex flex-col gap-6">
+                            {/* Bản đồ */}
                             <div className="bg-white rounded-2xl shadow-lg overflow-auto p-6 flex flex-col gap-4">
-                                {/* Luôn hiện map ở trên */}
                                 {mapData.pickupCoords && mapData.deliveryCoords ? (
                                     <MapContainer
                                         center={mapData.pickupCoords ? [mapData.pickupCoords.lat, mapData.pickupCoords.lon] : [21.0285, 105.8542]}
@@ -692,72 +1166,122 @@ const Booking = ({ isLoggedIn }) => {
                                     <div className="flex items-center justify-center h-[300px] text-gray-400 text-lg">Nhập địa chỉ để xem bản đồ</div>
                                 )}
                             </div>
-                            {/* Container mới cho thông tin chi tiết, nằm ngoài map */}
-                            <div className="bg-white rounded-3xl shadow-xl p-8 flex flex-col gap-4 border border-yellow-100">
-                                {bookingData.transportId && (() => {
-                                    const t = transportUnits.find(x => x.transportId === bookingData.transportId);
-                                    return t ? (
-                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-2 flex flex-row gap-4 items-center">
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-blue-800 mb-1">Thông tin phương tiện:</div>
-                                                <div className="text-gray-800"><strong>Công ty:</strong> {t.nameCompany}</div>
-                                                <div className="text-gray-800"><strong>Liên hệ:</strong> {t.namePersonContact}</div>
-                                                <div className="text-gray-800"><strong>SĐT:</strong> {t.phone}</div>
-                                                <div className="text-gray-800"><strong>Biển số:</strong> {t.licensePlate}</div>
-                                                <div className="text-gray-800"><strong>Trạng thái:</strong> {t.status}</div>
-                                            </div>
-                                            {t.imageTransportUnit || t.image ? (
-                                                <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
-                                                    <img src={t.imageTransportUnit || t.image} alt="Ảnh phương tiện" className="object-cover w-32 h-32 rounded shadow border bg-white" />
+                            
+                            {/* Component chọn đồ đạc */}
+                            <FurnitureSelector onFurnitureChange={handleFurnitureChange} />
+                            
+                            {/* Tóm tắt đồ đạc đã chọn */}
+                            {selectedFurniture.length > 0 && (
+                                <div className="bg-white rounded-2xl shadow-lg p-6">
+                                    <h4 className="text-lg font-semibold text-gray-800 mb-4">Tóm tắt đồ đạc đã chọn:</h4>
+                                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                                        {selectedFurniture.map((item, index) => (
+                                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-gray-800">{item.name}</div>
+                                                    <div className="text-sm text-gray-600">
+                                                        Phòng: {item.room} | SL: {item.quantity} | Thể tích: {item.volume}m³ | Khối lượng: {item.weight}kg
+                                                    </div>
                                                 </div>
-                                            ) : null}
-                                        </div>
-                                    ) : null;
-                                })()}
-                                {bookingData.storageId && (() => {
-                                    const s = storageUnits.find(x => x.storageId === bookingData.storageId);
-                                    return s ? (
-                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-2 flex flex-row gap-4 items-center">
-                                            <div className="flex-1">
-                                                <div className="font-semibold text-green-800 mb-1">Thông tin kho:</div>
-                                                <div className="text-gray-800"><strong>Tên kho:</strong> {s.name}</div>
-                                                <div className="text-gray-800"><strong>Địa chỉ:</strong> {s.address}</div>
-                                                <div className="text-gray-800"><strong>SĐT:</strong> {s.phone}</div>
-                                                <div className="text-gray-800"><strong>Trạng thái:</strong> {s.status}</div>
-                                            </div>
-                                            {s.imageStorageUnit || s.image ? (
-                                                <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
-                                                    <img src={s.imageStorageUnit || s.image} alt="Ảnh kho" className="object-cover w-32 h-32 rounded shadow border bg-white" />
+                                                <div className="flex gap-1">
+                                                    {item.modular && <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Modular</span>}
+                                                    {item.bulky && <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">Bulky</span>}
                                                 </div>
-                                            ) : null}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-medium">Tổng số lượng:</span>
+                                            <span>{selectedFurniture.reduce((sum, item) => sum + item.quantity, 0)}</span>
                                         </div>
-                                    ) : null;
-                                })()}
-                                {bookingData.promotionId && (() => {
-                                    const promo = promotions.find(p => p.id === bookingData.promotionId);
-                                    return promo ? (
-                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-2">
-                                            <div className="font-semibold text-yellow-800 mb-1">Thông tin khuyến mãi:</div>
-                                            <div className="text-gray-800"><strong>Tên:</strong> {promo.name}</div>
-                                            <div className="text-gray-800"><strong>Mô tả:</strong> {promo.description}</div>
-                                            <div className="text-gray-800">
-                                                <strong>Áp dụng đến:</strong> {promo.endDate ? new Date(promo.endDate).toLocaleDateString('vi-VN') : 'Không xác định'}
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-medium">Tổng thể tích:</span>
+                                            <span>{selectedFurniture.reduce((sum, item) => sum + (item.volume * item.quantity), 0).toFixed(2)} m³</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="font-medium">Tổng khối lượng:</span>
+                                            <span>{selectedFurniture.reduce((sum, item) => sum + (item.weight * item.quantity), 0).toFixed(2)} kg</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Slot Selector Component */}
+                            {showSlotSelector && slotStatus && (
+                                <div className="bg-white rounded-2xl shadow-lg p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-lg font-semibold text-gray-800">
+                                            Chọn vị trí cất giữ - {slotStatus.storageName}
+                                        </h4>
+                                        <button
+                                            onClick={() => setShowSlotSelector(false)}
+                                            className="text-gray-500 hover:text-gray-700"
+                                        >
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="mb-4">
+                                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-4 h-4 bg-green-500 rounded"></div>
+                                                <span>Trống</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-4 h-4 bg-red-500 rounded"></div>
+                                                <span>Đã đặt</span>
+                                            </div>
+                                            {selectedSlot && (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                                                    <span>Đã chọn: Slot {selectedSlot}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {slotStatus.slots.map((slot) => (
+                                            <button
+                                                key={slot.slotIndex}
+                                                onClick={() => !slot.booked && handleSlotSelect(slot.slotIndex)}
+                                                disabled={slot.booked}
+                                                className={`
+                                                    p-4 rounded-lg border-2 transition-all duration-200 text-center
+                                                    ${slot.booked 
+                                                        ? 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed' 
+                                                        : selectedSlot === slot.slotIndex
+                                                        ? 'bg-blue-100 border-blue-500 text-blue-700'
+                                                        : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                                                    }
+                                                `}
+                                            >
+                                                <div className="font-semibold">Slot {slot.slotIndex}</div>
+                                                {slot.booked ? (
+                                                    <div className="text-xs mt-1">
+                                                        Đã có người đặt
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs mt-1">
+                                                        Trống
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    
+                                    {selectedSlot && (
+                                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <div className="text-sm text-blue-800">
+                                                <strong>Đã chọn:</strong> Slot {selectedSlot} trong kho {slotStatus.storageName}
                                             </div>
                                         </div>
-                                    ) : null;
-                                })()}
-                                {bookingData.operatorId && (() => {
-                                    const st = staffMembers.find(x => x.operatorId === bookingData.operatorId);
-                                    return st ? (
-                                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-2">
-                                            <div className="font-semibold text-purple-800 mb-1">Thông tin nhân viên:</div>
-                                            <div className="text-gray-800"><strong>Họ tên:</strong> {st.fullName}</div>
-                                            <div className="text-gray-800"><strong>Email:</strong> {st.email}</div>
-                                            <div className="text-gray-800"><strong>SĐT:</strong> {st.phone}</div>
-                                        </div>
-                                    ) : null;
-                                })()}
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -776,7 +1300,7 @@ const Booking = ({ isLoggedIn }) => {
                         Đặt Xe Vận Chuyển
                     </h2>
                     <p className="text-xl text-gray-700 max-w-2xl mx-auto font-medium">
-                        Vui lòng nhập thông tin vận chuyển
+                        Vui lòng nhập thông tin vận chuyển và chọn đồ đạc
                     </p>
                     <div className="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
                         <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">

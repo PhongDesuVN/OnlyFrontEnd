@@ -53,7 +53,7 @@ const C_CustomerInfo = () => {
         totalOrders: 0,
         completedOrders: 0,
         pendingOrders: 0,
-        cancelledOrders: 0,
+        shippingOrders: 0,
         totalSpent: 0,
         averageRating: 0
     });
@@ -159,18 +159,26 @@ const C_CustomerInfo = () => {
             });
             if (bookingsResponse.ok) {
                 const bookingsData = await bookingsResponse.json();
+                console.log('Bookings data:', bookingsData); // Debug log
                 setOrderHistory(bookingsData);
                 
                 // Calculate statistics
+                const completedPayments = bookingsData.filter(order => order.paymentStatus === 'COMPLETED');
+                console.log('Completed payments:', completedPayments); // Debug log
+                
                 const stats = {
                     totalOrders: bookingsData.length,
                     completedOrders: bookingsData.filter(order => order.status === 'COMPLETED').length,
                     pendingOrders: bookingsData.filter(order => order.status === 'PENDING').length,
-                    cancelledOrders: bookingsData.filter(order => order.status === 'CANCELLED').length,
-                    totalSpent: bookingsData.reduce((sum, order) => sum + (order.totalAmount || 0), 0),
+                    shippingOrders: bookingsData.filter(order => order.status === 'SHIPPING').length,
+                    totalSpent: completedPayments.reduce((sum, order) => {
+                        console.log('Order total:', order.total, 'Order:', order); // Debug log
+                        return sum + (parseFloat(order.total) || 0);
+                    }, 0),
                     averageRating: bookingsData.length > 0 ? 
                         bookingsData.reduce((sum, order) => sum + (order.rating || 0), 0) / bookingsData.length : 0
                 };
+                console.log('Calculated stats:', stats); // Debug log
                 setCustomerStats(stats);
             }
 
@@ -264,7 +272,7 @@ const C_CustomerInfo = () => {
             case 'COMPLETED': return 'Hoàn thành';
             case 'PENDING': return 'Chờ xử lý';
             case 'CANCELLED': return 'Đã hủy';
-            case 'IN_PROGRESS': return 'Đang xử lý';
+            case 'SHIPPING': return 'Đang giao';
             default: return 'Không xác định';
         }
     };
@@ -277,15 +285,23 @@ const C_CustomerInfo = () => {
     };
 
     const getBarChartData = () => {
-        // Group by date (yyyy-mm-dd) and sum totalAmount
+        // Group by date (yyyy-mm-dd) and sum total for completed payments only
         const dateMap = {};
-        orderHistory.forEach(order => {
+        const completedOrders = orderHistory.filter(order => order.paymentStatus === 'COMPLETED');
+        console.log('Orders for bar chart:', completedOrders); // Debug log
+        
+        completedOrders.forEach(order => {
             const date = new Date(order.createdAt).toLocaleDateString('vi-VN');
             if (!dateMap[date]) dateMap[date] = 0;
-            dateMap[date] += order.totalAmount || 0;
+            const orderTotal = parseFloat(order.total) || 0;
+            dateMap[date] += orderTotal;
+            console.log(`Date: ${date}, Order total: ${orderTotal}, Running total: ${dateMap[date]}`); // Debug log
         });
+        
         const labels = Object.keys(dateMap);
         const data = Object.values(dateMap);
+        console.log('Bar chart data:', { labels, data }); // Debug log
+        
         return {
             labels,
             datasets: [
@@ -302,23 +318,23 @@ const C_CustomerInfo = () => {
 
     const getPieChartData = () => {
         return {
-            labels: ['Hoàn thành', 'Đang xử lý', 'Đã hủy'],
+            labels: ['Hoàn thành', 'Đang xử lý', 'Đang giao'],
             datasets: [
                 {
                     data: [
                         customerStats.completedOrders,
                         customerStats.pendingOrders,
-                        customerStats.cancelledOrders
+                        customerStats.shippingOrders
                     ],
                     backgroundColor: [
                         'rgba(34,197,94,0.7)', // green
                         'rgba(253,224,71,0.7)', // yellow
-                        'rgba(239,68,68,0.7)' // red
+                        'rgba(249,115,22,0.7)' // orange
                     ],
                     borderColor: [
                         'rgba(34,197,94,1)',
                         'rgba(253,224,71,1)',
-                        'rgba(239,68,68,1)'
+                        'rgba(249,115,22,1)'
                     ],
                     borderWidth: 1,
                 },
@@ -420,10 +436,10 @@ const C_CustomerInfo = () => {
                 <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-gray-600 text-sm">Đơn đã hủy</p>
-                            <p className="text-3xl font-bold text-red-600">{customerStats.cancelledOrders}</p>
+                            <p className="text-gray-600 text-sm">Đơn đang giao</p>
+                            <p className="text-3xl font-bold text-orange-600">{customerStats.shippingOrders}</p>
                         </div>
-                        <XCircle className="w-8 h-8 text-red-600" />
+                        <Truck className="w-8 h-8 text-orange-600" />
                     </div>
                 </div>
                 
@@ -545,7 +561,7 @@ const C_CustomerInfo = () => {
                                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                                         {getStatusText(order.status)}
                                     </span>
-                                    <span className="text-lg font-bold text-blue-600">{order.totalAmount?.toLocaleString()} VNĐ</span>
+                                    <span className="text-lg font-bold text-blue-600">{parseFloat(order.total || 0).toLocaleString()} VNĐ</span>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
