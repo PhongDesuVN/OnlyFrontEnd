@@ -1,0 +1,392 @@
+[
+  {
+    "VatDung": "Sofa",
+    "Phong": "Phòng khách",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Bàn ăn",
+    "Phong": "Phòng khách",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Ghế",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Tivi",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Máy lạnh",
+    "Phong": "Phòng khách",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Quạt điện",
+    "Phong": "Phòng khách",
+    "Modular": true,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Rèm cửa",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Thảm trải sàn",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Bàn làm việc",
+    "Phong": "Phòng khách",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Kệ sách",
+    "Phong": "Phòng khách",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Đồng hồ treo tường",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Wi-Fi router",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Máy lọc nước",
+    "Phong": "Phòng khách",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Máy pha cà phê / Ấm siêu tốc",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Thùng rác",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Chậu hoa",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Két sắt",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Sách",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Đồ chơi",
+    "Phong": "Phòng khách",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Giường ngủ",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Chăn, ga, gối, nệm",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Tủ quần áo",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Bàn trang điểm",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Gương",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Đèn ngủ",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Máy lạnh",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Quạt điện",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Rèm cửa",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Bàn làm việc",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Kệ sách",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Đồng hồ treo tường",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Tủ giày",
+    "Phong": "Phòng ngủ",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Két sắt",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Wi-Fi router",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Thùng rác",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Quần áo",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Sách",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Đồ trang điểm",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Đồ chơi",
+    "Phong": "Phòng ngủ",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Tủ lạnh",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Bàn ăn",
+    "Phong": "Phòng ăn",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Ghế",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Bếp điện",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Lò vi sóng",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Nồi cơm điện",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Máy hút bụi",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Bộ nồi chảo nấu ăn",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Máy xay sinh tố",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Khay đựng đồ gia vị",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Dao, kéo, muỗng, nĩa, đũa",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Bộ bát, đĩa, ly, cốc",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Rổ, rá, thau, chậu",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Thùng rác",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Máy lọc nước",
+    "Phong": "Phòng ăn",
+    "Modular": true,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Móc treo",
+    "Phong": "Phòng ăn",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Kệ sách (nếu có quầy bar/kệ đựng sách nấu ăn)",
+    "Phong": "Phòng ăn",
+    "Modular": null,
+    "Bulky": null
+  },
+  {
+    "VatDung": "Máy giặt",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Bàn chải và kem đánh răng",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Máy sấy tóc",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Gương",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": true
+  },
+  {
+    "VatDung": "Thùng rác",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Móc treo",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Chổi, cây lau nhà",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Rổ, rá, thau, chậu",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": false
+  },
+  {
+    "VatDung": "Bộ dụng cụ sửa chữa",
+    "Phong": "Phòng tắm",
+    "Modular": false,
+    "Bulky": false
+  }
+] 
