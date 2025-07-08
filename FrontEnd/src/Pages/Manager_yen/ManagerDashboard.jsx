@@ -98,6 +98,12 @@ const Dashboard = () => {
                         <button onClick={() => navigate("/transport-units/overview")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-orange-600 rounded-lg shadow hover:opacity-90">
                             <MapPin className="w-5 h-5" /> Quản lý vận chuyển
                         </button>
+                        <button
+                            onClick={() => navigate("/manager/pending-staff")}
+                            className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90"
+                        >
+                            <Users className="w-5 h-5" /> Duyệt nhân viên mới
+                        </button>
 
                         {/* Nút người dùng + dropdown */}
                         <div className="mt-auto relative">

@@ -37,6 +37,7 @@ import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
 import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
+import PendingStaffManagement from '../Pages/PendingStaffManagement/PendingStaffManagement.jsx';
 
 export default function AppRoutes() {
     return (
@@ -84,7 +85,8 @@ export default function AppRoutes() {
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/receipts" element={<ReceiptsManagement />} />
             <Route path="/storage-units" element={<StorageUnitManagement />} />
-
+            <Route path="/staffperformance" element={<StaffPerformance />} />
+            <Route path="/manager/pending-staff" element={<PendingStaffManagement />} />
 
         </Routes>
     );

@@ -372,62 +372,60 @@ const TransportUnitOverview = () => {
                 </div>
 
                 {/* Enhanced Stats Cards */}
-                {dashboardStats && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Users className="w-8 h-8 text-white" />
-                                    </div>
-                                </div>
-                                <div className="ml-5">
-                                    <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tổng đơn vị</p>
-                                    <p className="text-3xl font-bold text-blue-900">{dashboardStats.totalUnits}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <Users className="w-8 h-8 text-white" />
                                 </div>
                             </div>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <AlertCircle className="w-8 h-8 text-white" />
-                                    </div>
-                                </div>
-                                <div className="ml-5">
-                                    <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Đang chờ duyệt</p>
-                                    <p className="text-3xl font-bold text-blue-900">{dashboardStats.pendingApprovals}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <CheckCircle className="w-8 h-8 text-white" />
-                                    </div>
-                                </div>
-                                <div className="ml-5">
-                                    <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tỷ lệ duyệt</p>
-                                    <p className="text-3xl font-bold text-blue-900">{dashboardStats.approvalRate?.toFixed(1)}%</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Clock className="w-8 h-8 text-white" />
-                                    </div>
-                                </div>
-                                <div className="ml-5">
-                                    <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Thời gian xử lý TB</p>
-                                    <p className="text-3xl font-bold text-blue-900">{dashboardStats.avgProcessingTime?.toFixed(1)}h</p>
-                                </div>
+                            <div className="ml-5">
+                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tổng đơn vị</p>
+                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.totalUnits : 0}</p>
                             </div>
                         </div>
                     </div>
-                )}
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <AlertCircle className="w-8 h-8 text-white" />
+                                </div>
+                            </div>
+                            <div className="ml-5">
+                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Đang chờ duyệt</p>
+                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.pendingApprovals : 0}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <CheckCircle className="w-8 h-8 text-white" />
+                                </div>
+                            </div>
+                            <div className="ml-5">
+                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tỷ lệ duyệt</p>
+                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.approvalRate?.toFixed(1) : 0}%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <Clock className="w-8 h-8 text-white" />
+                                </div>
+                            </div>
+                            <div className="ml-5">
+                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Thời gian xử lý TB</p>
+                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.avgProcessingTime?.toFixed(1) : 0}h</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Enhanced Charts Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
@@ -439,7 +437,7 @@ const TransportUnitOverview = () => {
                         <ResponsiveContainer width="100%" height={350}>
                             <PieChart>
                                 <Pie
-                                    data={statusChartData}
+                                    data={statusChartData.length ? statusChartData : [{ name: 'Không có dữ liệu', value: 0 }]}
                                     cx="50%"
                                     cy="50%"
                                     labelLine={false}
