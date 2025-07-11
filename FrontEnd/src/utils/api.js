@@ -1,7 +1,7 @@
 // src/utils/api.js
 import Cookies from 'js-cookie';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8083";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 /**
  * Hàm gọi API hỗ trợ xác thực bằng token lưu trong cookie hoặc localStorage.
