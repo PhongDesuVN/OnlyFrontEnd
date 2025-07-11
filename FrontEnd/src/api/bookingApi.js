@@ -3,7 +3,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 // Bạn có thể thay đổi baseURL này theo môi trường build/deploy nếu cần
-const API_BASE_URL = "http://localhost:8080/api/bookings";
+const API_BASE_URL = "/api/bookings";
 
 // Khởi tạo một instance axios riêng cho booking (nếu muốn dùng interceptor riêng)
 const api = axios.create({
