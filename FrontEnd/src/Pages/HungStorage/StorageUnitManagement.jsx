@@ -49,7 +49,7 @@ import { vi } from "date-fns/locale";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
-const API_BASE = "/api/storage-units";
+const API_BASE = "http://localhost:8080/api/storage-units";
 
 // Component Pagination được cập nhật
 const Pagination = React.memo(
