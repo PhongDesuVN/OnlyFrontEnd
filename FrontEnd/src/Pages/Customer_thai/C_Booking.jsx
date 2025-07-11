@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import FurnitureSelector from '../../Components/FurnitureSelector';
 import { Home, Users } from 'lucide-react';
+import { apiCall } from '../../utils/api';
 const C_Booking = ({ isLoggedIn }) => {
     const [selectedService, setSelectedService] = useState(null);
     const [bookingData, setBookingData] = useState({
@@ -48,26 +49,22 @@ const C_Booking = ({ isLoggedIn }) => {
     useEffect(() => {
         const fetchOptions = async () => {
             if (!isLoggedIn || !selectedService) return;
-
             try {
                 const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
                 const [transportRes, storageRes, staffRes, promoRes] = await Promise.all([
-                    fetch('http://localhost:8083/api/customer/transport-units', { headers }),
-                    fetch('http://localhost:8083/api/customer/storage-units', { headers }),
-                    fetch('http://localhost:8083/api/customer/operator-staff', { headers }),
-                    fetch('http://localhost:8083/api/customer/promotions', { headers })
+                    apiCall('/api/customer/transport-units', { headers }),
+                    apiCall('/api/customer/storage-units', { headers }),
+                    apiCall('/api/customer/operator-staff', { headers }),
+                    apiCall('/api/customer/promotions', { headers })
                 ]);
-
                 if (transportRes.ok) setTransportUnits(await transportRes.json());
                 if (storageRes.ok) setStorageUnits(await storageRes.json());
                 if (staffRes.ok) setStaffMembers(await staffRes.json());
                 if (promoRes.ok) setPromotions(await promoRes.json());
-
             } catch (error) {
                 console.error("Lỗi khi tải tùy chọn đặt xe:", error);
             }
         };
-
         fetchOptions();
     }, [isLoggedIn, selectedService]);
 
@@ -434,7 +431,7 @@ const C_Booking = ({ isLoggedIn }) => {
 
     const fetchSlotStatus = async (storageId) => {
         try {
-            const response = await fetch(`http://localhost:8083/api/customer/storage-units/${storageId}/slots`, {
+            const response = await apiCall(`/api/customer/storage-units/${storageId}/slots`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             if (response.ok) {
@@ -555,7 +552,7 @@ const C_Booking = ({ isLoggedIn }) => {
         };
 
         try {
-            const response = await fetch('http://localhost:8083/api/customer/bookings', {
+            const response = await apiCall('/api/customer/bookings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

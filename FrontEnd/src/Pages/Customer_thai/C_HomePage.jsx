@@ -25,6 +25,7 @@ const Header = ({ isLoggedIn, handleLogout }) => {
                     <nav className="hidden md:flex space-x-8">
                         <a href="#home" className="hover:text-blue-600 transition-colors">Trang Chủ</a>
                         <a href="#booking" className="hover:text-blue-600 transition-colors">Đặt xe</a>
+                        <Link to="/c_feedback" className="hover:text-blue-600 transition-colors">Đánh giá</Link>
                         <a href="#about" className="hover:text-blue-600 transition-colors">Về chúng tôi</a>
                         <a href="#promotion" className="hover:text-blue-600 transition-colors">Ưu đãi</a>
                     </nav>
