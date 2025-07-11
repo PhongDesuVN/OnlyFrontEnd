@@ -2,14 +2,9 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-// 1) Tạo một axios instance mặc định gửi kèm cookie
-const api = axios.create({
-  baseURL: "http://localhost:8083/api/bookings",
-  withCredentials: true,       // luôn gửi cookie
-});
 
-// 2) (Option) Nếu muốn vẫn hỗ trợ header Bearer từ cookie,
-//    bạn có thể build header từ cookie và set vào interceptor:
+const API_BASE = "/api/storage-units";
+
 api.interceptors.request.use(config => {
   const token = Cookies.get("authToken");
   if (token) {
