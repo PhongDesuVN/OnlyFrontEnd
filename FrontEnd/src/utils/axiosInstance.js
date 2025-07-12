@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const instance = axios.create({
-    baseURL: "http://localhost:8083", // sửa baseURL đúng theo backend bạn
+    baseURL: "http://localhost:8080", // sửa baseURL đúng theo backend bạn
     headers: {
         "Content-Type": "application/json"
     }
