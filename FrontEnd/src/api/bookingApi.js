@@ -97,3 +97,8 @@ class BookingApi {
 // Export instance
 const bookingApi = new BookingApi();
 export default bookingApi;
+export const createBooking = (payload) => api.post("/", payload);
+export const updateBooking = (id, payload) => api.put(`/${id}`, payload);
+export const deleteBooking = (id) => api.delete(`/${id}`);
+export const getSlotsInfo = (storageId) => api.get(`/storage/${storageId}/slots`);
+export const getSlotDetail = (storageId, slotIndex) => api.get(`/storage/${storageId}/slots/${slotIndex}`);
