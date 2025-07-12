@@ -92,6 +92,7 @@ const Otp = () => {
                 const response = await apiCall("/api/auth/login/verify-otp", {
                     method: "POST",
                     body: JSON.stringify({ email: userEmail, otp: otpValue }),
+                    credentials: "include",
                 });
 
                 console.log("📨 OTP Response Status:", response.status);
