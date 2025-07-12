@@ -1,4 +1,6 @@
+# ========================
 # Logs
+# ========================
 logs
 *.log
 npm-debug.log*
@@ -7,18 +9,46 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ========================
+# Build output
+# ========================
+dist/
+dist-ssr/
+.svelte-kit/
+.build/
+.next/
+out/
 
-# Editor directories and files
-.vscode/*
+# ========================
+# Dependencies
+# ========================
+node_modules/
+
+# ========================
+# Env
+# ========================
+.env*
+!.env.example
+
+# ========================
+# Editor settings
+# ========================
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+
+# ========================
+# OS and IDE trash
+# ========================
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# ========================
+# Optional: lockfile (nếu dùng yarn hoặc pnpm)
+# ========================
+# yarn.lock
+# pnpm-lock.yaml
