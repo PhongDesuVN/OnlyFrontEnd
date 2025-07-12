@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/FormLogin_yen/Header.jsx';
 import Footer from '../../Components/FormLogin_yen/Footer.jsx';
+import { apiCall } from '../../utils/api';
 
 const C_Login = () => {
     const [formData, setFormData] = useState({
@@ -20,22 +21,19 @@ const C_Login = () => {
         e.preventDefault();
 
         try {
-            const response = await fetch('http://localhost:8083/api/auth/customer/login', {
+            const response = await apiCall('/api/auth/customer/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
 
-            const text = await response.text(); // lấy raw text để xử lý lỗi không phải JSON
+            const text = await response.text();
 
             if (!response.ok) {
                 let message = 'Đăng nhập thất bại';
                 try {
-                    const errorData = JSON.parse(text); // thử parse nếu có JSON
+                    const errorData = JSON.parse(text);
                     message = errorData.message || message;
-                } catch (_) {
-                    // nếu không parse được thì vẫn giữ message mặc định
-                }
+                } catch (_) {}
                 throw new Error(message);
             }
 

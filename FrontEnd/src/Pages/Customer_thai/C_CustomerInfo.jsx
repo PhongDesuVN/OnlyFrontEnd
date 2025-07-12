@@ -35,6 +35,7 @@ import {
   Legend,
   Title
 } from 'chart.js';
+import { apiCall } from '../../utils/api';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
@@ -107,7 +108,7 @@ const C_CustomerInfo = () => {
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:8083/api/customer/profile', {
+            const response = await apiCall('/api/customer/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -133,7 +134,7 @@ const C_CustomerInfo = () => {
         setLoading(true);
         try {
             // Fetch customer profile
-            const profileResponse = await fetch('http://localhost:8083/api/customer/profile', {
+            const profileResponse = await apiCall('/api/customer/profile', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -152,7 +153,7 @@ const C_CustomerInfo = () => {
             }
 
             // Fetch bookings
-            const bookingsResponse = await fetch('http://localhost:8083/api/customer/bookings', {
+            const bookingsResponse = await apiCall('/api/customer/bookings', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -183,7 +184,7 @@ const C_CustomerInfo = () => {
             }
 
             // Fetch complaints (if endpoint exists) - TẠM THỜI VÔ HIỆU HÓA VÌ ENDPOINT CHƯA TỒN TẠI
-            // const complaintsResponse = await fetch('http://localhost:8083/api/customer/complaints', {
+            // const complaintsResponse = await apiCall('/api/customer/complaints', {
             //     headers: {
             //         'Authorization': `Bearer ${localStorage.getItem('token')}`
             //     }
@@ -202,7 +203,7 @@ const C_CustomerInfo = () => {
     const deleteBooking = async (bookingId) => {
         if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
             try {
-                const response = await fetch(`http://localhost:8083/api/customer/bookings/${bookingId}`, {
+                const response = await apiCall(`/api/customer/bookings/${bookingId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -227,7 +228,7 @@ const C_CustomerInfo = () => {
         
         if (rating && comment) {
             try {
-                const response = await fetch(`http://localhost:8083/api/customer/bookings/${bookingId}/feedback`, {
+                const response = await apiCall(`/api/customer/bookings/${bookingId}/feedback`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -998,12 +999,12 @@ const BookingHistory = () => {
         setLoading(true);
         try {
             const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
-            const response = await fetch('http://localhost:8083/api/customer/bookings', { headers });
+            const response = await apiCall('/api/customer/bookings', { headers });
             if (response.ok) {
                 const data = await response.json();
                 setBookings(data);
                 const feedbackPromises = data.map(booking => 
-                    fetch(`http://localhost:8083/api/customer/feedback/booking/${booking.bookingId}`, { headers })
+                    apiCall(`/api/customer/feedback/booking/${booking.bookingId}`, { headers })
                         .then(res => res.ok ? res.json() : [])
                         .catch(() => [])
                 );
@@ -1027,7 +1028,7 @@ const BookingHistory = () => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             };
-            const response = await fetch('http://localhost:8083/api/customer/feedback', {
+            const response = await apiCall('api/customer/feedback', {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(feedbackData)
