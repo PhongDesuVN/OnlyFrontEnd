@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Header from '../../Components/FormLogin_yen/Header.jsx'
 import Footer from '../../Components/FormLogin_yen/Footer.jsx'
-
+import { apiCall } from "../../utils/api";
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [submitted, setSubmitted] = useState(false);
@@ -11,9 +11,8 @@ const ForgotPassword = () => {
         e.preventDefault();
         setError('');
         try {
-            const res = await fetch("http://localhost:8080/api/auth/forgot-password", {
+            const res = await apiCall("/api/auth/forgot-password", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
 
