@@ -21,6 +21,7 @@ import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
 
 
 // --- Manager Pages ---
+// --- Manager Pages ---
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
