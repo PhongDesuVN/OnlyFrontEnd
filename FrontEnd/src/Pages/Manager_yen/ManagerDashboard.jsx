@@ -15,6 +15,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, LineChart, Line
 } from "recharts";
+import LogoutButton from "../../Pages/Login_Register_trung/Logout";
 
 const Dashboard = () => {
     const [dashboardData, setDashboardData] = useState({
@@ -228,11 +229,9 @@ const Dashboard = () => {
                                         >
                                             Thông tin cá nhân
                                         </NavLink>
-                                        <NavLink to="/logout">
-                                        <button className="w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">
-                                            Đăng xuất
-                                        </button>
-                                        </NavLink>
+                                        <LogoutButton to="/logout">
+                                            <button className=" w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">Đăng xuất</button>
+                                        </LogoutButton>
                                         <button
                                             className="text-xs text-gray-400 hover:underline mt-1 text-center"
                                             onClick={() => setCurrentPage('main')}

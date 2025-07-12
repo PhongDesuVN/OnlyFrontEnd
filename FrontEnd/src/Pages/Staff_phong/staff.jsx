@@ -1,6 +1,7 @@
 "use client"
 import RequireAuth from "../../Components/RequireAuth";
-import { useState, useEffect } from "react"
+import LogoutButton from "../../Pages/Login_Register_trung/Logout";
+import React, { useState, useEffect } from "react"
 import { NavLink } from "react-router-dom";
    import{ Truck,
     Home,
@@ -415,11 +416,9 @@ const Staff = () => {
                                             >
                                                 Thông tin cá nhân
                                             </NavLink>
-                                            <NavLink to="/logout">
-                                                <button className="w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">
-                                                    Đăng xuất
-                                                </button>
-                                            </NavLink>
+                                            <LogoutButton to="/logout">
+                                                <button className=" w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">Đăng xuất</button>
+                                            </LogoutButton>
                                             <button
                                                 className="mt-2 text-xs text-gray-400 hover:underline"
                                                 onClick={() => setCurrentPage('main')}
