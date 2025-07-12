@@ -220,22 +220,7 @@ const Staff = () => {
         { name: "Cài Đặt", icon: Settings, hasLink: false },
     ]
 
-    const handleLogout = async () => {
-        // Xóa cookies trước
-        Cookies.remove("authToken");
-        Cookies.remove("userRole");
-        Cookies.remove("username");
-        try {
-            await fetch("http://localhost:8083/api/auth/logout", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${Cookies.get("authToken")}`,
-                },
-                credentials: "include",
-            });
-        } catch (e) { }
-        window.location.href = "/login";
-    };
+
 
     // ==================== RENDER ====================
     return (
@@ -430,12 +415,11 @@ const Staff = () => {
                                             >
                                                 Thông tin cá nhân
                                             </NavLink>
-                                            <button
-                                                className="w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition"
-                                                onClick={handleLogout}
-                                            >
-                                                Đăng xuất
-                                            </button>
+                                            <NavLink to="/logout">
+                                                <button className="w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">
+                                                    Đăng xuất
+                                                </button>
+                                            </NavLink>
                                             <button
                                                 className="mt-2 text-xs text-gray-400 hover:underline"
                                                 onClick={() => setCurrentPage('main')}

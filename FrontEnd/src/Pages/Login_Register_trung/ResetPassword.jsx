@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-
+import { apiCall } from "../../utils/api";
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -38,17 +38,15 @@ const ResetPassword = () => {
       let response;
 
       if (token) {
-        // Trường hợp có token (từ link email)
-        response = await fetch("http://localhost:8083/api/auth/reset-password", {
+        // ✅ Trường hợp có token (từ link email)
+        response = await apiCall("/api/auth/reset-password", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token, newPassword: password }),
         });
       } else {
-        // Trường hợp không có token (gửi email reset)
-        response = await fetch("/api/auth/request-reset-password", {
+        // ✅ Trường hợp không có token (gửi email reset)
+        response = await apiCall("/api/auth/request-reset-password", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
         });
       }
@@ -57,9 +55,11 @@ const ResetPassword = () => {
 
       if (response.ok) {
         setSuccess(true);
-        setMessage(token
-            ? "Đặt lại mật khẩu thành công! Đang chuyển về trang đăng nhập…"
-            : "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư.");
+        setMessage(
+            token
+                ? "Đặt lại mật khẩu thành công! Đang chuyển về trang đăng nhập…"
+                : "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư."
+        );
 
         if (token) {
           setTimeout(() => navigate("/login"), 2000);
@@ -67,6 +67,7 @@ const ResetPassword = () => {
       } else {
         setMessage(data || "Có lỗi xảy ra.");
       }
+
     } catch (err) {
       console.error("Lỗi xử lý mật khẩu:", err);
       setMessage("Đã xảy ra lỗi. Vui lòng thử lại.");

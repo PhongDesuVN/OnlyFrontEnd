@@ -1,7 +1,8 @@
 import React from "react"
 import Cookies from "js-cookie"
 import { useNavigate } from "react-router-dom"
-// import { Settings } from "lucide-react" // 👈 Xoá nếu không dùng
+import { apiCall } from "../../utils/api.js"
+// import { Settings } from "lucide-react"
 
 export default function LogoutButton() {
     // const [showMenu, setShowMenu] = useState(false)
@@ -9,19 +10,14 @@ export default function LogoutButton() {
 
     const handleLogout = async () => {
         try {
-            const token = Cookies.get("authToken")
-            if (token) {
-                await fetch("http://localhost:8083/api/auth/logout", {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    credentials: "include",
-                })
-            }
-        } catch (e) {
-            console.error("Logout error:", e)
+            await apiCall("/api/auth/logout", {
+                method: "POST",
+                auth: true, // tự động lấy token từ Cookies hoặc localStorage
+            });
+        } catch (error) {
+            console.error("❌ Lỗi khi logout:", error);
         }
+
 
         // Xoá cookie và chuyển hướng
         Cookies.remove("authToken")
@@ -33,7 +29,7 @@ export default function LogoutButton() {
     return (
         <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            className="w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition"
         >
             Đăng xuất
         </button>
