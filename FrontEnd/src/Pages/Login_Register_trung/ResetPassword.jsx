@@ -46,7 +46,7 @@ const ResetPassword = () => {
         });
       } else {
         // Trường hợp không có token (gửi email reset)
-        response = await fetch("http://localhost:8083/api/auth/request-reset-password", {
+        response = await fetch("/api/auth/request-reset-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
