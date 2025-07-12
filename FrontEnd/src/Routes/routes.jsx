@@ -8,6 +8,7 @@ import Register from '../Pages/Login_Register_trung/Register.jsx';
 import ForgotPassword from '../Pages/Login_Register_trung/ForgotPassword.jsx';
 import Otp from '../Pages/Login_Register_trung/Otp.jsx';
 import ResetPassword from '../Pages/Login_Register_trung/ResetPassword.jsx';
+import Logout from "../Pages/Login_Register_trung/Logout.jsx"
 
 // --- Common Pages ---
 import HomePage from '../Pages/HomePage_phong/homepage.jsx';
@@ -49,6 +50,7 @@ export default function AppRoutes() {
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/otp" element={<Otp />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/logout" element={<Logout />} />
 
             {/* General pages */}
             <Route path="/" element={<HomePage />} />
