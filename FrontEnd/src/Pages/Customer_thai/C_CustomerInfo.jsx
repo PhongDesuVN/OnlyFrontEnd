@@ -23,7 +23,7 @@ import {
     CheckCircle,
     XCircle
 } from 'lucide-react';
-import NotificationBell from '../../components/NotificationBell';
+import NotificationBell from '../../Components/NotificationBell';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
