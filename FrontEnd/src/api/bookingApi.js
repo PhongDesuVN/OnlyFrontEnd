@@ -1,16 +1,15 @@
-// bookingApi.js
 import axios from "axios";
 import Cookies from "js-cookie";
 
-// Bạn có thể thay đổi baseURL này theo môi trường build/deploy nếu cần
+// Base URL cho booking API
 const API_BASE_URL = "/api/bookings";
 
-// Khởi tạo một instance axios riêng cho booking (nếu muốn dùng interceptor riêng)
+// Khởi tạo axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Tự động gắn token cho mọi request
+// Interceptor để tự động gắn token
 api.interceptors.request.use((config) => {
   const token = Cookies.get("authToken");
   if (token) {
@@ -22,68 +21,79 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor để xử lý response
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error("API Error:", error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 class BookingApi {
-  // Tổng quan booking
+  // GET /api/bookings/overview
   async getOverview() {
     const res = await api.get("/overview");
     return res.data;
   }
 
-  // Lấy tất cả bookings
+  // GET /api/bookings
   async getAllBookings() {
     const res = await api.get("/");
     return res.data;
   }
 
-  // Lấy thông tin slot của một kho
-  async getSlotsInfo(storageId) {
-    const res = await api.get(`/storage/${storageId}/slots`);
-    return res.data;
-  }
-
-  // Lấy chi tiết booking của 1 slot
-  async getSlotDetail(storageId, slotIndex) {
-    const res = await api.get(`/storage/${storageId}/slots/${slotIndex}`);
-    return res.data;
-  }
-
-  // Tìm kiếm booking theo tên khách hàng
-  async searchBookings(fullName) {
-    const res = await api.get(`/search`, { params: { fullName } });
-    return res.data;
-  }
-
-  // Lấy booking theo ID
+  // GET /api/bookings/{id}
   async getBookingById(id) {
     const res = await api.get(`/${id}`);
     return res.data;
   }
 
-  // Tạo mới booking
+  // POST /api/bookings
   async createBooking(payload) {
-    const res = await api.post(`/`, payload);
+    const res = await api.post("/", payload);
     return res.data;
   }
 
-  // Update booking
+  // PUT /api/bookings/{id}
   async updateBooking(id, payload) {
     const res = await api.put(`/${id}`, payload);
     return res.data;
   }
 
-  // Xoá booking
+  // DELETE /api/bookings/{id}
   async deleteBooking(id) {
     const res = await api.delete(`/${id}`);
     return res.data;
   }
 
-  // Cập nhật payment status
+  // GET /api/bookings/search?fullName={fullName}
+  async searchBookings(fullName) {
+    const res = await api.get("/search", { params: { fullName } });
+    return res.data;
+  }
+
+  // PUT /api/bookings/{id}/payment?status={status}
   async updatePaymentStatus(id, status) {
-    // status: string ("PAID", "UNPAID", ...)
     const res = await api.put(`/${id}/payment`, null, { params: { status } });
     return res.data;
   }
+
+  // GET /api/bookings/storage/{storageId}/slots
+  async getSlotsInfo(storageId) {
+    const res = await api.get(`/storage/${storageId}/slots`);
+    return res.data;
+  }
+
+  // GET /api/bookings/storage/{storageId}/slots/{slotIndex}
+  async getSlotDetail(storageId, slotIndex) {
+    const res = await api.get(`/storage/${storageId}/slots/${slotIndex}`);
+    return res.data;
+  }
+
+
 }
 
+// Export instance
 const bookingApi = new BookingApi();
 export default bookingApi;
