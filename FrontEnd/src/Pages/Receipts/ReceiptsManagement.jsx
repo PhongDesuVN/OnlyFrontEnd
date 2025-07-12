@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FileText, BarChart, List, Search, AlertCircle, Loader, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const API_BASE = "http://localhost:8083/api/payments";
+const API_BASE = "/api/payments";
 
 // Tách các component nhỏ ra ngoài để tránh re-create
 const Header = React.memo(() => (
