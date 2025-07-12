@@ -14,7 +14,7 @@ import Logout from "../Pages/Login_Register_trung/Logout.jsx"
 import HomePage from '../Pages/HomePage_phong/homepage.jsx';
 import Staff from '../Pages/Staff_phong/staff.jsx';
 import Dashboard from '../Pages/Staff_phong/DashBoard.jsx';
-import ManageOrder from '../Pages/ManageOrder_phong/manageorder.jsx';
+import ManageOrder from '../Pages/ManageOrder_phong/ManageOrder.jsx';
 import ManageUser from '../Pages/ManageUser_trung/manageuser.jsx';
 import ManageRevenue from '../Pages/ManageRevenue_trung/managerevenue.jsx';
 import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
