@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import NotificationBell from '../../Components/NotificationBell';
 import Booking from './C_Booking';
 import { Home, Users } from 'lucide-react';
-git
 const Header = ({ isLoggedIn, handleLogout }) => {
     const [isScrolled, setIsScrolled] = useState(false);
 
