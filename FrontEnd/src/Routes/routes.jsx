@@ -16,12 +16,13 @@ import Dashboard from '../Pages/Staff_phong/DashBoard.jsx';
 import ManageOrder from '../Pages/ManageOrder_phong/manageorder.jsx';
 import ManageUser from '../Pages/ManageUser_trung/manageuser.jsx';
 import ManageRevenue from '../Pages/ManageRevenue_trung/managerevenue.jsx';
+import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
+
 
 // --- Manager Pages ---
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
-import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
 
 // --- Transport Unit Pages ---
 import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.jsx';
@@ -35,6 +36,8 @@ import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
 
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
+import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
+import PendingStaffManagement from '../Pages/PendingStaffManagement/PendingStaffManagement.jsx';
 
 export default function AppRoutes() {
     return (
@@ -50,6 +53,8 @@ export default function AppRoutes() {
             <Route path="/" element={<HomePage />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/dashboard" element={<Dashboard />} />
+        
+            <Route path="/profile/main" element={<ProfileMainPage />} />
 
             {/* Management */}
             <Route path="/manageorder" element={<ManageOrder />} />
@@ -57,11 +62,12 @@ export default function AppRoutes() {
             <Route path="/managerevenue" element={<ManageRevenue />} /> 
 
             {/* Manager */}
-            <Route path="/manager" element={<ManagerDashboard />} />
-            <Route path="/manager-dashboard" element={<ManagerDashboard />} />
-            <Route path="/managerstaff" element={<StaffManagement />} />
-            <Route path="/promotions" element={<PromotionManagement />} />
+                <Route path="/manager" element={<ManagerDashboard />} />
+                <Route path="/manager-dashboard" element={<ManagerDashboard />} />
+                <Route path="/managerstaff" element={<StaffManagement />} />
+                <Route path="/promotions" element={<PromotionManagement />} />
                 <Route path="/staffperformance" element={<StaffPerformance />} />
+
             {/* Transport Unit */}
             <Route path="/transport-units" element={<TransportLayout />}>
                 <Route index element={<TransportUnitManagement />} />
@@ -79,6 +85,8 @@ export default function AppRoutes() {
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/receipts" element={<ReceiptsManagement />} />
             <Route path="/storage-units" element={<StorageUnitManagement />} />
+            <Route path="/staffperformance" element={<StaffPerformance />} />
+            <Route path="/manager/pending-staff" element={<PendingStaffManagement />} />
 
         </Routes>
     );

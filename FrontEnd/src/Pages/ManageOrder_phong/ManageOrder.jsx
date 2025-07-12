@@ -36,7 +36,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
     const pageLabels = {
         overview: 'Tổng Quan',
         view: 'Danh Sách',
-        payment: 'Thanh Toán',
+
         search: 'Tìm Kiếm',
     };
 
@@ -51,18 +51,18 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
                 <Package className="mr-2" /> Quản Lý Đơn Hàng
             </h1>
             <nav>
-                {['overview', 'view', 'payment', 'search'].map(page => (
+                {['overview', 'view', 'search'].map(page => (
                     <motion.button
                         key={page}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${currentPage === page ? 'bg-blue-500 shadow-lg' : 'hover:bg-blue-600'
-                        }`}
+                            }`}
                         onClick={() => setCurrentPage(page)}
                     >
                         {page === 'overview' && <BarChart className="mr-2" size={20} />}
                         {page === 'view' && <List className="mr-2" size={20} />}
-                        {page === 'payment' && <CreditCard className="mr-2" size={20} />}
+
                         {page === 'search' && <Search className="mr-2" size={20} />}
                         {pageLabels[page]}
                     </motion.button>
@@ -416,10 +416,10 @@ const OverviewOrders = ({ orders }) => {
                     transition={{ delay: 0.3 }}
                     className="bg-white p-6 rounded-xl shadow-lg border border-gray-100"
                 >
-                    <h3 className="text-xl font-bold mb-4 flex items-center text-gray-800">
+                    <h2 className="text-xl font-bold mb-4 flex items-center text-gray-800">
                         <Truck className="mr-2 text-blue-600" />
                         Tiến Trình Giao Hàng
-                    </h3>
+                    </h2>
                     <div className="space-y-3">
                         {Object.entries(deliveryStats).map(([status, count], index) => {
                             const colors = {
@@ -465,38 +465,38 @@ const OverviewOrders = ({ orders }) => {
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                        <tr className="border-b border-gray-200">
-                            <th className="text-left py-2 text-gray-600 font-medium">Mã Đơn</th>
-                            <th className="text-left py-2 text-gray-600 font-medium">Khách Hàng</th>
-                            <th className="text-left py-2 text-gray-600 font-medium">Giá Trị</th>
-                            <th className="text-left py-2 text-gray-600 font-medium">Trạng Thái</th>
-                        </tr>
+                            <tr className="border-b border-gray-200">
+                                <th className="text-left py-2 text-gray-600 font-medium">Mã Đơn</th>
+                                <th className="text-left py-2 text-gray-600 font-medium">Khách Hàng</th>
+                                <th className="text-left py-2 text-gray-600 font-medium">Giá Trị</th>
+                                <th className="text-left py-2 text-gray-600 font-medium">Trạng Thái</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        {orders.slice(0, 5).map((order, index) => (
-                            <motion.tr
-                                key={order.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.6 + index * 0.1 }}
-                                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                            >
-                                <td className="py-3 font-medium text-blue-600">{order.id}</td>
-                                <td className="py-3 text-gray-800">{order.customer}</td>
-                                <td className="py-3 font-semibold text-green-600">
-                                    {order.total.toLocaleString()} VNĐ
-                                </td>
-                                <td className="py-3">
+                            {orders.slice(0, 5).map((order, index) => (
+                                <motion.tr
+                                    key={order.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.6 + index * 0.1 }}
+                                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                >
+                                    <td className="py-3 font-medium text-blue-600">{order.id}</td>
+                                    <td className="py-3 text-gray-800">{order.customer}</td>
+                                    <td className="py-3 font-semibold text-green-600">
+                                        {order.total.toLocaleString()} VNĐ
+                                    </td>
+                                    <td className="py-3">
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'Hoàn thành' ? 'bg-green-100 text-green-700' :
                                             order.status === 'Đang giao' ? 'bg-yellow-100 text-yellow-700' :
                                                 order.status === 'Hủy' ? 'bg-red-100 text-red-700' :
                                                     'bg-blue-100 text-blue-700'
-                                        }`}>
+                                            }`}>
                                             {order.status}
                                         </span>
-                                </td>
-                            </motion.tr>
-                        ))}
+                                    </td>
+                                </motion.tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -548,10 +548,12 @@ const OverviewOrders = ({ orders }) => {
     );
 };
 
-// ViewOrders với CRUD
+// ViewOrders với CRUD và bộ lọc
 const ViewOrders = ({ orders, onEditOrder }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingOrder, setEditingOrder] = useState(null);
+    const [filterStatus, setFilterStatus] = useState('Tất cả');
+    const [filterPayment, setFilterPayment] = useState('Tất cả');
 
     const handleEdit = (order) => {
         setEditingOrder(order);
@@ -566,6 +568,19 @@ const ViewOrders = ({ orders, onEditOrder }) => {
         setEditingOrder(null);
     };
 
+    // Áp dụng bộ lọc
+    const filteredOrders = orders.filter(order => {
+        const statusMatch = filterStatus === 'Tất cả' || order.status === filterStatus;
+        const paymentMatch = filterPayment === 'Tất cả' || order.payment === filterPayment;
+        return statusMatch && paymentMatch;
+    });
+
+    // Reset bộ lọc
+    const resetFilters = () => {
+        setFilterStatus('Tất cả');
+        setFilterPayment('Tất cả');
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -578,53 +593,89 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                 </h2>
             </div>
 
+            {/* Bộ lọc */}
+            <div className="mb-6 flex space-x-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái Đơn Hàng</label>
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="Tất cả">Tất cả</option>
+                        <option value="Đang xử lý">Đang xử lý</option>
+                        <option value="Đang giao">Đang giao</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
+                        <option value="Hủy">Hủy</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái Thanh Toán</label>
+                    <select
+                        value={filterPayment}
+                        onChange={(e) => setFilterPayment(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="Tất cả">Tất cả</option>
+                        <option value="Đã thanh toán">Đã thanh toán</option>
+                        <option value="Chưa thanh toán">Chưa thanh toán</option>
+                    </select>
+                </div>
+                <button
+                    onClick={resetFilters}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors mt-auto"
+                >
+                    Đặt Lại Bộ Lọc
+                </button>
+            </div>
+
             <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
                 <table className="w-full border-collapse">
                     <thead>
-                    <tr className="bg-gray-100">
-                        <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
-                        <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
-                        <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
-                        <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
-                        <th className="border p-3 text-left text-gray-700">Thanh Toán</th>
-                        <th className="border p-3 text-left text-gray-700">Thao Tác</th>
-                    </tr>
+                        <tr className="bg-gray-100">
+                            <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
+                            <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
+                            <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
+                            <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
+                            <th className="border p-3 text-left text-gray-700">Thanh Toán</th>
+                            <th className="border p-3 text-left text-gray-700">Thao Tác</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {orders.map(order => (
-                        <motion.tr
-                            key={order.id}
-                            whileHover={{ backgroundColor: '#f3f4f6' }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <td className="border p-3">{order.id}</td>
-                            <td className="border p-3">{order.customer}</td>
-                            <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
-                            <td className="border p-3">
+                        {filteredOrders.map(order => (
+                            <motion.tr
+                                key={order.id}
+                                whileHover={{ backgroundColor: '#f3f4f6' }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <td className="border p-3">{order.id}</td>
+                                <td className="border p-3">{order.customer}</td>
+                                <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
+                                <td className="border p-3">
                                     <span className={`px-2 py-1 rounded-full text-sm ${order.status === 'Hoàn thành' ? 'bg-green-100 text-green-700' :
                                         order.status === 'Đang giao' ? 'bg-yellow-100 text-yellow-700' :
                                             order.status === 'Hủy' ? 'bg-red-100 text-red-700' :
                                                 'bg-blue-100 text-blue-700'
-                                    }`}>
+                                        }`}>
                                         {order.status}
                                     </span>
-                            </td>
-                            <td className="border p-3">{order.payment}</td>
-                            <td className="border p-3">
-                                <div className="flex space-x-2">
-                                    <motion.button
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={() => handleEdit(order)}
-                                        className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                                        title="Sửa"
-                                    >
-                                        <Edit2 size={16} />
-                                    </motion.button>
-                                </div>
-                            </td>
-                        </motion.tr>
-                    ))}
+                                </td>
+                                <td className="border p-3">{order.payment}</td>
+                                <td className="border p-3">
+                                    <div className="flex space-x-2">
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => handleEdit(order)}
+                                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                            title="Sửa"
+                                        >
+                                            <Edit2 size={16} />
+                                        </motion.button>
+                                    </div>
+                                </td>
+                            </motion.tr>
+                        ))}
                     </tbody>
                 </table>
             </div>
@@ -643,69 +694,7 @@ const ViewOrders = ({ orders, onEditOrder }) => {
     );
 };
 
-// UpdatePayment
-const UpdatePayment = ({ orders, updatePaymentStatus }) => {
-    const [selectedOrderId, setSelectedOrderId] = useState('');
-    const [newPaymentStatus, setNewPaymentStatus] = useState('COMPLETED');
 
-    const handleUpdate = () => {
-        if (selectedOrderId && updatePaymentStatus) {
-            updatePaymentStatus(selectedOrderId, newPaymentStatus);
-            alert(`Đã cập nhật trạng thái thanh toán cho đơn hàng ${selectedOrderId} thành "${newPaymentStatus === 'COMPLETED' ? 'Đã thanh toán' : 'Chưa thanh toán'}"`);
-            setSelectedOrderId('');
-            setNewPaymentStatus('COMPLETED');
-        } else {
-            alert('Vui lòng chọn đơn hàng và trạng thái thanh toán!');
-        }
-    };
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="bg-white p-6 rounded-xl shadow-lg border border-gray-100"
-        >
-            <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-                <CreditCard className="mr-2" /> Cập Nhật Thanh Toán
-            </h2>
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Chọn Đơn Hàng</label>
-                    <select
-                        value={selectedOrderId}
-                        onChange={(e) => setSelectedOrderId(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="">-- Chọn đơn hàng --</option>
-                        {orders.map(order => (
-                            <option key={order.id} value={order.id}>
-                                {order.id} - {order.customer} ({order.payment})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái Thanh Toán Mới</label>
-                    <select
-                        value={newPaymentStatus}
-                        onChange={(e) => setNewPaymentStatus(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                        <option value="COMPLETED">Đã thanh toán</option>
-                        <option value="INCOMPLETED">Chưa thanh toán</option>
-                    </select>
-                </div>
-                <button
-                    onClick={handleUpdate}
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
-                >
-                    <Save className="mr-2" size={16} /> Cập Nhật
-                </button>
-            </div>
-        </motion.div>
-    );
-};
 
 // SearchOrders
 const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
@@ -740,33 +729,33 @@ const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                        <tr className="bg-gray-100">
-                            <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
-                            <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
-                            <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
-                            <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
-                        </tr>
+                            <tr className="bg-gray-100">
+                                <th className="border p-3 text-left text-gray-700">Mã Đơn</th>
+                                <th className="border p-3 text-left text-gray-700">Khách Hàng</th>
+                                <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
+                                <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        {filteredOrders.map(order => (
-                            <motion.tr
-                                key={order.id}
-                                whileHover={{ backgroundColor: '#f3f4f6' }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <td className="border p-3">{order.id}</td>
-                                <td className="border p-3">{order.customer}</td>
-                                <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
-                                <td className="border p-3">
+                            {filteredOrders.map(order => (
+                                <motion.tr
+                                    key={order.id}
+                                    whileHover={{ backgroundColor: '#f3f4f6' }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <td className="border p-3">{order.id}</td>
+                                    <td className="border p-3">{order.customer}</td>
+                                    <td className="border p-3">{order.total.toLocaleString()} VNĐ</td>
+                                    <td className="border p-3">
                                         <span className={`px-2 py-1 rounded-full text-sm ${order.status === 'Hoàn thành' ? 'bg-green-100 text-green-700' :
                                             order.status === 'Đang giao' ? 'bg-yellow-100 text-yellow-700' :
                                                 'bg-red-100 text-red-700'
-                                        }`}>
+                                            }`}>
                                             {order.status}
                                         </span>
-                                </td>
-                            </motion.tr>
-                        ))}
+                                    </td>
+                                </motion.tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -1010,7 +999,7 @@ const Dashboard = () => {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <UpdatePayment orders={orders} updatePaymentStatus={updatePaymentStatus} />
+
                             </motion.div>
                         )}
                         {currentPage === 'search' && (

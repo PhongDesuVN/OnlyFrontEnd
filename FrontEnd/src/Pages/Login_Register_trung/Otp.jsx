@@ -102,7 +102,7 @@ const Otp = () => {
                     console.log("✅ OTP Success Response (JSON):", authResponse);
                 } catch (parseError) {
                     console.error("❌ Error parsing JSON:", parseError);
-                    setError("Lỗi khi phân tích dữ liệu từ server.");
+                    setError("Mã OTP sai hoặc hết hạn.Xin vui lòng thử lại.");
                     setIsLoading(false);
                     return;
                 }
