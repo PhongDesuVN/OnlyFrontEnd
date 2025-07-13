@@ -1,7 +1,7 @@
 // src/utils/api.js
 import Cookies from 'js-cookie';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "https://operator-management-system.onrender.com";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 //  "https://operator-management-system.onrender.com" "http://localhost:8080"
 /**
  * Hàm gọi API hỗ trợ xác thực bằng token lưu trong cookie hoặc localStorage.
@@ -61,4 +61,5 @@ export const apiCall = async (endpoint, options = {}) => {
         });
         throw error;
     }
+
 };
