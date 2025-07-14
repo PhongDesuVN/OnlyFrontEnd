@@ -5,12 +5,15 @@ import Cookies from "js-cookie";
 const RequireAuth = ({ allowedRoles = ["CUSTOMER", "STAFF", "MANAGER"], children }) => {
   const navigate = useNavigate();
   const [authorized, setAuthorized] = useState(false);
-  const [checked, setChecked] = useState(false); // đảm bảo không return null quá sớm
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const tokenRaw = Cookies.get("authToken") || localStorage.getItem("authToken");
+    // Ưu tiên cookie, sau đó localStorage, sau đó sessionStorage
+    const tokenRaw =
+      Cookies.get("authToken") ||
+      localStorage.getItem("authToken") ||
+      sessionStorage.getItem("authToken");
 
-    // Nếu không có token → không bắt buộc đăng nhập, chỉ đánh dấu đã kiểm tra
     if (!tokenRaw) {
       setChecked(true);
       return;
@@ -31,7 +34,7 @@ const RequireAuth = ({ allowedRoles = ["CUSTOMER", "STAFF", "MANAGER"], children
         setAuthorized(true);
       } else {
         console.warn(`⛔ Vai trò '${payload.role}' không được phép truy cập`);
-        navigate("/", { replace: true }); // không phải /unauthorized
+        navigate("/", { replace: true });
       }
     } catch (err) {
       console.error("❌ Token decode lỗi:", err.message);
@@ -41,10 +44,13 @@ const RequireAuth = ({ allowedRoles = ["CUSTOMER", "STAFF", "MANAGER"], children
     }
   }, [allowedRoles, navigate]);
 
-  // Nếu chưa kiểm tra xong → không render gì (tránh nhấp nháy)
   if (!checked) return null;
 
-  return authorized || !Cookies.get("authToken") ? children : null;
+  return authorized || !(
+    Cookies.get("authToken") ||
+    localStorage.getItem("authToken") ||
+    sessionStorage.getItem("authToken")
+  ) ? children : null;
 };
 
 export default RequireAuth;

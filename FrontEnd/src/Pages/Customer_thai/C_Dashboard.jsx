@@ -42,6 +42,7 @@ import { apiCall } from '../../utils/api';
 import C_Booking from './C_Booking';
 import C_Feedback from './C_Feedback';
 import C_Historycmt from './C_Historycmt';
+import ChatboxAI from '../ChatboxAI_TrungTran/ChatboxAI';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
@@ -82,10 +83,18 @@ const C_Dashboard = () => {
         }
     });
     const [promotions, setPromotions] = useState([]);
+    const [isCustomer, setIsCustomer] = useState(false);
 
     useEffect(() => {
         fetchCustomerData();
         fetchPromotions();
+        // Kiểm tra role CUSTOMER
+        const roles = sessionStorage.getItem('roles');
+        if (roles && (roles.includes('CUSTOMER') || roles.includes('customer'))) {
+            setIsCustomer(true);
+        } else {
+            setIsCustomer(false);
+        }
     }, []);
 
     useEffect(() => {
@@ -943,6 +952,7 @@ const C_Dashboard = () => {
                 {/* Main Content */}
                 <main className="flex-1 p-6">
                     {renderActiveComponent()}
+                    {isCustomer && <ChatboxAI />}
                 </main>
             </div>
         </div>

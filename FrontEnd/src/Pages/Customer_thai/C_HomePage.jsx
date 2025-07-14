@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import NotificationBell from '../../components/NotificationBell';
 import Booking from './C_Booking';
 import { Home, Users } from 'lucide-react';
+import ChatboxAI from '../ChatboxAI_TrungTran/ChatboxAI';
 
 const Header = ({ isLoggedIn, handleLogout }) => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -441,6 +442,7 @@ const Footer = () => {
 
 const C_HomePage = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('isLoggedIn') === 'true');
+    const [isCustomer, setIsCustomer] = useState(false);
 
     useEffect(() => {
         const handleSmoothScroll = (e) => {
@@ -460,6 +462,13 @@ const C_HomePage = () => {
             setIsLoggedIn(sessionStorage.getItem('isLoggedIn') === 'true');
         };
         window.addEventListener('storage', handleStorage);
+        // Kiểm tra role CUSTOMER
+        const roles = sessionStorage.getItem('roles');
+        if (roles && (roles.includes('CUSTOMER') || roles.includes('customer'))) {
+            setIsCustomer(true);
+        } else {
+            setIsCustomer(false);
+        }
         return () => {
             document.removeEventListener('click', handleSmoothScroll);
             window.removeEventListener('storage', handleStorage);
@@ -496,6 +505,7 @@ const C_HomePage = () => {
             <Promotion />
             <Contact />
             <Footer />
+            {isCustomer && <ChatboxAI />}
         </div>
     );
 };

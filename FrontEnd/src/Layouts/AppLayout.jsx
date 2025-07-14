@@ -3,15 +3,23 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import ChatboxAI from "../Pages/ChatboxAI_TrungTran/ChatboxAI";
 
-
-/**
- * Layout bao toàn bộ giao diện người dùng. ChatboxAI chỉ hiển thị nếu role là CUSTOMER.
- */
 const AppLayout = () => {
+    const token = sessionStorage.getItem("authToken");
+    let role = null;
+
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            role = payload.role;
+        } catch (e) {
+            console.error("Lỗi phân tích token:", e);
+        }
+    }
+
     return (
         <>
             <Outlet />
-            <ChatboxAI />
+            {role === "CUSTOMER" && <ChatboxAI />}
         </>
     );
 };
