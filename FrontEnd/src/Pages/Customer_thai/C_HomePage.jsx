@@ -39,13 +39,14 @@ const Header = ({ isLoggedIn, handleLogout }) => {
                                 </Link>
                             </>
                         )}
-                        {isLoggedIn && (
+                        {/* Bỏ nút Info điều hướng tới C_CustomerInfo */}
+                        {/* {isLoggedIn && (
                             <Link to="/c_customerinfo">
                                 <button className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
                                     Info
                                 </button>
                             </Link>
-                        )}
+                        )} */}
                         <Link to="/">
                             <button className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all">
                                 Operator

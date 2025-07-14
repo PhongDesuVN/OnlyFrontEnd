@@ -33,7 +33,10 @@ const C_Login = () => {
                 try {
                     const errorData = JSON.parse(text);
                     message = errorData.message || message;
-                } catch (_) {}
+                } catch (err) {
+                    // console.error('Failed to parse error response:', err);
+                    // Ignore parse error, fallback to default message
+                }
                 throw new Error(message);
             }
 
@@ -42,7 +45,7 @@ const C_Login = () => {
             setErrorMessage('');
             localStorage.setItem("isLoggedIn", "true");
             localStorage.setItem("token", data.accessToken);
-            navigate('/c_homepage');
+            navigate('/c_customerinfo');
         } catch (error) {
             console.error('Đăng nhập thất bại:', error.message);
             setErrorMessage(error.message);
