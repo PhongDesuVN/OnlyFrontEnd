@@ -35,7 +35,6 @@ import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
 import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_Dashboard from "../Pages/Customer_thai/C_Dashboard.jsx";
-// import C_Feedback from "../Pages/Customer_thai/C_Feedback.jsx";
 
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
@@ -81,15 +80,12 @@ export default function AppRoutes() {
 
             {/* Customer routes */}
             {/*<Route element={<AppLayout/>}>*/}
-                <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
-                <Route path="/c_feedback" element={<C_Feedback/>}/>
                 <Route path="/c_customerinfo" element={<C_Dashboard/>}/>
             {/*</Route>*/}
             <Route path="/c_login" element={<CustomerLogin/>}/>
             <Route path="/c_register" element={<C_Register/>}/>
             <Route path="/c_homepage" element={<C_HomePage/>}/>
 
-            {/*<Route path="/c_feedback" element={<C_Feedback/>}/>*/}
 
 
             {/* Fallback route */}
