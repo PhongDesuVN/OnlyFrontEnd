@@ -43,6 +43,7 @@ import C_Booking from './C_Booking';
 import C_Feedback from './C_Feedback';
 import C_Historycmt from './C_Historycmt';
 import ChatboxAI from '../ChatboxAI_TrungTran/ChatboxAI';
+import RequireAuth from '../../Components/RequireAuth';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
@@ -812,150 +813,152 @@ const C_Dashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-4">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                                <Truck className="w-6 h-6 text-white" />
+        <RequireAuth allowedRoles={["CUSTOMER"]}>
+            <div className="min-h-screen bg-gray-50">
+                {/* Header */}
+                <header className="bg-white shadow-sm border-b border-gray-200">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center py-4">
+                            <div className="flex items-center space-x-4">
+                                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                                    <Truck className="w-6 h-6 text-white" />
+                                </div>
+                                <h1 className="text-xl font-bold text-gray-800">Vận Chuyển Nhà</h1>
                             </div>
-                            <h1 className="text-xl font-bold text-gray-800">Vận Chuyển Nhà</h1>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4">
-                            <NotificationBell />
-                            <div className="flex items-center space-x-3">
-                                <img
-                                    src={userInfo.avatar || '/default-avatar.png'}
-                                    alt={userInfo.name}
-                                    className="w-8 h-8 rounded-full"
-                                />
-                                <span className="text-sm font-medium text-gray-700">{userInfo.name}</span>
+                            
+                            <div className="flex items-center space-x-4">
+                                <NotificationBell />
+                                <div className="flex items-center space-x-3">
+                                    <img
+                                        src={userInfo.avatar || '/default-avatar.png'}
+                                        alt={userInfo.name}
+                                        className="w-8 h-8 rounded-full"
+                                    />
+                                    <span className="text-sm font-medium text-gray-700">{userInfo.name}</span>
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span>Đăng xuất</span>
+                                </button>
                             </div>
-                            <button
-                                onClick={handleLogout}
-                                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span>Đăng xuất</span>
-                            </button>
                         </div>
                     </div>
+                </header>
+
+                <div className="flex">
+                    {/* Sidebar */}
+                    <aside className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
+                        <nav className="p-4 space-y-2">
+                            <button
+                                onClick={() => setActiveComponent('dashboard')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'dashboard' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <BarChart3 className="w-5 h-5" />
+                                <span>Tổng quan</span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveComponent('booking')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'booking' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <Plus className="w-5 h-5" />
+                                <span>Tạo đơn hàng</span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveComponent('promotions')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'promotions' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <Gift className="w-5 h-5" />
+                                <span>Khuyến mãi</span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveComponent('feedback')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'feedback' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <Package className="w-5 h-5" />
+                                <span>Kho và vận chuyển</span>
+                            </button>
+
+                            {/* Thêm nút Nhật kí hoạt động */}
+                            <button
+                                onClick={() => setActiveComponent('historycmt')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'historycmt' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <History className="w-5 h-5" />
+                                <span>Nhật kí hoạt động</span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveComponent('orderHistory')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'orderHistory' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <History className="w-5 h-5" />
+                                <span>Lịch sử đơn hàng</span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveComponent('editInfo')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'editInfo' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <Edit className="w-5 h-5" />
+                                <span>Chỉnh sửa thông tin</span>
+                            </button>
+
+                            <button
+                                onClick={() => setActiveComponent('complaints')}
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                    activeComponent === 'complaints' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                            >
+                                <MessageSquare className="w-5 h-5" />
+                                <span>Khiếu nại</span>
+                            </button>
+                        </nav>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 p-6">
+                        {renderActiveComponent()}
+                        {isCustomer && <ChatboxAI />}
+                    </main>
                 </div>
-            </header>
-
-            <div className="flex">
-                {/* Sidebar */}
-                <aside className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
-                    <nav className="p-4 space-y-2">
-                        <button
-                            onClick={() => setActiveComponent('dashboard')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'dashboard' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <BarChart3 className="w-5 h-5" />
-                            <span>Tổng quan</span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveComponent('booking')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'booking' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <Plus className="w-5 h-5" />
-                            <span>Tạo đơn hàng</span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveComponent('promotions')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'promotions' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <Gift className="w-5 h-5" />
-                            <span>Khuyến mãi</span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveComponent('feedback')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'feedback' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <Package className="w-5 h-5" />
-                            <span>Kho và vận chuyển</span>
-                        </button>
-
-                        {/* Thêm nút Nhật kí hoạt động */}
-                        <button
-                            onClick={() => setActiveComponent('historycmt')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'historycmt' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <History className="w-5 h-5" />
-                            <span>Nhật kí hoạt động</span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveComponent('orderHistory')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'orderHistory' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <History className="w-5 h-5" />
-                            <span>Lịch sử đơn hàng</span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveComponent('editInfo')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'editInfo' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <Edit className="w-5 h-5" />
-                            <span>Chỉnh sửa thông tin</span>
-                        </button>
-
-                        <button
-                            onClick={() => setActiveComponent('complaints')}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                activeComponent === 'complaints' 
-                                    ? 'bg-blue-100 text-blue-700' 
-                                    : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                        >
-                            <MessageSquare className="w-5 h-5" />
-                            <span>Khiếu nại</span>
-                        </button>
-                    </nav>
-                </aside>
-
-                {/* Main Content */}
-                <main className="flex-1 p-6">
-                    {renderActiveComponent()}
-                    {isCustomer && <ChatboxAI />}
-                </main>
             </div>
-        </div>
+        </RequireAuth>
     );
 };
 

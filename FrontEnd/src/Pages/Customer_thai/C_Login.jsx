@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/FormLogin_yen/Header.jsx';
 import Footer from '../../Components/FormLogin_yen/Footer.jsx';
 import { apiCall } from '../../utils/api';
+import Cookies from 'js-cookie';
 
 const C_Login = () => {
     const [formData, setFormData] = useState({
@@ -34,8 +35,7 @@ const C_Login = () => {
                     const errorData = JSON.parse(text);
                     message = errorData.message || message;
                 } catch (err) {
-                    // console.error('Failed to parse error response:', err);
-                    // Ignore parse error, fallback to default message
+                    // Ignore parse error
                 }
                 throw new Error(message);
             }
@@ -44,7 +44,10 @@ const C_Login = () => {
             console.log('Đăng nhập thành công:', data);
             setErrorMessage('');
             sessionStorage.setItem("isLoggedIn", "true");
-            sessionStorage.setItem("token", data.accessToken);
+            // Lưu token vào cookie, sessionStorage, localStorage
+            Cookies.set("authToken", data.accessToken, { expires: 7 });
+            sessionStorage.setItem("authToken", data.accessToken);
+            localStorage.setItem("authToken", data.accessToken);
             navigate('/c_dashboard');
         } catch (error) {
             console.error('Đăng nhập thất bại:', error.message);
