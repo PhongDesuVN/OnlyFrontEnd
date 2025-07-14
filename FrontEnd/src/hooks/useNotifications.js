@@ -13,7 +13,7 @@ function useNotifications() {
         try {
             const response = await apiCall('/api/customer/notifications', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
             
@@ -61,7 +61,7 @@ function useNotifications() {
             const response = await apiCall(`/api/customer/notifications/${notificationId}/read`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
 
