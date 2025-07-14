@@ -35,7 +35,7 @@ import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
 import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
-// import C_Feedback from "../Pages/Customer_thai/C_Feedback.jsx";
+import C_Feedback from "../Pages/Customer_thai/C_Feedback.jsx";
 
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
@@ -53,47 +53,49 @@ export default function AppRoutes() {
             <Route path="/reset-password" element={<ResetPassword/>}/>
             <Route path="/logout" element={<Logout/>}/>
 
-                {/* General pages */}
-                <Route path="/" element={<HomePage/>}/>
-                <Route path="/staff" element={<Staff/>}/>
-                <Route path="/dashboard" element={<Dashboard/>}/>
+            {/* General pages */}
+            <Route path="/" element={<HomePage/>}/>
+            <Route path="/staff" element={<Staff/>}/>
+            <Route path="/dashboard" element={<Dashboard/>}/>
 
-                <Route path="/profile/main" element={<ProfileMainPage/>}/>
+            <Route path="/profile/main" element={<ProfileMainPage/>}/>
 
-                {/* Management */}
-                <Route path="/manageorder" element={<ManageOrder/>}/>
-                <Route path="/manageuser" element={<ManageUser/>}/>
-                <Route path="/managerevenue" element={<ManageRevenue/>}/>
+            {/* Management */}
+            <Route path="/manageorder" element={<ManageOrder/>}/>
+            <Route path="/manageuser" element={<ManageUser/>}/>
+            <Route path="/managerevenue" element={<ManageRevenue/>}/>
 
-                {/* Manager */}
-                <Route path="/manager" element={<ManagerDashboard/>}/>
-                <Route path="/manager-dashboard" element={<ManagerDashboard/>}/>
-                <Route path="/managerstaff" element={<StaffManagement/>}/>
-                <Route path="/promotions" element={<PromotionManagement/>}/>
-                <Route path="/staffperformance" element={<StaffPerformance/>}/>
+            {/* Manager */}
+            <Route path="/manager" element={<ManagerDashboard/>}/>
+            <Route path="/manager-dashboard" element={<ManagerDashboard/>}/>
+            <Route path="/managerstaff" element={<StaffManagement/>}/>
+            <Route path="/promotions" element={<PromotionManagement/>}/>
+            <Route path="/staffperformance" element={<StaffPerformance/>}/>
 
-                {/* Transport Unit */}
-                <Route path="/transport-units" element={<TransportLayout/>}>
-                    <Route index element={<TransportUnitManagement/>}/>
-                    <Route path="overview" element={<TransportUnitOverview/>}/>
-                </Route>
+            {/* Transport Unit */}
+            <Route path="/transport-units" element={<TransportLayout/>}>
+                <Route index element={<TransportUnitManagement/>}/>
+                <Route path="overview" element={<TransportUnitOverview/>}/>
+            </Route>
 
-            <Route path="/c_homepage" element={<C_HomePage/>}/>
+
+            {/* Customer routes */}
+            {/*<Route element={<AppLayout/>}>*/}
+
+                <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
+                <Route path="/c_feedback" element={<C_Feedback/>}/>
+            {/*</Route>*/}
             <Route path="/c_login" element={<CustomerLogin/>}/>
             <Route path="/c_register" element={<C_Register/>}/>
+            <Route path="/c_homepage" element={<C_HomePage/>}/>
 
-            {/*<Route element={<AppLayout/>}>*/}
-                {/* Customer routes */}
-                <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
-                {/*<Route path="/c_feedback" element={<C_Feedback/>}/>*/}
-            {/*</Route>*/}
 
-                {/* Fallback route */}
-                <Route path="*" element={<Navigate to="/" replace/>}/>
-                <Route path="/receipts" element={<ReceiptsManagement/>}/>
-                <Route path="/storage-units" element={<StorageUnitManagement/>}/>
-                <Route path="/staffperformance" element={<StaffPerformance/>}/>
-                <Route path="/manager/pending-staff" element={<PendingStaffManagement/>}/>
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" replace/>}/>
+            <Route path="/receipts" element={<ReceiptsManagement/>}/>
+            <Route path="/storage-units" element={<StorageUnitManagement/>}/>
+            <Route path="/staffperformance" element={<StaffPerformance/>}/>
+            <Route path="/manager/pending-staff" element={<PendingStaffManagement/>}/>
 
         </Routes>
     );
