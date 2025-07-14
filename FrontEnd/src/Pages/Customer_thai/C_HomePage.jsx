@@ -439,7 +439,7 @@ const Footer = () => {
 };
 
 const C_HomePage = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('isLoggedIn') === 'true');
+    const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem('isLoggedIn') === 'true');
 
     useEffect(() => {
         const handleSmoothScroll = (e) => {
@@ -456,7 +456,7 @@ const C_HomePage = () => {
         };
         document.addEventListener('click', handleSmoothScroll);
         const handleStorage = () => {
-            setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
+            setIsLoggedIn(sessionStorage.getItem('isLoggedIn') === 'true');
         };
         window.addEventListener('storage', handleStorage);
         return () => {
@@ -466,7 +466,7 @@ const C_HomePage = () => {
     }, []);
 
     const handleLogout = () => {
-        localStorage.setItem('isLoggedIn', 'false');
+        sessionStorage.setItem('isLoggedIn', 'false');
         setIsLoggedIn(false);
         window.location.reload();
     };

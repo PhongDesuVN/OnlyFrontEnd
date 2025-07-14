@@ -63,7 +63,6 @@ const C_Dashboard = () => {
         totalSpent: 0,
         averageRating: 0
     });
-    const [loading, setLoading] = useState(true);
     const [editFormData, setEditFormData] = useState({
         fullName: '',
         phone: '',
@@ -154,7 +153,6 @@ const C_Dashboard = () => {
     };
 
     const fetchCustomerData = async () => {
-        setLoading(true);
         try {
             // Fetch customer profile
             const profileResponse = await apiCall('/api/customer/profile', {
@@ -219,7 +217,7 @@ const C_Dashboard = () => {
         } catch (error) {
             console.error('Error fetching customer data:', error);
         } finally {
-            setLoading(false);
+            // setLoading(false); // Xóa
         }
     };
 
@@ -766,17 +764,6 @@ const C_Dashboard = () => {
                 return renderDashboard();
         }
     };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Đang tải thông tin...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="min-h-screen bg-gray-50">

@@ -2,7 +2,7 @@ import { apiCall } from '../../utils/api';
 
 // Lấy tất cả storage + feedbacks
 export async function getAllStorageWithFeedbacks() {
-    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+    const headers = { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` };
     const response = await apiCall('/api/customer/feedback/storage-units', { headers });
     if (!response.ok) throw new Error('Lỗi lấy danh sách kho');
     return await response.json();
@@ -10,7 +10,7 @@ export async function getAllStorageWithFeedbacks() {
 
 // Lấy tất cả transport + feedbacks
 export async function getAllTransportWithFeedbacks() {
-    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+    const headers = { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` };
     const response = await apiCall('/api/customer/feedback/transport-units', { headers });
     if (!response.ok) throw new Error('Lỗi lấy danh sách vận chuyển');
     return await response.json();
@@ -66,7 +66,7 @@ export async function getFeedbacksByTransportId(transportId) {
 
 // Like feedback
 export async function likeFeedback(feedbackId) {
-    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+    const headers = { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` };
     const response = await apiCall(`/api/customer/feedback/${feedbackId}/like`, {
         method: 'PATCH',
         headers
@@ -77,7 +77,7 @@ export async function likeFeedback(feedbackId) {
 
 // Dislike feedback
 export async function dislikeFeedback(feedbackId) {
-    const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
+    const headers = { 'Authorization': `Bearer ${sessionStorage.getItem('token')}` };
     const response = await apiCall(`/api/customer/feedback/${feedbackId}/dislike`, {
         method: 'PATCH',
         headers

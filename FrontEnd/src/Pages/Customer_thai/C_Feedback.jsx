@@ -86,7 +86,7 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
             const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
 
@@ -108,7 +108,7 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
             const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
 
@@ -290,7 +290,7 @@ const CreateFeedbackModal = ({ isOpen, onClose, service, type, onFeedbackCreated
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 },
                 body: JSON.stringify({
                     content: content.trim(),
@@ -518,7 +518,6 @@ const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCr
 const C_Feedback = ({ hideNavbar }) => {
     const [isLoggedIn] = useState(true);
     const [activeTab, setActiveTab] = useState('ranking');
-    const [loading, setLoading] = useState(true);
     const [topStorages, setTopStorages] = useState([]);
     const [topTransports, setTopTransports] = useState([]);
     const [allStorages, setAllStorages] = useState([]);
@@ -533,7 +532,6 @@ const C_Feedback = ({ hideNavbar }) => {
     }, []);
 
     const fetchData = async () => {
-        setLoading(true);
         try {
             // Sử dụng các hàm mới thay cho API cũ
             const [topStorageData, topTransportData, allStorageData, allTransportData] = await Promise.all([
@@ -548,8 +546,6 @@ const C_Feedback = ({ hideNavbar }) => {
             setAllTransports(allTransportData);
         } catch (error) {
             console.error('Error fetching data:', error);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -580,10 +576,6 @@ const C_Feedback = ({ hideNavbar }) => {
     const handleLogout = () => {
         console.log('Đăng xuất');
     };
-
-    if (loading) {
-        return null;
-    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
