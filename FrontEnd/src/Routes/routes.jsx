@@ -82,11 +82,11 @@ export default function AppRoutes() {
             <Route path="/c_login" element={<CustomerLogin/>}/>
             <Route path="/c_register" element={<C_Register/>}/>
 
-            <Route element={<AppLayout/>}>
+            {/*<Route element={<AppLayout/>}>*/}
                 {/* Customer routes */}
                 <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
                 {/*<Route path="/c_feedback" element={<C_Feedback/>}/>*/}
-            </Route>
+            {/*</Route>*/}
 
                 {/* Fallback route */}
                 <Route path="*" element={<Navigate to="/" replace/>}/>
