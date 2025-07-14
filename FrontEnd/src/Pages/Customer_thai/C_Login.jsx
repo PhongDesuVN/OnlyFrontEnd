@@ -43,8 +43,8 @@ const C_Login = () => {
             const data = JSON.parse(text);
             console.log('Đăng nhập thành công:', data);
             setErrorMessage('');
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("token", data.accessToken);
+            sessionStorage.setItem("isLoggedIn", "true");
+            sessionStorage.setItem("token", data.accessToken);
             navigate('/c_customerinfo');
         } catch (error) {
             console.error('Đăng nhập thất bại:', error.message);
