@@ -21,9 +21,10 @@ import {
 } from "recharts"
 import { jsPDF } from "jspdf"
 import { Download, TrendingUp, Users, Clock, CheckCircle, AlertCircle, XCircle, BarChart3 } from "lucide-react"
+import { API_BASE_URL } from "../../utils/api";
 
 let fontLoaded = false
-
+const apiRoot = API_BASE_URL + "/api";
 const loadFont = async () => {
     if (fontLoaded) return
     try {
@@ -175,7 +176,7 @@ const exportToPDF = (
     doc.save(fileName)
 }
 
-const apiRoot = "http://localhost:8083/api"
+
 
 const TransportUnitOverview = () => {
     const [allUnits, setAllUnits] = useState([])

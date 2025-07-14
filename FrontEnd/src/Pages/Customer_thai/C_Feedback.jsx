@@ -515,7 +515,7 @@ const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCr
     );
 };
 
-const C_Feedback = () => {
+const C_Feedback = ({ hideNavbar }) => {
     const [isLoggedIn] = useState(true);
     const [activeTab, setActiveTab] = useState('ranking');
     const [loading, setLoading] = useState(true);
@@ -582,19 +582,12 @@ const C_Feedback = () => {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-            <Header isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
+            {!hideNavbar && <Header isLoggedIn={isLoggedIn} handleLogout={handleLogout} />}
 
             {/* Hero Section */}
             <section className="pt-24 pb-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white">

@@ -1,11 +1,12 @@
 "use client"
+import { API_BASE_URL } from "../../utils/api";
 
 import { useState, useEffect, useMemo } from "react"
 import { Search, Eye, Pencil, Check, X, Filter, RefreshCw } from "lucide-react"
 import Cookies from "js-cookie"
 
 export default function TransportUnitManagement() {
-    const apiRoot = "http://localhost:8083/api"
+    const apiRoot = API_BASE_URL + "/api";
     const pageSize = 9
     const [showEdit, setShowEdit] = useState(false)
     const [form, setForm] = useState({

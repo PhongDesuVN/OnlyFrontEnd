@@ -8,17 +8,19 @@ import Register from '../Pages/Login_Register_trung/Register.jsx';
 import ForgotPassword from '../Pages/Login_Register_trung/ForgotPassword.jsx';
 import Otp from '../Pages/Login_Register_trung/Otp.jsx';
 import ResetPassword from '../Pages/Login_Register_trung/ResetPassword.jsx';
+import Logout from "../Pages/Login_Register_trung/Logout.jsx"
 
 // --- Common Pages ---
 import HomePage from '../Pages/HomePage_phong/homepage.jsx';
 import Staff from '../Pages/Staff_phong/staff.jsx';
 import Dashboard from '../Pages/Staff_phong/DashBoard.jsx';
-import ManageOrder from '../Pages/ManageOrder_phong/manageorder.jsx';
+import ManageOrder from '../Pages/ManageOrder_phong/ManageOrder.jsx';
 import ManageUser from '../Pages/ManageUser_trung/manageuser.jsx';
 import ManageRevenue from '../Pages/ManageRevenue_trung/managerevenue.jsx';
 import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
 
 
+// --- Manager Pages ---
 // --- Manager Pages ---
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
@@ -32,8 +34,8 @@ import TransportUnitOverview from '../Pages/TransportUnit_TrungTran/TransportUni
 import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
 import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
-import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
-import C_Feedback from "../Pages/Customer_thai/C_Feedback.jsx";
+import C_Dashboard from "../Pages/Customer_thai/C_Dashboard.jsx";
+// import C_Feedback from "../Pages/Customer_thai/C_Feedback.jsx";
 
 import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
@@ -49,6 +51,7 @@ export default function AppRoutes() {
             <Route path="/forgot" element={<ForgotPassword />} />
             <Route path="/otp" element={<Otp />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/logout" element={<Logout />} />
 
             {/* General pages */}
             <Route path="/" element={<HomePage />} />
@@ -79,8 +82,8 @@ export default function AppRoutes() {
             <Route path="/c_login" element={<CustomerLogin />} />
             <Route path="/c_register" element={<C_Register/>}/>
             <Route path="/c_homepage" element={<C_HomePage/>}/>
-            <Route path="/c_customerinfo" element={<C_CustomerInfo/>}/>
-            <Route path="/c_feedback" element={<C_Feedback/>}/>
+            <Route path="/c_customerinfo" element={<C_Dashboard/>}/>
+            {/*<Route path="/c_feedback" element={<C_Feedback/>}/>*/}
 
 
             {/* Fallback route */}
