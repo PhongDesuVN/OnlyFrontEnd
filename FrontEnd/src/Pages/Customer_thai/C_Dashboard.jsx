@@ -41,6 +41,7 @@ import {
 import { apiCall } from '../../utils/api';
 import C_Booking from './C_Booking';
 import C_Feedback from './C_Feedback';
+import C_Historycmt from './C_Historycmt';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
@@ -110,7 +111,7 @@ const C_Dashboard = () => {
         try {
             const response = await apiCall('/api/customer/promotions', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
             if (response.ok) {
@@ -134,7 +135,7 @@ const C_Dashboard = () => {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 },
                 body: JSON.stringify(editFormData)
             });
@@ -157,7 +158,7 @@ const C_Dashboard = () => {
             // Fetch customer profile
             const profileResponse = await apiCall('/api/customer/profile', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
             if (profileResponse.ok) {
@@ -176,7 +177,7 @@ const C_Dashboard = () => {
             // Fetch bookings
             const bookingsResponse = await apiCall('/api/customer/bookings', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
             if (bookingsResponse.ok) {
@@ -230,7 +231,7 @@ const C_Dashboard = () => {
             const response = await apiCall(`/api/customer/bookings/${bookingId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
 
@@ -259,7 +260,7 @@ const C_Dashboard = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 },
                 body: JSON.stringify(feedbackData)
             });
@@ -278,8 +279,8 @@ const C_Dashboard = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('isLoggedIn');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('isLoggedIn');
         window.location.href = '/c_homepage';
     };
 
@@ -337,27 +338,49 @@ const C_Dashboard = () => {
 
     const getPieChartData = () => {
         return {
-            labels: ['Hoàn thành', 'Chờ xử lý', 'Đang vận chuyển', 'Đã hủy'],
+            labels: ['Hoàn thành', 'Chờ xử lý', 'Đang vận chuyển'],
             datasets: [
                 {
                     data: [
                         customerStats.completedOrders,
                         customerStats.pendingOrders,
-                        customerStats.shippingOrders,
-                        customerStats.totalOrders - customerStats.completedOrders - customerStats.pendingOrders - customerStats.shippingOrders
+                        customerStats.shippingOrders
                     ],
                     backgroundColor: [
                         'rgba(34, 197, 94, 0.8)',
                         'rgba(234, 179, 8, 0.8)',
-                        'rgba(59, 130, 246, 0.8)',
-                        'rgba(239, 68, 68, 0.8)'
+                        'rgba(59, 130, 246, 0.8)'
                     ],
                     borderColor: [
                         'rgba(34, 197, 94, 1)',
                         'rgba(234, 179, 8, 1)',
-                        'rgba(59, 130, 246, 1)',
-                        'rgba(239, 68, 68, 1)'
+                        'rgba(59, 130, 246, 1)'
                     ],
+                    borderWidth: 1,
+                },
+            ],
+        };
+    };
+
+    // Thêm hàm lấy dữ liệu tổng chi tiêu theo tháng
+    const getTotalSpentBarChartData = () => {
+        const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+        const data = new Array(12).fill(0);
+
+        orderHistory.forEach(order => {
+            const date = new Date(order.createdAt);
+            const monthIndex = date.getMonth(); // 0-11
+            data[monthIndex] += parseFloat(order.total) || 0;
+        });
+
+        return {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Tổng chi tiêu (VNĐ)',
+                    data: data,
+                    backgroundColor: 'rgba(139, 92, 246, 0.5)',
+                    borderColor: 'rgba(139, 92, 246, 1)',
                     borderWidth: 1,
                 },
             ],
@@ -457,18 +480,30 @@ const C_Dashboard = () => {
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Thống kê đơn hàng theo tháng</h3>
-                    <Bar data={getBarChartData()} options={{
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top',
+                {/* Container chứa cả 2 biểu đồ cột */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-10">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Thống kê đơn hàng theo tháng</h3>
+                        <Bar data={getBarChartData()} options={{
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
                             },
-                        },
-                    }} />
+                        }} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Tổng chi tiêu theo tháng</h3>
+                        <Bar data={getTotalSpentBarChartData()} options={{
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top' },
+                            },
+                        }} />
+                    </div>
                 </div>
-
+                {/* Pie chart giữ nguyên */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Phân bố trạng thái đơn hàng</h3>
                     <Pie data={getPieChartData()} options={{
@@ -760,6 +795,8 @@ const C_Dashboard = () => {
                 return <C_Feedback />;
             case 'promotions':
                 return renderPromotions();
+            case 'historycmt':
+                return <C_Historycmt />;
             default:
                 return renderDashboard();
         }
@@ -802,7 +839,7 @@ const C_Dashboard = () => {
 
             <div className="flex">
                 {/* Sidebar */}
-                <aside className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen">
+                <aside className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
                     <nav className="p-4 space-y-2">
                         <button
                             onClick={() => setActiveComponent('dashboard')}
@@ -850,6 +887,19 @@ const C_Dashboard = () => {
                         >
                             <Package className="w-5 h-5" />
                             <span>Kho và vận chuyển</span>
+                        </button>
+
+                        {/* Thêm nút Nhật kí hoạt động */}
+                        <button
+                            onClick={() => setActiveComponent('historycmt')}
+                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                                activeComponent === 'historycmt' 
+                                    ? 'bg-blue-100 text-blue-700' 
+                                    : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                        >
+                            <History className="w-5 h-5" />
+                            <span>Nhật kí hoạt động</span>
                         </button>
 
                         <button

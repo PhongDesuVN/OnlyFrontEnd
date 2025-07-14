@@ -11,56 +11,6 @@ import {
     getFeedbacksByTransportId
 } from './feedbackDataService';
 
-const Header = ({ isLoggedIn, }) => {
-    const [isScrolled, setIsScrolled] = useState(false);
-
-    React.useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 50);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    return (
-        <header className={`fixed w-full top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-lg text-gray-800' : 'bg-transparent text-white'}`}>
-            <div className="container mx-auto px-4 py-4">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                        <Truck className="w-8 h-8 text-blue-600" />
-                        <h1 className="text-xl font-bold">Vận Chuyển Nhà</h1>
-                    </div>
-                    <nav className="hidden md:flex space-x-8">
-                        <Link to="/c_homepage" className="hover:text-blue-600 transition-colors">Trang Chủ</Link>
-                        <Link to="/c_booking" className="hover:text-blue-600 transition-colors">Đặt xe</Link>
-                        <Link to="/c_feedback" className="hover:text-blue-600 transition-colors">Đánh giá</Link>
-                        <Link to="/c_customerinfo" className="hover:text-blue-600 transition-colors">Thông tin</Link>
-                    </nav>
-                    <div className="flex items-center space-x-3">
-                        {!isLoggedIn && (
-                            <Link to="/c_login">
-                                <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                                    Đăng Nhập
-                                </button>
-                            </Link>
-                        )}
-                        {isLoggedIn && (
-                            <Link to="/c_customerinfo">
-                                <button className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
-                                    Info
-                                </button>
-                            </Link>
-                        )}
-                        <Link to="/">
-                            <button className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all">
-                                Operator
-                            </button>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
-};
-
 const RatingStars = ({ rating, size = "w-4 h-4" }) => {
     return (
         <div className="flex items-center space-x-1">
@@ -579,7 +529,6 @@ const C_Feedback = ({ hideNavbar }) => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-            {!hideNavbar && <Header isLoggedIn={isLoggedIn} handleLogout={handleLogout} />}
 
             {/* Hero Section */}
             <section className="pt-24 pb-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white">

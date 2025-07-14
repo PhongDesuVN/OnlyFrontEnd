@@ -45,7 +45,7 @@ const C_Login = () => {
             setErrorMessage('');
             sessionStorage.setItem("isLoggedIn", "true");
             sessionStorage.setItem("token", data.accessToken);
-            navigate('/c_customerinfo');
+            navigate('/c_dashboard');
         } catch (error) {
             console.error('Đăng nhập thất bại:', error.message);
             setErrorMessage(error.message);
