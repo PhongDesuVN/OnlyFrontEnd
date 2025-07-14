@@ -18,7 +18,6 @@ export const apiCall = async (endpoint, options = {}) => {
     const headers = {
         ...(options.headers || {}),
     };
-
     if (options.body instanceof FormData) {
         delete headers["Content-Type"];
     } else {
