@@ -8,6 +8,7 @@ import {
   createBooking,
   updateBooking,
   deleteBooking,
+  getInitIds,
 } from "../../api/bookingApi";
 
 Modal.setAppElement("#root");
@@ -21,6 +22,14 @@ export default function SlotGrid({ storageId }) {
   const [slotToBook, setSlotToBook] = useState(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [pendingSlot, setPendingSlot] = useState(null);
+  const [initIds, setInitIds] = useState({
+    customerIds: [],
+    operatorStaffIds: [],
+    transportUnitIds: [],
+    storageUnitIds: [],
+    pickupLocationIds: [],
+    deliveryLocationIds: [],
+  });
 
   // Đầy đủ trường theo entity Booking
   const [formData, setFormData] = useState({
@@ -29,13 +38,19 @@ export default function SlotGrid({ storageId }) {
     note: "",
     transportUnitId: "",
     operatorStaffId: "",
+    storageUnitId: storageId,
     total: "",
-    paymentStatus: "PENDING",
+    paymentStatus: "INCOMPLETED",
     pickupLocation: "",
     deliveryLocation: "",
+    slotIndex: null
   });
 
   const [errors, setErrors] = useState({});
+
+  // State cho modal chỉnh sửa
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
 
   const loadSlots = () => {
     getSlotsInfo(storageId)
@@ -47,6 +62,15 @@ export default function SlotGrid({ storageId }) {
   };
 
   useEffect(loadSlots, [storageId]);
+  useEffect(() => {
+    getInitIds()
+      .then(res => setInitIds({
+        ...res.data,
+        pickupLocationIds: res.data.pickupLocationIds || [],
+        deliveryLocationIds: res.data.deliveryLocationIds || [],
+      }))
+      .catch(() => setInitIds({ customerIds: [], operatorStaffIds: [], transportUnitIds: [], storageUnitIds: [], pickupLocationIds: [], deliveryLocationIds: [] }));
+  }, [bookingModalOpen]);
 
   const openDetail = (slotIndex) => {
     getSlotDetail(storageId, slotIndex)
@@ -59,29 +83,29 @@ export default function SlotGrid({ storageId }) {
 
   const openBooking = (slotIndex) => {
     setSlotToBook(slotIndex);
-    // Reset form
     setFormData({
       customerId: "",
       deliveryDate: new Date().toISOString().slice(0, 16),
       note: "",
       transportUnitId: "",
       operatorStaffId: "",
+      storageUnitId: storageId,    // tự set storageId từ prop
       total: "",
-      paymentStatus: "PENDING",
+      paymentStatus: "INCOMPLETED",
       pickupLocation: "",
       deliveryLocation: "",
+      slotIndex: slotIndex,        // tự set slotIndex theo slot được click
     });
     setErrors({});
     setBookingModalOpen(true);
   };
 
+
   const handleClick = (i) => {
     if (bookedSlots.includes(i)) openDetail(i);
-    else {
-      setPendingSlot(i);
-      setConfirmModalOpen(true);
-    }
+    else openBooking(i);
   };
+
 
   const handleDelete = () => {
     deleteBooking(currentDetail.bookingId)
@@ -92,9 +116,9 @@ export default function SlotGrid({ storageId }) {
       .catch((err) => alert("Xóa thất bại: " + err.message));
   };
 
-  // Khi ấn "Chỉnh sửa" booking, điền lại form với đủ thông tin
+  // Khi ấn "Chỉnh sửa" booking, điền lại form với đủ thông tin và mở modal chỉnh sửa
   const handleEdit = () => {
-    setFormData({
+    setEditFormData({
       customerId: currentDetail.customerId,
       deliveryDate: currentDetail.deliveryDate
         ? currentDetail.deliveryDate.slice(0, 16)
@@ -106,10 +130,44 @@ export default function SlotGrid({ storageId }) {
       paymentStatus: currentDetail.paymentStatus,
       pickupLocation: currentDetail.pickupLocation || "",
       deliveryLocation: currentDetail.deliveryLocation || "",
+      storageUnitId: storageId,
+      slotIndex: currentDetail.slotIndex,
     });
-    setSlotToBook(currentDetail.slotIndex);
+    setEditModalOpen(true);
     setDetailModalOpen(false);
-    setBookingModalOpen(true);
+  };
+
+  // Xử lý submit chỉnh sửa booking
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    let errs = {};
+    if (!editFormData.customerId) errs.customerId = "Bắt buộc";
+    if (!editFormData.deliveryDate) errs.deliveryDate = "Bắt buộc";
+    if (!editFormData.transportUnitId) errs.transportUnitId = "Bắt buộc";
+    if (!editFormData.operatorStaffId) errs.operatorStaffId = "Bắt buộc";
+    if (!editFormData.total) errs.total = "Bắt buộc";
+    if (!editFormData.pickupLocation) errs.pickupLocation = "Bắt buộc";
+    if (!editFormData.deliveryLocation) errs.deliveryLocation = "Bắt buộc";
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+    const payload = {
+      ...editFormData,
+      status: editFormData.paymentStatus,
+      storageUnitId: editFormData.storageUnitId,
+      slotIndex: editFormData.slotIndex,
+    };
+    updateBooking(currentDetail.bookingId, payload)
+      .then(() => {
+        setEditModalOpen(false);
+        setDetailModalOpen(false);
+        loadSlots();
+      })
+      .catch((err) => {
+        console.error('❌ Booking update error:', err);
+        alert("Cập nhật thất bại: " + (err.response?.data?.message || err.message));
+      });
   };
 
   // Validate & submit
@@ -130,32 +188,80 @@ export default function SlotGrid({ storageId }) {
 
     const payload = {
       ...formData,
-      status: currentDetail ? formData.paymentStatus : "PENDING",
-      storageUnitId: storageId,
-      slotIndex: slotToBook,
+      status: "INCOMPLETED",
+      storageUnitId: formData.storageUnitId,
+      slotIndex: formData.slotIndex,
     };
 
-    const action = currentDetail
-      ? updateBooking(currentDetail.bookingId, payload)
-      : createBooking(payload);
+    console.log('🚀 Submitting booking:', {
+      payload: payload
+    });
 
-    action
+    // Luôn gọi CREATE
+    createBooking(payload)
       .then(() => {
         setBookingModalOpen(false);
         setDetailModalOpen(false);
         loadSlots();
       })
-      .catch(() => alert("Lưu thất bại"));
+      .catch((err) => {
+        console.error('❌ Booking error:', err);
+        alert("Lưu thất bại: " + (err.response?.data?.message || err.message));
+      });
   };
 
   const cols = Math.ceil(Math.sqrt(slotCount));
 
   // Xử lý chọn slot nhanh (có thể tuỳ chỉnh cho hợp lý nghiệp vụ)
   const handleConfirmChooseSlot = () => {
+    // Hiện tại chỉ có storageUnitId và slotIndex, cần yêu cầu nhập thêm các trường bắt buộc
+    const deliveryLocation = prompt('Nhập nơi giao hàng (bắt buộc):');
+    if (!deliveryLocation) {
+      alert('Bạn phải nhập nơi giao hàng!');
+      return;
+    }
+    const pickupLocation = prompt('Nhập nơi lấy hàng (bắt buộc):');
+    if (!pickupLocation) {
+      alert('Bạn phải nhập nơi lấy hàng!');
+      return;
+    }
+    const customerId = prompt('Nhập mã khách hàng (bắt buộc):');
+    if (!customerId) {
+      alert('Bạn phải nhập mã khách hàng!');
+      return;
+    }
+    const operatorStaffId = prompt('Nhập mã nhân viên vận hành (bắt buộc):');
+    if (!operatorStaffId) {
+      alert('Bạn phải nhập mã nhân viên vận hành!');
+      return;
+    }
+    const transportUnitId = prompt('Nhập mã đơn vị vận chuyển (bắt buộc):');
+    if (!transportUnitId) {
+      alert('Bạn phải nhập mã đơn vị vận chuyển!');
+      return;
+    }
+    const total = prompt('Nhập tổng tiền (bắt buộc):');
+    if (!total) {
+      alert('Bạn phải nhập tổng tiền!');
+      return;
+    }
+    const deliveryDate = prompt('Nhập ngày giao (yyyy-MM-ddTHH:mm, bắt buộc):', new Date().toISOString().slice(0, 16));
+    if (!deliveryDate) {
+      alert('Bạn phải nhập ngày giao!');
+      return;
+    }
     const payload = {
       storageUnitId: storageId,
       slotIndex: pendingSlot,
-      // Có thể truyền thêm default customerId hoặc yêu cầu form chi tiết sau
+      deliveryLocation,
+      pickupLocation,
+      customerId,
+      operatorStaffId,
+      transportUnitId,
+      total,
+      deliveryDate,
+      paymentStatus: 'INCOMPLETED',
+      status: 'INCOMPLETED',
     };
 
     createBooking(payload)
@@ -167,9 +273,15 @@ export default function SlotGrid({ storageId }) {
       .catch((err) => {
         alert(
           "Không thể chọn slot: " +
-            (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message)
         );
       });
+  };
+
+  const getLocationName = (id, locations) => {
+    if (!id) return "";
+    const found = locations.find(loc => String(loc.id) === String(id));
+    return found ? found.name : id; // fallback: nếu không có name thì hiện id
   };
 
   return (
@@ -188,13 +300,12 @@ export default function SlotGrid({ storageId }) {
             transition={{ duration: 0.25, delay: i * 0.03 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`p-4 text-center rounded cursor-pointer select-none transition-colors duration-200 ${
-              bookedSlots.includes(i)
-                ? "bg-yellow-200 hover:bg-yellow-300"
-                : "bg-green-200 hover:bg-green-300"
-            }`}
+            className={`p-4 text-center rounded cursor-pointer select-none transition-colors duration-200 ${bookedSlots.includes(i)
+              ? "bg-yellow-200 hover:bg-yellow-300"
+              : "bg-green-200 hover:bg-green-300"
+              }`}
           >
-            {i + 1}
+            {i}
           </motion.div>
         ))}
       </div>
@@ -231,12 +342,10 @@ export default function SlotGrid({ storageId }) {
                 <strong>Trạng thái:</strong> {currentDetail.paymentStatus}
               </p>
               <p>
-                <strong>Nơi lấy hàng:</strong>{" "}
-                {currentDetail.pickupLocation}
+                <strong>Nơi giao hàng:</strong> {getLocationName(currentDetail.deliveryLocation, initIds.deliveryLocationIds)}
               </p>
               <p>
-                <strong>Nơi giao hàng:</strong>{" "}
-                {currentDetail.deliveryLocation}
+                <strong>Nơi lấy hàng:</strong> {getLocationName(currentDetail.pickupLocation, initIds.pickupLocationIds)}
               </p>
             </div>
             <div className="mt-6 flex gap-2">
@@ -267,197 +376,368 @@ export default function SlotGrid({ storageId }) {
       <Modal
         isOpen={bookingModalOpen}
         onRequestClose={() => setBookingModalOpen(false)}
-        className="modal p-6 bg-white rounded shadow-lg"
+        className="modal bg-white rounded-lg shadow-xl p-4 max-w-md w-full mx-auto mt-24 border border-gray-200 flex flex-col"
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
       >
-        <h4 className="text-xl mb-4">
-          {currentDetail
-            ? "Cập nhật Booking"
-            : `Book slot #${slotToBook + 1}`}
+        <h4 className="text-lg font-semibold mb-3 text-center">
+          Booking slot #{slotToBook}
         </h4>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-y-auto max-h-[60vh] space-y-3 pr-1">
+          {/* CustomerId */}
           <div>
-            <label className="block">Mã khách hàng</label>
-            <input
-              type="number"
+            <label className="block text-sm font-medium mb-1">Mã khách hàng</label>
+            <select
               value={formData.customerId}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  customerId: e.target.value,
-                }))
+              onChange={e =>
+                setFormData(f => ({ ...f, customerId: e.target.value }))
               }
-              className={`w-full border p-2 rounded ${
-                errors.customerId ? "border-red-500" : ""
-              }`}
-            />
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.customerId ? "border-red-500" : ""
+                }`}
+            >
+              <option value="">Chọn khách hàng</option>
+              {initIds.customerIds.map(id => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
             {errors.customerId && (
-              <p className="text-red-500 text-sm">
-                {errors.customerId}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{errors.customerId}</p>
             )}
           </div>
+          {/* OperatorStaffId */}
           <div>
-            <label className="block">Ngày giao</label>
+            <label className="block text-sm font-medium mb-1">Mã nhân viên vận hành</label>
+            <select
+              value={formData.operatorStaffId}
+              onChange={e =>
+                setFormData(f => ({ ...f, operatorStaffId: e.target.value }))
+              }
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.operatorStaffId ? "border-red-500" : ""
+                }`}
+            >
+              <option value="">Chọn nhân viên vận hành</option>
+              {initIds.operatorStaffIds.map(id => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
+            {errors.operatorStaffId && (
+              <p className="text-red-500 text-xs mt-1">{errors.operatorStaffId}</p>
+            )}
+          </div>
+          {/* TransportUnitId */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Mã đơn vị vận chuyển</label>
+            <select
+              value={formData.transportUnitId}
+              onChange={e =>
+                setFormData(f => ({ ...f, transportUnitId: e.target.value }))
+              }
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.transportUnitId ? "border-red-500" : ""
+                }`}
+            >
+              <option value="">Chọn đơn vị vận chuyển</option>
+              {initIds.transportUnitIds.map(id => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
+            {errors.transportUnitId && (
+              <p className="text-red-500 text-xs mt-1">{errors.transportUnitId}</p>
+            )}
+          </div>
+          {/* Delivery Date */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Ngày giao</label>
             <input
               type="datetime-local"
               value={formData.deliveryDate}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  deliveryDate: e.target.value,
-                }))
+              onChange={e =>
+                setFormData(f => ({ ...f, deliveryDate: e.target.value }))
               }
-              className="w-full border p-2 rounded"
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryDate ? "border-red-500" : ""
+                }`}
             />
             {errors.deliveryDate && (
-              <p className="text-red-500 text-sm">
-                {errors.deliveryDate}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
             )}
           </div>
+          {/* Note */}
           <div>
-            <label className="block">Ghi chú</label>
+            <label className="block text-sm font-medium mb-1">Ghi chú</label>
             <textarea
               value={formData.note}
-              onChange={(e) =>
-                setFormData((f) => ({ ...f, note: e.target.value }))
+              onChange={e =>
+                setFormData(f => ({ ...f, note: e.target.value }))
               }
-              className="w-full border p-2 rounded"
+              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
+              rows={2}
             />
           </div>
+          {/* Tổng tiền */}
           <div>
-            <label className="block">Mã đơn vị vận chuyển</label>
-            <input
-              type="number"
-              value={formData.transportUnitId}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  transportUnitId: e.target.value,
-                }))
-              }
-              className={`w-full border p-2 rounded ${
-                errors.transportUnitId ? "border-red-500" : ""
-              }`}
-            />
-            {errors.transportUnitId && (
-              <p className="text-red-500 text-sm">
-                {errors.transportUnitId}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block">Mã nhân viên vận hành</label>
-            <input
-              type="number"
-              value={formData.operatorStaffId}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  operatorStaffId: e.target.value,
-                }))
-              }
-              className={`w-full border p-2 rounded ${
-                errors.operatorStaffId ? "border-red-500" : ""
-              }`}
-            />
-            {errors.operatorStaffId && (
-              <p className="text-red-500 text-sm">
-                {errors.operatorStaffId}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block">Tổng tiền</label>
+            <label className="block text-sm font-medium mb-1">Tổng tiền</label>
             <input
               type="number"
               value={formData.total}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  total: e.target.value,
-                }))
+              onChange={e =>
+                setFormData(f => ({ ...f, total: e.target.value }))
               }
-              className={`w-full border p-2 rounded ${
-                errors.total ? "border-red-500" : ""
-              }`}
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.total ? "border-red-500" : ""
+                }`}
             />
             {errors.total && (
-              <p className="text-red-500 text-sm">
-                {errors.total}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{errors.total}</p>
             )}
           </div>
+          {/* Trạng thái thanh toán */}
           <div>
-            <label className="block">Trạng thái thanh toán</label>
+            <label className="block text-sm font-medium mb-1">Trạng thái thanh toán</label>
             <select
               value={formData.paymentStatus}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  paymentStatus: e.target.value,
-                }))
+              onChange={e =>
+                setFormData(f => ({ ...f, paymentStatus: e.target.value }))
               }
-              className="w-full border p-2 rounded"
+              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
             >
-              <option value="PENDING">PENDING</option>
-              <option value="PAID">PAID</option>
-              <option value="FAILED">FAILED</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="INCOMPLETED">INCOMPLETED</option>
             </select>
           </div>
+          {/* Nơi lấy hàng */}
           <div>
-            <label className="block">Nơi lấy hàng</label>
-            <input
-              type="text"
-              value={formData.pickupLocation}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  pickupLocation: e.target.value,
-                }))
-              }
-              className={`w-full border p-2 rounded ${
-                errors.pickupLocation ? "border-red-500" : ""
-              }`}
-            />
+            <label className="block text-sm font-medium mb-1">Nơi lấy hàng</label>
+            {initIds.pickupLocationIds && initIds.pickupLocationIds.length > 0 ? (
+              <select
+                value={formData.pickupLocation}
+                onChange={e => setFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+              >
+                <option value="">Chọn nơi lấy hàng</option>
+                {initIds.pickupLocationIds.map(id => (
+                  <option key={id} value={id}>{id}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={formData.pickupLocation}
+                onChange={e => setFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+              />
+            )}
             {errors.pickupLocation && (
-              <p className="text-red-500 text-sm">
-                {errors.pickupLocation}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>
             )}
           </div>
+          {/* Nơi giao hàng */}
           <div>
-            <label className="block">Nơi giao hàng</label>
-            <input
-              type="text"
-              value={formData.deliveryLocation}
-              onChange={(e) =>
-                setFormData((f) => ({
-                  ...f,
-                  deliveryLocation: e.target.value,
-                }))
-              }
-              className={`w-full border p-2 rounded ${
-                errors.deliveryLocation ? "border-red-500" : ""
-              }`}
-            />
+            <label className="block text-sm font-medium mb-1">Nơi giao hàng</label>
+            {initIds.deliveryLocationIds && initIds.deliveryLocationIds.length > 0 ? (
+              <select
+                value={formData.deliveryLocation}
+                onChange={e => setFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+              >
+                <option value="">Chọn nơi giao hàng</option>
+                {initIds.deliveryLocationIds.map(id => (
+                  <option key={id} value={id}>{id}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={formData.deliveryLocation}
+                onChange={e => setFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+              />
+            )}
             {errors.deliveryLocation && (
-              <p className="text-red-500 text-sm">
-                {errors.deliveryLocation}
-              </p>
+              <p className="text-red-500 text-xs mt-1">{errors.deliveryLocation}</p>
             )}
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-2 justify-center sticky bottom-0 bg-white py-2 z-10 border-t border-gray-100">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition"
             >
               Lưu
             </button>
             <button
               type="button"
-              className="px-4 py-2 bg-gray-300 rounded"
+              className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:ring-2 focus:ring-blue-100 transition"
               onClick={() => setBookingModalOpen(false)}
+            >
+              Hủy
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Booking Modal */}
+      <Modal
+        isOpen={editModalOpen}
+        onRequestClose={() => setEditModalOpen(false)}
+        className="modal bg-white rounded-lg shadow-xl p-4 max-w-md w-full mx-auto mt-24 border border-gray-200 flex flex-col"
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
+      >
+        <h4 className="text-lg font-semibold mb-3 text-center">
+          Chỉnh sửa Booking slot #{editFormData?.slotIndex + 1}
+        </h4>
+        <form onSubmit={handleEditSubmit} className="flex-1 flex flex-col overflow-y-auto max-h-[60vh] space-y-3 pr-1">
+          {/* Các trường giống như form booking */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Mã khách hàng</label>
+            <select
+              value={editFormData?.customerId || ""}
+              onChange={e => setEditFormData(f => ({ ...f, customerId: e.target.value }))}
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.customerId ? "border-red-500" : ""}`}
+            >
+              <option value="">Chọn khách hàng</option>
+              {initIds.customerIds.map(id => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
+            {errors.customerId && (
+              <p className="text-red-500 text-xs mt-1">{errors.customerId}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Mã nhân viên vận hành</label>
+            <select
+              value={editFormData?.operatorStaffId || ""}
+              onChange={e => setEditFormData(f => ({ ...f, operatorStaffId: e.target.value }))}
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.operatorStaffId ? "border-red-500" : ""}`}
+            >
+              <option value="">Chọn nhân viên vận hành</option>
+              {initIds.operatorStaffIds.map(id => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
+            {errors.operatorStaffId && (
+              <p className="text-red-500 text-xs mt-1">{errors.operatorStaffId}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Mã đơn vị vận chuyển</label>
+            <select
+              value={editFormData?.transportUnitId || ""}
+              onChange={e => setEditFormData(f => ({ ...f, transportUnitId: e.target.value }))}
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.transportUnitId ? "border-red-500" : ""}`}
+            >
+              <option value="">Chọn đơn vị vận chuyển</option>
+              {initIds.transportUnitIds.map(id => (
+                <option key={id} value={id}>{id}</option>
+              ))}
+            </select>
+            {errors.transportUnitId && (
+              <p className="text-red-500 text-xs mt-1">{errors.transportUnitId}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Ngày giao</label>
+            <input
+              type="datetime-local"
+              value={editFormData?.deliveryDate || ""}
+              onChange={e => setEditFormData(f => ({ ...f, deliveryDate: e.target.value }))}
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryDate ? "border-red-500" : ""}`}
+            />
+            {errors.deliveryDate && (
+              <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Ghi chú</label>
+            <textarea
+              value={editFormData?.note || ""}
+              onChange={e => setEditFormData(f => ({ ...f, note: e.target.value }))}
+              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
+              rows={2}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Tổng tiền</label>
+            <input
+              type="number"
+              value={editFormData?.total || ""}
+              onChange={e => setEditFormData(f => ({ ...f, total: e.target.value }))}
+              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.total ? "border-red-500" : ""}`}
+            />
+            {errors.total && (
+              <p className="text-red-500 text-xs mt-1">{errors.total}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Trạng thái thanh toán</label>
+            <select
+              value={editFormData?.paymentStatus || "INCOMPLETED"}
+              onChange={e => setEditFormData(f => ({ ...f, paymentStatus: e.target.value }))}
+              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
+            >
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="INCOMPLETED">INCOMPLETED</option>
+            </select>
+          </div>
+          {/* Nơi lấy hàng */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Nơi lấy hàng</label>
+            {initIds.pickupLocationIds && initIds.pickupLocationIds.length > 0 ? (
+              <select
+                value={editFormData?.pickupLocation || ""}
+                onChange={e => setEditFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+              >
+                <option value="">Chọn nơi lấy hàng</option>
+                {initIds.pickupLocationIds.map(id => (
+                  <option key={id} value={id}>{id}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={editFormData?.pickupLocation || ""}
+                onChange={e => setEditFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+              />
+            )}
+            {errors.pickupLocation && (
+              <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>
+            )}
+          </div>
+          {/* Nơi giao hàng */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Nơi giao hàng</label>
+            {initIds.deliveryLocationIds && initIds.deliveryLocationIds.length > 0 ? (
+              <select
+                value={editFormData?.deliveryLocation || ""}
+                onChange={e => setEditFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+              >
+                <option value="">Chọn nơi giao hàng</option>
+                {initIds.deliveryLocationIds.map(id => (
+                  <option key={id} value={id}>{id}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={editFormData?.deliveryLocation || ""}
+                onChange={e => setEditFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+              />
+            )}
+            {errors.deliveryLocation && (
+              <p className="text-red-500 text-xs mt-1">{errors.deliveryLocation}</p>
+            )}
+          </div>
+          <div className="flex gap-2 mt-2 justify-center sticky bottom-0 bg-white py-2 z-10 border-t border-gray-100">
+            <button
+              type="submit"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition"
+            >
+              Lưu chỉnh sửa
+            </button>
+            <button
+              type="button"
+              className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:ring-2 focus:ring-blue-100 transition"
+              onClick={() => setEditModalOpen(false)}
             >
               Hủy
             </button>
@@ -473,7 +753,7 @@ export default function SlotGrid({ storageId }) {
       >
         <h4 className="text-xl mb-4">
           Bạn có muốn chọn vị trí này (Slot #
-          {pendingSlot !== null ? pendingSlot + 1 : ""})?
+          {pendingSlot !== null ? pendingSlot : ""})?
         </h4>
         <div className="flex gap-2">
           <button

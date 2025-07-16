@@ -1,11 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import axios from "axios";
-import SlotGrid from "../../Components/HungStorage/SlotGrid";
-
-
-
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Warehouse,
@@ -32,6 +27,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify"; // Thêm react-toastify để hiển thị thông báo
 import "react-toastify/dist/ReactToastify.css";
 
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -46,125 +42,17 @@ import {
 import { Line, Pie } from "react-chartjs-2";
 import { format, subDays, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
+import axiosInstance from '../../utils/axiosInstance';
+import SlotGrid from "../../Components/HungStorage/SlotGrid";
+import Sidebar from "../../Components/HungStorage/Sidebar";
+import { LoadingSpinner, ErrorMessage } from "../../Components/HungStorage/LoadingError";
+import Footer from "../../Components/HungStorage/Footer";
+import Pagination from "../../Components/HungStorage/Pagination";
+import RequireAuth from '../../Components/RequireAuth';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
 const API_BASE = "/api/storage-units";
-
-// Component Pagination được cập nhật
-const Pagination = React.memo(
-  ({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange }) => {
-    const getPageNumbers = () => {
-      const delta = 2;
-      const range = [];
-      const rangeWithDots = [];
-
-      if (totalPages <= 7) {
-        for (let i = 1; i <= totalPages; i++) {
-          range.push(i);
-        }
-        return range;
-      }
-
-      for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
-        range.push(i);
-      }
-
-      if (currentPage - delta > 2) {
-        rangeWithDots.push(1, "...");
-      } else {
-        rangeWithDots.push(1);
-      }
-
-      rangeWithDots.push(...range);
-
-      if (currentPage + delta < totalPages - 1) {
-        rangeWithDots.push("...", totalPages);
-      } else if (totalPages > 1) {
-        rangeWithDots.push(totalPages);
-      }
-
-      return rangeWithDots;
-    };
-
-    return (
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6 p-4 bg-white rounded-lg border">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <span>Hiển thị</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-            className="border rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </select>
-          <span>trên {totalItems} kết quả</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => onPageChange(1)}
-            disabled={currentPage === 1}
-            className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border"
-            title="Trang đầu"
-          >
-            <ChevronsLeft size={16} />
-          </button>
-
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border"
-            title="Trang trước"
-          >
-            <ChevronLeft size={16} />
-          </button>
-
-          {getPageNumbers().map((page, index) => (
-            <button
-              key={index}
-              onClick={() => typeof page === "number" && onPageChange(page)}
-              disabled={page === "..."}
-              className={`px-3 py-2 rounded text-sm border min-w-[40px] ${
-                page === currentPage
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : page === "..."
-                    ? "cursor-default border-gray-200"
-                    : "hover:bg-gray-100 border-gray-200"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border"
-            title="Trang sau"
-          >
-            <ChevronRight size={16} />
-          </button>
-
-          <button
-            onClick={() => onPageChange(totalPages)}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border"
-            title="Trang cuối"
-          >
-            <ChevronsRight size={16} />
-          </button>
-        </div>
-
-        <div className="text-sm text-gray-600">Trang {currentPage} / {totalPages}</div>
-      </div>
-    );
-  }
-);
 
 // Component FilterBar được gộp vào
 const FilterBar = React.memo(({ filters, onFiltersChange, onClearFilters, resultCount, loading }) => {
@@ -206,7 +94,7 @@ const FilterBar = React.memo(({ filters, onFiltersChange, onClearFilters, result
               newErrors.status = "Trạng thái không được để trống";
             } else if (value.length > 30) {
               newErrors.status = "Trạng thái không được vượt quá 30 ký tự";
-            } else if (!["AVAILABLE", "ACTIVE", "INACTIVE"].includes(value)) {
+            } else if (!["ACTIVE", "INACTIVE"].includes(value)) {
               newErrors.status = "Trạng thái không hợp lệ";
             } else {
               delete newErrors.status;
@@ -281,7 +169,6 @@ const FilterBar = React.memo(({ filters, onFiltersChange, onClearFilters, result
           >
             <option value="">Tất cả trạng thái</option>
             <option value="ACTIVE">Đang hoạt động</option>
-            <option value="AVAILABLE">Có sẵn</option>
             <option value="INACTIVE">Ngừng hoạt động</option>
           </select>
         </div>
@@ -413,70 +300,6 @@ const Header = React.memo(() => (
   </header>
 ));
 
-// Component Sidebar
-const Sidebar = React.memo(({ currentPage, onPageChange }) => {
-  const pageLabels = {
-    overview: "Tổng Quan",
-    view: "Danh Sách",
-    add: "Thêm Mới",
-    search: "Tìm Kiếm",
-  };
-
-  return (
-    <motion.div
-      initial={{ x: -300 }}
-      animate={{ x: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-64 bg-gradient-to-b from-blue-900 to-purple-600 text-white p-6 h-screen shadow-2xl"
-    >
-      <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
-        <Warehouse className="mr-2" /> Quản Lý Kho
-      </h1>
-      <nav>
-        {["overview", "view", "add", "search"].map((page) => (
-          <motion.button
-            key={page}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${
-              currentPage === page ? "bg-blue-500 shadow-lg" : "hover:bg-blue-600"
-            }`}
-            onClick={() => onPageChange(page)}
-          >
-            {page === "overview" && <BarChart className="mr-2" size={20} />}
-            {page === "view" && <List className="mr-2" size={20} />}
-            {page === "add" && <Plus className="mr-2" size={20} />}
-            {page === "search" && <Search className="mr-2" size={20} />}
-            {pageLabels[page]}
-          </motion.button>
-        ))}
-      </nav>
-    </motion.div>
-  );
-});
-
-// Component LoadingSpinner
-const LoadingSpinner = React.memo(() => (
-  <div className="flex items-center justify-center py-8">
-    <Loader className="animate-spin mr-2" size={20} />
-    <span>Đang tải dữ liệu...</span>
-  </div>
-));
-
-// Component ErrorMessage
-const ErrorMessage = React.memo(({ error, onRetry }) => (
-  <div className="flex items-center justify-center py-8 text-red-600">
-    <AlertCircle className="mr-2" size={20} />
-    <span>{error}</span>
-    <button
-      onClick={onRetry}
-      className="ml-4 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-    >
-      Thử lại
-    </button>
-  </div>
-));
-
 // Component SearchBar
 const SearchBar = React.memo(({ value, onChange, onClear, resultCount }) => (
   <div className="mb-6">
@@ -525,6 +348,7 @@ const StorageUnitForm = React.memo(
       status: storageUnit?.status || "AVAILABLE",
       note: storageUnit?.note || "",
       image: storageUnit?.image || "",
+      slotCount: storageUnit?.slotCount || "",
     });
 
     const [errors, setErrors] = useState({});
@@ -547,6 +371,9 @@ const StorageUnitForm = React.memo(
       if (formData.managerId && isNaN(Number.parseInt(formData.managerId))) {
         newErrors.managerId = "ID quản lý phải là số";
       }
+  if (!formData.slotCount || isNaN(Number.parseInt(formData.slotCount)) || Number.parseInt(formData.slotCount) <= 0) {
+          newErrors.slotCount = "Số lượng kho là bắt buộc";
+        }
       if (formData.image && !/^(https?:\/\/)?([\w-]+(\.[\w-]+)+)([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?$/.test(formData.image)) {
         newErrors.image = "URL ảnh không hợp lệ";
       }
@@ -565,6 +392,7 @@ const StorageUnitForm = React.memo(
           note: formData.note ? formData.note.trim() : null,
           managerId: formData.managerId ? Number.parseInt(formData.managerId) : null,
           image: formData.image || null, // Đảm bảo image luôn được gửi
+          slotCount: Number.parseInt(formData.slotCount),
         };
         onSubmit(submitData, setErrors);
       }
@@ -580,7 +408,7 @@ const StorageUnitForm = React.memo(
           formDataUpload.append("file", fileOrUrl);
 
           const headers = getAuthHeaders ? getAuthHeaders() : {};
-          const response = await axios.post(`${API_BASE}/upload`, formDataUpload, {
+          const response = await axiosInstance.post(`${API_BASE}/upload`, formDataUpload, {
             headers: {
               "Content-Type": "multipart/form-data",
               ...headers,
@@ -655,7 +483,6 @@ const StorageUnitForm = React.memo(
                   errors.status ? "border-red-500" : "border-gray-300"
                 }`}
               >
-                <option value="AVAILABLE">Có sẵn</option>
                 <option value="ACTIVE">Đang hoạt động</option>
                 <option value="INACTIVE">Ngừng hoạt động</option>
               </select>
@@ -706,6 +533,21 @@ const StorageUnitForm = React.memo(
               />
               {errors.managerId && <p className="text-red-500 text-sm mt-1">{errors.managerId}</p>}
             </div>
+            <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Số Lượng Ô *</label>
+                          <input
+                            type="number"
+                            name="slotCount"
+                            value={formData.slotCount}
+                            onChange={handleChange}
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none ${
+                              errors.slotCount ? "border-red-500" : "border-gray-300"
+                            }`}
+                            placeholder="Nhập số lượng ô"
+                            min="1"
+                          />
+                          {errors.slotCount && <p className="text-red-500 text-sm mt-1">{errors.slotCount}</p>}
+                        </div>
           </div>
 
           <div>
@@ -861,7 +703,6 @@ const StorageStatusChart = React.memo(({ storages }) => {
 
     const statusColors = {
       ACTIVE: "#10B981",
-      AVAILABLE: "#F59E0B",
       INACTIVE: "#EF4444",
       UNKNOWN: "#6B7280",
     };
@@ -875,8 +716,6 @@ const StorageStatusChart = React.memo(({ storages }) => {
         switch (label) {
           case "ACTIVE":
             return "Đang hoạt động";
-          case "AVAILABLE":
-            return "Có sẵn";
           case "INACTIVE":
             return "Ngừng hoạt động";
           default:
@@ -1009,9 +848,9 @@ const StorageTable = React.memo(
                           className={`px-3 py-1 rounded-full text-sm font-medium ${
                             storage.status === "ACTIVE"
                               ? "bg-green-100 text-green-700"
-                              : storage.status === "AVAILABLE"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-red-100 text-red-700"
+                              : storage.status === "INACTIVE"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-gray-100 text-gray-700"
                           }`}
                         >
                           {storage.status}
@@ -1038,13 +877,13 @@ const StorageTable = React.memo(
                             >
                               <Edit size={16} />
                             </button>
-                            <button
+                            {/* <button
                               onClick={() => onDelete(storage)}
                               className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
                               title="Xóa"
                             >
                               <Trash2 size={16} />
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                       )}
@@ -1103,15 +942,6 @@ const StatsCards = React.memo(({ stats }) => (
   </div>
 ));
 
-// Component Footer
-const Footer = React.memo(() => (
-  <footer className="bg-gray-800 text-white py-8 mt-16">
-    <div className="border-t border-gray-700 pt-8 text-center text-gray-400">
-      <p>© 2025 Hệ Thống Quản Lý Kho Lưu Trữ. Mọi quyền được bảo lưu.</p>
-    </div>
-  </footer>
-));
-
 // Cập nhật StorageUnitManagement để truyền getAuthHeaders
 export default function StorageUnitManagement() {
   const [storages, setStorages] = useState([]);
@@ -1159,7 +989,7 @@ export default function StorageUnitManagement() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(API_BASE, {
+      const response = await axiosInstance.get(API_BASE, {
         headers: getAuthHeaders(),
       });
       const data = response.data || [];
@@ -1169,7 +999,7 @@ export default function StorageUnitManagement() {
         image: item.image
           ? item.image.startsWith("http")
             ? item.image
-            : `http://localhost:8083${item.image}`
+            : `${item.image}`
           : null,
       }));
       setAllStorages(processedData);
@@ -1280,35 +1110,39 @@ export default function StorageUnitManagement() {
   const handleCreate = async (formData, setErrors) => {
     setLoading(true);
     try {
-      console.log("Dữ liệu gửi đi:", JSON.stringify(formData, null, 2));
-      const response = await axios.post(API_BASE, formData, {
-        headers: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
+      console.log('Dữ liệu gửi đi:', JSON.stringify(formData, null, 2));
+      const response = await axiosInstance.post(API_BASE, formData, {
+        headers: getAuthHeaders(),
       });
+
       if (response.data) {
         setAllStorages((prev) => [...prev, response.data]);
         setStorages((prev) => [...prev, response.data]);
-        setCurrentPage("view");
-        toast.success("Thêm kho thành công!");
+        setCurrentPage('view');
+        toast.success('Thêm kho thành công!');
       }
     } catch (err) {
-      console.error("Lỗi khi tạo kho:", err.response?.status, err.response?.data);
+      console.error('Lỗi khi tạo kho:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      });
       if (err.response?.status === 400) {
         const errorData = err.response.data;
-        if (typeof errorData === "object" && !Array.isArray(errorData)) {
+        console.log('Chi tiết lỗi 400:', JSON.stringify(errorData, null, 2));
+        if (typeof errorData === 'object' && !Array.isArray(errorData)) {
           setErrors(errorData);
         } else {
           toast.error(
-            "Dữ liệu không hợp lệ: " + (typeof errorData === "string" ? errorData : JSON.stringify(errorData))
+            'Dữ liệu không hợp lệ: ' +
+              (typeof errorData === 'string' ? errorData : JSON.stringify(errorData))
           );
         }
       } else if (err.response?.status === 403) {
-        toast.error("Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.");
-        window.location.href = "/login";
+        toast.error('Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.');
+        window.location.href = '/login';
       } else {
-        toast.error("Không thể thêm kho: " + (err.response?.data?.error || err.message));
+        toast.error('Không thể thêm kho: ' + (err.response?.data?.error || err.message));
       }
     } finally {
       setLoading(false);
@@ -1320,7 +1154,7 @@ export default function StorageUnitManagement() {
 
     setLoading(true);
     try {
-      const response = await axios.put(`${API_BASE}/${editingStorage.storageId}`, formData, {
+      const response = await axiosInstance.put(`${API_BASE}/${editingStorage.storageId}`, formData, {
         headers: getAuthHeaders(),
       });
 
@@ -1351,7 +1185,7 @@ export default function StorageUnitManagement() {
 
     setLoading(true);
     try {
-      await axios.delete(`${API_BASE}/${storage.storageId}`, {
+      await axiosInstance.delete(`${API_BASE}/${storage.storageId}`, {
         headers: getAuthHeaders(),
       });
 
@@ -1561,117 +1395,31 @@ export default function StorageUnitManagement() {
     [filteredStorages, searchProps, loading, error, fetchInitialData]
   );
 
-  const DetailStorage = useMemo(
-    () => (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-4xl font-bold flex items-center text-gray-800">
-            <Eye className="mr-2" /> Chi Tiết Kho
-          </h2>
-          <button
-            onClick={() => {
-              setViewingStorage(null);
-              setCurrentPage("view");
-            }}
-            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center"
-          >
-            <ArrowLeft className="mr-2" size={16} />
-            Quay Lại
-          </button>
-        </div>
-
-        {viewingStorage && (
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {viewingStorage.image && (
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ảnh Kho</label>
-                  <img
-                    src={viewingStorage.image}
-                    alt={`${viewingStorage.name} - Ảnh kho`}
-                    className="w-full max-w-md h-auto object-cover rounded-lg mb-4 border"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mã Kho</label>
-                <p className="text-lg font-semibold text-gray-900">{viewingStorage.storageId}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên Kho</label>
-                <p className="text-lg font-semibold text-gray-900">{viewingStorage.name}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Địa Chỉ</label>
-                <p className="text-lg text-gray-900">{viewingStorage.address || "N/A"}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Số Điện Thoại</label>
-                <p className="text-lg text-gray-900">{viewingStorage.phone || "N/A"}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái</label>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    viewingStorage.status === "ACTIVE"
-                      ? "bg-green-100 text-green-700"
-                      : viewingStorage.status === "AVAILABLE"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {viewingStorage.status}
-                </span>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Quản Lý</label>
-                <p className="text-lg text-gray-900">{viewingStorage.managerName || "N/A"}</p>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ghi Chú</label>
-                <p className="text-lg text-gray-900">{viewingStorage.note || "Không có ghi chú"}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ngày Tạo</label>
-                <p className="text-lg text-gray-900">
-                  {viewingStorage.createdAt
-                    ? new Date(viewingStorage.createdAt).toLocaleString("vi-VN")
-                    : "N/A"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </motion.div>
-    ),
-    [viewingStorage]
-  );
-
   if (error && allStorages.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center p-10">
-          <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={fetchInitialData}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Thử lại
-          </button>
+      <RequireAuth>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center p-10">
+            <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={fetchInitialData}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Thử lại
+            </button>
+          </div>
         </div>
-      </div>
+      </RequireAuth>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex pt-20">
-        <Sidebar currentPage={currentPage} onPageChange={handlePageChangeMain} />
-        <div className="flex-1 p-8 overflow-auto">
+    <RequireAuth>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar currentPage={currentPage} onPageChange={handlePageChangeMain} className="h-screen" />
+        <div className="flex-1 min-h-screen p-8 overflow-auto">
           <AnimatePresence mode="wait">
             {currentPage === "overview" && (
               <motion.div
@@ -1736,8 +1484,72 @@ export default function StorageUnitManagement() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                {DetailStorage}
-                {viewingStorage && <SlotGrid storageId={viewingStorage.storageId} />}
+                {viewingStorage && (
+                  <>
+                    <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
+                      <Eye className="mr-2" /> Chi Tiết Kho Lưu Trữ
+                    </h2>
+                    <div className="bg-white p-6 rounded-xl shadow-lg mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {viewingStorage.image && (
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ảnh Kho</label>
+                            <img
+                              src={viewingStorage.image}
+                              alt={`${viewingStorage.name} - Ảnh kho`}
+                              className="w-full max-w-md h-auto object-cover rounded-lg mb-4 border"
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Mã Kho</label>
+                          <p className="text-lg font-semibold text-gray-900">{viewingStorage.storageId}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Tên Kho</label>
+                          <p className="text-lg font-semibold text-gray-900">{viewingStorage.name}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Địa Chỉ</label>
+                          <p className="text-lg text-gray-900">{viewingStorage.address || "N/A"}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Số Điện Thoại</label>
+                          <p className="text-lg text-gray-900">{viewingStorage.phone || "N/A"}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái</label>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            viewingStorage.status === "ACTIVE"
+                              ? "bg-green-100 text-green-700"
+                              : viewingStorage.status === "INACTIVE"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-gray-100 text-gray-700"
+                          }`}>
+                            {viewingStorage.status}
+                          </span>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Quản Lý</label>
+                          <p className="text-lg text-gray-900">{viewingStorage.managerName || "N/A"}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Ghi Chú</label>
+                          <p className="text-lg text-gray-900">{viewingStorage.note || "Không có ghi chú"}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Ngày Tạo</label>
+                          <p className="text-lg text-gray-900">
+                            {viewingStorage.createdAt
+                              ? new Date(viewingStorage.createdAt).toLocaleString("vi-VN")
+                              : "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <SlotGrid storageId={viewingStorage.storageId} />
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -1774,20 +1586,9 @@ export default function StorageUnitManagement() {
                 </button>
                 <button
                   onClick={() => handleDelete(showDeleteConfirm)}
-                  disabled={loading}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
-                  {loading ? (
-                    <>
-                      <Loader className="animate-spin mr-2" size={16} />
-                      Đang xóa...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="mr-2" size={16} />
-                      Xóa
-                    </>
-                  )}
+                  Xóa
                 </button>
               </div>
             </motion.div>
@@ -1796,6 +1597,6 @@ export default function StorageUnitManagement() {
       </AnimatePresence>
 
       <Footer />
-    </div>
+    </RequireAuth>
   );
 }

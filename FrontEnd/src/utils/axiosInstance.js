@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const instance = axios.create({
-    baseURL: "https://operator-management-system.onrender.com", // sửa baseURL đúng theo backend bạn
+    baseURL: "http://localhost:8080", // sửa baseURL đúng theo backend bạn
 
     //   "https://operator-management-system.onrender.com" "http://localhost:8080"
     headers: {

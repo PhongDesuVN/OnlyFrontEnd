@@ -36,7 +36,7 @@ import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_CustomerInfo from "../Pages/Customer_thai/C_CustomerInfo.jsx";
 // import C_Feedback from "../Pages/Customer_thai/C_Feedback.jsx";
 
-import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
+import PaymentManagement from "../Pages/Receipts/PaymentManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
 import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
 import PendingStaffManagement from '../Pages/PendingStaffManagement/PendingStaffManagement.jsx';
@@ -87,7 +87,7 @@ export default function AppRoutes() {
 
             {/* Fallback route */}
             <Route path="*" element={<Navigate to="/" replace />} />
-            <Route path="/receipts" element={<ReceiptsManagement />} />
+            <Route path="/receipts" element={<PaymentManagement />} />
             <Route path="/storage-units" element={<StorageUnitManagement />} />
             <Route path="/staffperformance" element={<StaffPerformance />} />
             <Route path="/manager/pending-staff" element={<PendingStaffManagement />} />

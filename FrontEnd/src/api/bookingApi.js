@@ -1,99 +1,42 @@
-import axios from "axios";
-import Cookies from "js-cookie";
+import axiosInstance from '../utils/axiosInstance';
 
-// Base URL cho booking API
-const API_BASE_URL = "/api/bookings";
+const API_BASE = '/api/bookings';
 
-// Khởi tạo axios instance
-const api = axios.create({
-  baseURL: API_BASE_URL,
-});
+// Lấy thông tin slots của một storage unit
+export const getSlotsInfo = (storageId) => {
+  return axiosInstance.get(`/api/bookings/storage/${storageId}/slots`);
+};
 
-// Interceptor để tự động gắn token
-api.interceptors.request.use((config) => {
-  const token = Cookies.get("authToken");
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-  }
-  return config;
-});
+// Lấy chi tiết slot
+export const getSlotDetail = (storageId, slotIndex) => {
+  return axiosInstance.get(`/api/bookings/storage/${storageId}/slots/${slotIndex}`);
+};
 
-// Interceptor để xử lý response
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error("API Error:", error.response?.data || error.message);
-    return Promise.reject(error);
-  }
-);
+// Tạo booking mới
+export const createBooking = (bookingData) => {
+  return axiosInstance.post(API_BASE, bookingData);
+};
 
-class BookingApi {
-  // GET /api/bookings/overview
-  async getOverview() {
-    const res = await api.get("/overview");
-    return res.data;
-  }
+// Cập nhật booking
+export const updateBooking = (bookingId, bookingData) => {
+  return axiosInstance.put(`${API_BASE}/${bookingId}`, bookingData);
+};
 
-  // GET /api/bookings
-  async getAllBookings() {
-    const res = await api.get("/");
-    return res.data;
-  }
+// Xóa booking
+export const deleteBooking = (bookingId) => {
+  return axiosInstance.delete(`${API_BASE}/${bookingId}`);
+};
 
-  // GET /api/bookings/{id}
-  async getBookingById(id) {
-    const res = await api.get(`/${id}`);
-    return res.data;
-  }
+// Lấy danh sách bookings
+export const getBookings = (params = {}) => {
+  return axiosInstance.get(API_BASE, { params });
+};
 
-  // POST /api/bookings
-  async createBooking(payload) {
-    const res = await api.post("/", payload);
-    return res.data;
-  }
+// Lấy chi tiết booking
+export const getBookingDetail = (bookingId) => {
+  return axiosInstance.get(`${API_BASE}/${bookingId}`);
+};
 
-  // PUT /api/bookings/{id}
-  async updateBooking(id, payload) {
-    const res = await api.put(`/${id}`, payload);
-    return res.data;
-  }
-
-  // DELETE /api/bookings/{id}
-  async deleteBooking(id) {
-    const res = await api.delete(`/${id}`);
-    return res.data;
-  }
-
-  // GET /api/bookings/search?fullName={fullName}
-  async searchBookings(fullName) {
-    const res = await api.get("/search", { params: { fullName } });
-    return res.data;
-  }
-
-  // PUT /api/bookings/{id}/payment?status={status}
-  async updatePaymentStatus(id, status) {
-    const res = await api.put(`/${id}/payment`, null, { params: { status } });
-    return res.data;
-  }
-
-  // GET /api/bookings/storage/{storageId}/slots
-  async getSlotsInfo(storageId) {
-    const res = await api.get(`/storage/${storageId}/slots`);
-    return res.data;
-  }
-
-  // GET /api/bookings/storage/{storageId}/slots/{slotIndex}
-  async getSlotDetail(storageId, slotIndex) {
-    const res = await api.get(`/storage/${storageId}/slots/${slotIndex}`);
-    return res.data;
-  }
-
-
-}
-
-// Export instance
-const bookingApi = new BookingApi();
-export default bookingApi;
+export const getInitIds = () => {
+  return axiosInstance.get('/api/bookings/init-ids');
+};
