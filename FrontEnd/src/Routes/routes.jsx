@@ -21,7 +21,6 @@ import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
 
 
 // --- Manager Pages ---
-// --- Manager Pages ---
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
@@ -36,7 +35,7 @@ import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_Dashboard from "../Pages/Customer_thai/C_Dashboard.jsx";
 
-import ReceiptsManagement from "../Pages/Receipts/ReceiptsManagement";
+import PaymentManagement from "../Pages/Receipts/PaymentManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
 import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
 import PendingStaffManagement from '../Pages/PendingStaffManagement/PendingStaffManagement.jsx';
@@ -93,11 +92,11 @@ export default function AppRoutes() {
 
 
             {/* Fallback route */}
-            <Route path="*" element={<Navigate to="/" replace/>}/>
-            <Route path="/receipts" element={<ReceiptsManagement/>}/>
-            <Route path="/storage-units" element={<StorageUnitManagement/>}/>
-            <Route path="/staffperformance" element={<StaffPerformance/>}/>
-            <Route path="/manager/pending-staff" element={<PendingStaffManagement/>}/>
+            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/receipts" element={<PaymentManagement />} />
+            <Route path="/storage-units" element={<StorageUnitManagement />} />
+            <Route path="/staffperformance" element={<StaffPerformance />} />
+            <Route path="/manager/pending-staff" element={<PendingStaffManagement />} />
 
         </Routes>
     );
