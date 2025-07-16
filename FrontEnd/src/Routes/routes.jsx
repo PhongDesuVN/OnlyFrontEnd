@@ -25,6 +25,7 @@ import ProfileMainPage from '../Pages/Staff_phong/ProfileMainPage.jsx';
 import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
+import PromotionStatisticsDashboard from '../Pages/Manager_yen/PromotionStatisticsDashboard.jsx';
 
 // --- Transport Unit Pages ---
 import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.jsx';
@@ -71,6 +72,7 @@ export default function AppRoutes() {
                 <Route path="/managerstaff" element={<StaffManagement />} />
                 <Route path="/promotions" element={<PromotionManagement />} />
                 <Route path="/staffperformance" element={<StaffPerformance />} />
+                <Route path="//stats" element={<PromotionStatisticsDashboard/>} />
 
             {/* Transport Unit */}
             <Route path="/transport-units" element={<TransportLayout />}>
