@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import FurnitureSelector from '../../Components/FurnitureSelector';
+import FurnitureSelector from './FurnitureSelector.jsx';
+import ImageUpload from './ImageUpload.jsx';
 import { Home, Users } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 const C_Booking = ({ isLoggedIn }) => {
@@ -45,17 +46,17 @@ const C_Booking = ({ isLoggedIn }) => {
     const [showDeliverySuggestions, setShowDeliverySuggestions] = useState(false);
     const [loadingDistance, setLoadingDistance] = useState(false);
     const [distanceError, setDistanceError] = useState(null);
+    const [vehicleQuantity, setVehicleQuantity] = useState(1);
 
     useEffect(() => {
         const fetchOptions = async () => {
             if (!isLoggedIn || !selectedService) return;
             try {
-                const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
                 const [transportRes, storageRes, staffRes, promoRes] = await Promise.all([
-                    apiCall('/api/customer/transport-units', { headers }),
-                    apiCall('/api/customer/storage-units', { headers }),
-                    apiCall('/api/customer/operator-staff', { headers }),
-                    apiCall('/api/customer/promotions', { headers })
+                    apiCall('/api/customer/transport-units', { auth: true }),
+                    apiCall('/api/customer/storage-units', { auth: true }),
+                    apiCall('/api/customer/operator-staff', { auth: true }),
+                    apiCall('/api/customer/promotions', { auth: true })
                 ]);
                 if (transportRes.ok) setTransportUnits(await transportRes.json());
                 if (storageRes.ok) setStorageUnits(await storageRes.json());
@@ -88,27 +89,11 @@ const C_Booking = ({ isLoggedIn }) => {
         }
     };
 
-    const calculateTotal = async (pickupLocation, deliveryLocation, furniture) => {
+    const calculateTotal = async (pickupLocation, deliveryLocation, furniture, selectedTransport, homeType) => {
         try {
             let totalVolume = 0;
             if (furniture && furniture.length > 0) {
                 totalVolume = furniture.reduce((sum, item) => sum + (item.volume * item.quantity), 0);
-            }
-
-            let vehicleType = 'Xe ba gác';
-            let vehicleFactor = 1;
-            if (totalVolume > 7 && totalVolume <= 11) {
-                vehicleType = 'Xe Tải Mini';
-                vehicleFactor = 1.4;
-            } else if (totalVolume > 11 && totalVolume <= 15) {
-                vehicleType = 'Xe tải tiêu chuẩn';
-                vehicleFactor = 1.8;
-            } else if (totalVolume > 15 && totalVolume <= 20) {
-                vehicleType = 'Xe tải lớn';
-                vehicleFactor = 2.1;
-            } else if (totalVolume > 20) {
-                vehicleType = 'Xe container';
-                vehicleFactor = 2.5;
             }
 
             let distance = 0;
@@ -130,9 +115,35 @@ const C_Booking = ({ isLoggedIn }) => {
                 }
             }
 
-            const total = distance * 10 * vehicleFactor;
+            let vehicleQuantity = 1;
+            let capacityPerVehicle = 1;
+            if (selectedTransport && selectedTransport.capacityPerVehicle) {
+                capacityPerVehicle = selectedTransport.capacityPerVehicle;
+                if (totalVolume > capacityPerVehicle) {
+                    vehicleQuantity = Math.ceil(totalVolume / capacityPerVehicle);
+                }
+            }
 
-            return { total, distance, vehicleType, totalVolume, geocodingError };
+            // Tổng tiền cơ bản
+            let total = distance * vehicleQuantity * 10;
+
+            // Nếu nhà thường, cộng thêm 200000
+            if (homeType === 'Nhà thường') {
+                total += 200000;
+            }
+            // Nếu có modular hoặc bulky, cộng thêm 50000 cho mỗi loại
+            let hasModular = false, hasBulky = false;
+            if (furniture && furniture.length > 0) {
+                hasModular = furniture.some(item => item.modular);
+                hasBulky = furniture.some(item => item.bulky);
+            }
+            if (hasModular) total += 50000;
+            if (hasBulky) total += 50000;
+
+            // Làm tròn tổng tiền về số nguyên sau khi cộng phụ phí
+            total = Math.round(total);
+
+            return { total, distance, totalVolume, geocodingError, vehicleQuantity };
         } catch (error) {
             console.error('Lỗi tính toán:', error);
             throw error;
@@ -140,35 +151,39 @@ const C_Booking = ({ isLoggedIn }) => {
     };
 
     const updateTotal = async () => {
-        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+        if (bookingData.pickupLocation && bookingData.deliveryLocation && bookingData.transportId) {
             setLoadingDistance(true);
             setDistanceError(null);
             try {
-                const { total, distance, vehicleType, totalVolume, geocodingError } = await calculateTotal(
+                const selectedTransport = transportUnits.find(t => t.transportId === bookingData.transportId);
+                const { total, distance, totalVolume, geocodingError, vehicleQuantity: vq } = await calculateTotal(
                     bookingData.pickupLocation,
                     bookingData.deliveryLocation,
-                    selectedFurniture
+                    selectedFurniture,
+                    selectedTransport,
+                    bookingData.homeType
                 );
+
+                setVehicleQuantity(vq || 1);
 
                 if (geocodingError) {
                     setDistanceError(geocodingError);
-                    setBookingData(prev => ({ ...prev, total: 0, distance: 0, vehicleType: null, totalVolume: 0 }));
+                    setBookingData(prev => ({ ...prev, total: 0, distance: 0, totalVolume: 0 }));
                 } else if (!distance || distance <= 0) {
                     setDistanceError('Không thể tính được khoảng cách giữa hai địa chỉ.');
-                    setBookingData(prev => ({ ...prev, total: 0, distance: 0, vehicleType: null, totalVolume: 0 }));
+                    setBookingData(prev => ({ ...prev, total: 0, distance: 0, totalVolume: 0 }));
                 } else {
                     setDistanceError(null);
                     setBookingData(prev => ({
                         ...prev,
                         total,
                         distance,
-                        vehicleType,
                         totalVolume
                     }));
                 }
             } catch (error) {
                 setDistanceError('Lỗi khi tính toán khoảng cách.');
-                setBookingData(prev => ({ ...prev, total: 0, distance: 0, vehicleType: null, totalVolume: 0 }));
+                setBookingData(prev => ({ ...prev, total: 0, distance: 0, totalVolume: 0 }));
             } finally {
                 setLoadingDistance(false);
             }
@@ -183,6 +198,13 @@ const C_Booking = ({ isLoggedIn }) => {
             return () => clearTimeout(timeoutId);
         }
     }, [bookingData.pickupLocation, bookingData.deliveryLocation, selectedFurniture]);
+
+    useEffect(() => {
+        if (bookingData.homeType && bookingData.pickupLocation && bookingData.deliveryLocation && bookingData.transportId) {
+            updateTotal();
+        }
+        // eslint-disable-next-line
+    }, [bookingData.homeType]);
 
     const geocodingCache = useRef(new Map());
 
@@ -431,9 +453,7 @@ const C_Booking = ({ isLoggedIn }) => {
 
     const fetchSlotStatus = async (storageId) => {
         try {
-            const response = await apiCall(`/api/customer/storage-units/${storageId}/slots`, {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-            });
+            const response = await apiCall(`/api/customer/storage-units/${storageId}/slots`, { auth: true });
             if (response.ok) {
                 const data = await response.json();
                 setSlotStatus(data);
@@ -498,6 +518,17 @@ const C_Booking = ({ isLoggedIn }) => {
         };
     }, []);
 
+    const checkVehicleAvailability = async (transportUnitId, vehicleQuantity) => {
+        try {
+            const response = await apiCall(`/api/customer/transport-units/${transportUnitId}/checkvehicle?vehicleQuantity=${vehicleQuantity}`, { auth: true });
+            if (!response.ok) throw new Error('Lỗi kiểm tra số lượng xe');
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            return { available: false, message: 'Không kiểm tra được số lượng xe khả dụng' };
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isLoggedIn) return;
@@ -519,6 +550,13 @@ const C_Booking = ({ isLoggedIn }) => {
 
         if (bookingData.storageId && !bookingData.slotIndex) {
             alert('Vui lòng chọn vị trí cất giữ trong kho.');
+            return;
+        }
+
+        // Kiểm tra số lượng xe khả dụng trước khi booking
+        const checkResult = await checkVehicleAvailability(bookingData.transportId, vehicleQuantity);
+        if (!checkResult.available) {
+            alert(checkResult.message || 'Không đủ số lượng xe. Vui lòng chọn phương tiện vận chuyển khác.');
             return;
         }
 
@@ -548,17 +586,15 @@ const C_Booking = ({ isLoggedIn }) => {
             promotionName: selectedPromotion ? selectedPromotion.name : null,
             homeType: bookingData.homeType,
             slotIndex: bookingData.slotIndex,
-            items: items
+            items: items,
+            vehicleQuantity: vehicleQuantity // thêm vào đây
         };
 
         try {
             const response = await apiCall('/api/customer/bookings', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
                 body: JSON.stringify(payload),
+                auth: true
             });
 
             if (!response.ok) {
@@ -633,6 +669,8 @@ const C_Booking = ({ isLoggedIn }) => {
                                     <div className="text-gray-800"><strong>SĐT:</strong> {selectedOption.phone}</div>
                                     <div className="text-gray-800"><strong>Biển số:</strong> {selectedOption.licensePlate}</div>
                                     <div className="text-gray-800"><strong>Trạng thái:</strong> {selectedOption.status}</div>
+                                    <div className="text-gray-800"><strong>Sức chứa mỗi xe:</strong> {selectedOption.capacityPerVehicle} m³</div>
+                                    <div className="text-gray-800"><strong>Số lượng xe:</strong> {selectedOption.numberOfVehicles}</div>
                                 </div>
                                 {selectedOption.imageTransportUnit || selectedOption.image ? (
                                     <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
@@ -858,9 +896,15 @@ const C_Booking = ({ isLoggedIn }) => {
                                                         <span className="font-semibold text-blue-800 ml-2">{bookingData.totalVolume ? bookingData.totalVolume.toFixed(2) : 0} m³</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-600">Loại xe:</span>
-                                                        <span className="font-semibold text-orange-600 ml-2">{bookingData.vehicleType || 'Chưa xác định'}</span>
+                                                        <span className="text-gray-600">Số lượng xe cần thiết:</span>
+                                                        <span className="font-semibold text-orange-600 ml-2">{vehicleQuantity}</span>
                                                     </div>
+                                                    {bookingData.homeType === 'Nhà thường' && (
+                                                        <div className="col-span-2 text-blue-700">+200.000 VNĐ (phụ phí nhà thường)</div>
+                                                    )}
+                                                    {(selectedFurniture.some(item => item.modular) || selectedFurniture.some(item => item.bulky)) && (
+                                                        <div className="col-span-2 text-blue-700">+{selectedFurniture.some(item => item.modular) && selectedFurniture.some(item => item.bulky) ? '100.000' : '50.000'} VNĐ (phụ phí modular/bulky)</div>
+                                                    )}
                                                 </div>
                                             )}
                                             <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-blue-200">
@@ -1012,6 +1056,7 @@ const C_Booking = ({ isLoggedIn }) => {
                             </div>
 
                             <FurnitureSelector onFurnitureChange={handleFurnitureChange} />
+                            <ImageUpload />
 
                             {selectedFurniture.length > 0 && (
                                 <div className="bg-white rounded-2xl shadow-lg p-6">

@@ -141,17 +141,9 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
     // Tính tổng số lượng và tổng thể tích cho toàn bộ userFurniture
     const totalQuantity = userFurniture.reduce((sum, item) => sum + item.quantity, 0);
     const totalVolume = userFurniture.reduce((sum, item) => sum + (item.quantity * item.volume), 0);
-    // Xác định loại xe
-    let vehicleType = 'Xe ba gác';
-    if (totalVolume > 7 && totalVolume <= 11) vehicleType = 'Xe Tải Mini';
-    else if (totalVolume > 11 && totalVolume <= 15) vehicleType = 'Xe tải tiêu chuẩn';
-    else if (totalVolume > 15 && totalVolume <= 20) vehicleType = 'Xe tải lớn';
-    else if (totalVolume > 20) vehicleType = 'Xe container';
 
-    // Box thông tin tổng hợp luôn hiển thị
     const InfoBox = () => (
         <div className="text-xs text-left p-0 bg-transparent border-none shadow-none min-w-[160px]">
-            <div><span className="font-semibold">Loại xe:</span> <span>{vehicleType}</span></div>
             <div><span className="font-semibold">Tổng số lượng:</span> <span>{totalQuantity}</span></div>
             <div><span className="font-semibold">Tổng thể tích:</span> <span>{totalVolume.toFixed(2)} m³</span></div>
         </div>

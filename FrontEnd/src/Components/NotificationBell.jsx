@@ -6,7 +6,7 @@ import useNotifications from '../hooks/useNotifications';
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const bellRef = useRef(null);
-  const { notifications, unreadCount, loading, markAsRead, refresh, error } = useNotifications();
+  const { notifications, unreadCount, loading, markAsRead, error } = useNotifications();
 
   // Đóng dropdown khi click ngoài
   useEffect(() => {
