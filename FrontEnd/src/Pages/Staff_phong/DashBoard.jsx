@@ -1,8 +1,7 @@
-"use client"
-
-import { useState } from "react"
-import Cookies from "js-cookie"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { useDebounce } from "use-debounce";
 import {
     TrendingUp,
     TrendingDown,
@@ -15,8 +14,9 @@ import {
     Award,
     Crown,
     Truck
-} from "lucide-react"
-import { Link } from "react-router-dom"
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import DashBoardApi from "../../utils/DashBoard_phongApi.js";
 
 // Header Component
 const Header = () => {
@@ -28,12 +28,10 @@ const Header = () => {
                         <Truck className="w-8 h-8 text-blue-600" />
                         <h1 className="text-xl font-bold text-black">Vận Chuyển Nhà</h1>
                     </div>
-
                     <div className="flex space-x-3">
                         <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
                             <Link to="/" className="text-black hover:text-blue-600 transition-colors">Trang Chủ</Link>
                         </button>
-
                     </div>
                 </div>
             </div>
@@ -42,265 +40,183 @@ const Header = () => {
 };
 
 const Dashboard = () => {
-    const [activeTab, setActiveTab] = useState("performance")
-    const [selectedYear, setSelectedYear] = useState("2024")
-    const [selectedUnit, setSelectedUnit] = useState("Tất cả")
-    const [selectedPeriod, setSelectedPeriod] = useState("month")
-    const [selectedMetric, setSelectedMetric] = useState("revenue")
+    const [activeTab, setActiveTab] = useState("performance");
+    const [selectedYear, setSelectedYear] = useState("2024");
+    const [selectedUnit, setSelectedUnit] = useState("Tất cả");
+    const [selectedPeriod, setSelectedPeriod] = useState("month");
+    const [selectedMetric, setSelectedMetric] = useState("revenue");
+    const [hoveredCard, setHoveredCard] = useState(null);
+    const [pressedButton, setPressedButton] = useState(null);
+    const [showMenu, setShowMenu] = useState(false);
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
-    const [hoveredCard, setHoveredCard] = useState(null)
-    const [pressedButton, setPressedButton] = useState(null)
-    const [showMenu, setShowMenu] = useState(false)
-    const navigate = useNavigate()
+    // Debounce các tham số
+    const [debouncedYear] = useDebounce(selectedYear, 500);
+    const [debouncedUnit] = useDebounce(selectedUnit, 500);
 
     // Lấy username từ cookies
-    const username = Cookies.get("username") || "Staff User"
+    const username = Cookies.get("username") || "Staff User";
 
-    // Dữ liệu mẫu cho biểu đồ hiệu suất
-    const monthlyRevenue = [
-        { month: "6/2023", chuyenNha24H: 152300001, dvChuyenNhaSaiGon: 127800000, chuyenNhaMinhAnh: 189200001 },
-        { month: "7/2023", chuyenNha24H: 168400001, dvChuyenNhaSaiGon: 139600001, chuyenNhaMinhAnh: 197800001 },
-        { month: "8/2023", chuyenNha24H: 174500000, dvChuyenNhaSaiGon: 128900001, chuyenNhaMinhAnh: 203100000 },
-        { month: "1/2024", chuyenNha24H: 180000000, dvChuyenNhaSaiGon: 135000000, chuyenNhaMinhAnh: 210000000 },
-        { month: "1/2025", chuyenNha24H: 185000000, dvChuyenNhaSaiGon: 140000000, chuyenNhaMinhAnh: 215000000 },
-    ]
+    // State để lưu dữ liệu từ API
+    const [monthlyRevenue, setMonthlyRevenue] = useState([]);
+    const [performanceData, setPerformanceData] = useState([]);
+    const [detailData, setDetailData] = useState([]);
+    const [transportData, setTransportData] = useState({
+        totalShipments: 0,
+        revenue: "0 đ",
+        deliveryRate: 0,
+        totalVolume: 0,
+        shipmentGrowth: 0,
+        revenueGrowth: 0,
+        deliveryRateGrowth: 0,
+        volumeGrowth: 0,
+    });
+    const [rankingData, setRankingData] = useState([]);
+    const [teamRanking, setTeamRanking] = useState([]);
+    const [dashboardStats, setDashboardStats] = useState({
+        newReceipts: 0,
+        pendingOrders: 0,
+        newCustomers: 0,
+    });
+    const [recentActivities, setRecentActivities] = useState([]);
+    const [achievements, setAchievements] = useState([]);
 
-    const performanceData = [
-        { month: "6/2023", dungHan: 328, huy: 18, tre: 23 },
-        { month: "7/2023", dungHan: 355, huy: 16, tre: 29 },
-        { month: "8/2023", dungHan: 367, huy: 18, tre: 30 },
-        { month: "1/2024", dungHan: 370, huy: 15, tre: 25 },
-        { month: "1/2025", dungHan: 380, huy: 12, tre: 28 },
-    ]
+    // Gọi API khi component mount hoặc khi bộ lọc thay đổi
+    useEffect(() => {
+        const token = Cookies.get("authToken");
+        if (!token) {
+            navigate("/login", { replace: true });
+            return;
+        }
 
-    const detailData = [
-        {
-            month: "6/2023",
-            unit: "Chuyển Nhà 24H",
-            trips: 120,
-            revenue: "152.300.001 đ",
-            onTime: 108,
-            cancelled: 5,
-            late: 7,
-        },
-        {
-            month: "6/2023",
-            unit: "DV Chuyển Nhà Sài Gòn",
-            trips: 95,
-            revenue: "127.800.000 đ",
-            onTime: 85,
-            cancelled: 3,
-            late: 7,
-        },
-        {
-            month: "6/2023",
-            unit: "Chuyển Nhà Minh Anh",
-            trips: 150,
-            revenue: "189.200.001 đ",
-            onTime: 135,
-            cancelled: 6,
-            late: 9,
-        },
-        {
-            month: "7/2023",
-            unit: "Chuyển Nhà 24H",
-            trips: 130,
-            revenue: "168.400.001 đ",
-            onTime: 115,
-            cancelled: 4,
-            late: 11,
-        },
-        {
-            month: "7/2023",
-            unit: "DV Chuyển Nhà Sài Gòn",
-            trips: 110,
-            revenue: "139.600.001 đ",
-            onTime: 98,
-            cancelled: 5,
-            late: 7,
-        },
-        {
-            month: "7/2023",
-            unit: "Chuyển Nhà Minh Anh",
-            trips: 160,
-            revenue: "197.800.001 đ",
-            onTime: 142,
-            cancelled: 7,
-            late: 11,
-        },
-    ]
+        const fetchDashboardData = async () => {
+            try {
+                setError(null); // Reset lỗi trước khi gọi API
 
-    // Dữ liệu xếp hạng mẫu
-    const rankingData = [
-        {
-            rank: 1,
-            name: username,
-            unit: "Chuyển Nhà Minh Anh",
-            revenue: "245.800.000 đ",
-            trips: 156,
-            successRate: 94.2,
-            change: "+12%",
-            trend: "up",
-            avatar: username
-                .split(" ")
-                .map((w) => w[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2),
-        },
-        {
-            rank: 2,
-            name: "Trần Thị Bình",
-            unit: "Chuyển Nhà 24H",
-            revenue: "238.500.000 đ",
-            trips: 142,
-            successRate: 91.8,
-            change: "+8%",
-            trend: "up",
-            avatar: "TB",
-        },
-        {
-            rank: 3,
-            name: "Lê Văn Cường",
-            unit: "DV Chuyển Nhà Sài Gòn",
-            revenue: "225.300.000 đ",
-            trips: 138,
-            successRate: 89.5,
-            change: "+5%",
-            trend: "up",
-            avatar: "LC",
-        },
-        {
-            rank: 4,
-            name: "Phạm Thị Dung",
-            unit: "Chuyển Nhà Minh Anh",
-            revenue: "218.700.000 đ",
-            trips: 134,
-            successRate: 87.3,
-            change: "-2%",
-            trend: "down",
-            avatar: "PD",
-        },
-        {
-            rank: 5,
-            name: "Hoàng Văn Em",
-            unit: "Chuyển Nhà 24H",
-            revenue: "212.400.000 đ",
-            trips: 129,
-            successRate: 85.7,
-            change: "+3%",
-            trend: "up",
-            avatar: "HE",
-        },
-    ]
+                // Gọi API lấy thống kê tổng quan
+                const statsResponse = await DashBoardApi.getDashboardStats();
+                setDashboardStats({
+                    newReceipts: statsResponse.newReceipts || 0,
+                    pendingOrders: statsResponse.pendingOrders || 0,
+                    newCustomers: statsResponse.newCustomers || 0,
+                });
 
-    const teamRanking = [
-        {
-            rank: 1,
-            name: "Chuyển Nhà Minh Anh",
-            totalRevenue: "1.245.800.000 đ",
-            totalTrips: 456,
-            avgSuccessRate: 91.2,
-            members: 12,
-            change: "+15%",
-            trend: "up",
-        },
-        {
-            rank: 2,
-            name: "Chuyển Nhà 24H",
-            totalRevenue: "1.138.500.000 đ",
-            totalTrips: 398,
-            avgSuccessRate: 88.8,
-            members: 10,
-            change: "+8%",
-            trend: "up",
-        },
-        {
-            rank: 3,
-            name: "DV Chuyển Nhà Sài Gòn",
-            totalRevenue: "925.300.000 đ",
-            totalTrips: 342,
-            avgSuccessRate: 86.5,
-            members: 8,
-            change: "+2%",
-            trend: "up",
-        },
-    ]
+                // Gọi API lấy hoạt động gần đây
+                const activitiesResponse = await DashBoardApi.getRecentActivities();
+                setRecentActivities(Array.isArray(activitiesResponse) ? activitiesResponse : []);
 
-    // Dữ liệu tổng hợp
-    const transportData = {
-        totalShipments: 2025,
-        revenue: 2513800009,
-        deliveryRate: 88.6,
-        totalVolume: 127107.3,
-        shipmentGrowth: 15,
-        revenueGrowth: 8,
-        deliveryRateGrowth: 2,
-        volumeGrowth: 12,
-    }
+                // Gọi API lấy doanh thu hàng tháng
+                const revenueResponse = await DashBoardApi.getMonthlyRevenue(debouncedYear, debouncedUnit);
+                setMonthlyRevenue(revenueResponse || []);
+
+                // Gọi API lấy dữ liệu hiệu suất
+                const performanceResponse = await DashBoardApi.getPerformanceData(debouncedYear, debouncedUnit);
+                setPerformanceData(performanceResponse || []);
+
+                // Gọi API lấy dữ liệu chi tiết
+                const detailResponse = await DashBoardApi.getDetailData(debouncedYear, debouncedUnit);
+                setDetailData(detailResponse || []);
+
+                // Gọi API lấy dữ liệu tổng quan vận chuyển
+                const transportResponse = await DashBoardApi.getTransportData(debouncedYear, debouncedUnit);
+                setTransportData({
+                    totalShipments: transportResponse.totalShipments || 0,
+                    revenue: transportResponse.revenue || "0 đ",
+                    deliveryRate: transportResponse.deliveryRate || 0,
+                    totalVolume: transportResponse.totalVolume || 0,
+                    shipmentGrowth: transportResponse.shipmentGrowth || 0,
+                    revenueGrowth: transportResponse.revenueGrowth || 0,
+                    deliveryRateGrowth: transportResponse.deliveryRateGrowth || 0,
+                    volumeGrowth: transportResponse.volumeGrowth || 0,
+                });
+
+                // Gọi API lấy xếp hạng cá nhân
+                const rankingResponse = await DashBoardApi.getRankingData(selectedPeriod, selectedMetric);
+                setRankingData(rankingResponse || []);
+
+                // Gọi API lấy xếp hạng đội nhóm
+                const teamRankingResponse = await DashBoardApi.getTeamRanking(selectedPeriod, selectedMetric);
+                setTeamRanking(teamRankingResponse || []);
+
+                // Gọi API lấy thành tích
+                const achievementsResponse = await DashBoardApi.getAchievements();
+                setAchievements(Array.isArray(achievementsResponse) ? achievementsResponse : []);
+            } catch (error) {
+                setError(error.message || "Lỗi khi lấy dữ liệu dashboard");
+                console.error("Lỗi khi lấy dữ liệu dashboard:", error.message);
+            }
+        };
+
+        fetchDashboardData();
+    }, [navigate, debouncedYear, debouncedUnit, selectedPeriod, selectedMetric]);
 
     const getRankIcon = (rank) => {
         switch (rank) {
             case 1:
-                return <Crown className="w-6 h-6 text-yellow-500" />
+                return <Crown className="w-6 h-6 text-yellow-500" />;
             case 2:
-                return <Medal className="w-6 h-6 text-gray-400" />
+                return <Medal className="w-6 h-6 text-gray-400" />;
             case 3:
-                return <Award className="w-6 h-6 text-orange-500" />
+                return <Award className="w-6 h-6 text-orange-500" />;
             default:
-                return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold">{rank}</span>
+                return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold">{rank}</span>;
         }
-    }
+    };
 
     const getRankBadgeClass = (rank) => {
         switch (rank) {
             case 1:
-                return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white"
+                return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-white";
             case 2:
-                return "bg-gradient-to-r from-gray-300 to-gray-500 text-white"
+                return "bg-gradient-to-r from-gray-300 to-gray-500 text-white";
             case 3:
-                return "bg-gradient-to-r from-orange-400 to-orange-600 text-white"
+                return "bg-gradient-to-r from-orange-400 to-orange-600 text-white";
             default:
-                return "bg-gradient-to-r from-blue-400 to-blue-600 text-white"
+                return "bg-gradient-to-r from-blue-400 to-blue-600 text-white";
         }
-    }
+    };
 
     const handleButtonPress = (buttonId) => {
-        setPressedButton(buttonId)
-        setTimeout(() => setPressedButton(null), 150)
-    }
+        setPressedButton(buttonId);
+        setTimeout(() => setPressedButton(null), 150);
+    };
 
     const handleLogout = async () => {
         try {
-            const token = Cookies.get("authToken")
-            if (token) {
-                await fetch("http://localhost:8083/api/auth/logout", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    credentials: "include",
-                })
-            }
-        } catch (e) { }
-        Cookies.remove("authToken")
-        Cookies.remove("userRole")
-        Cookies.remove("username")
-        navigate("/login")
-    }
+            await DashBoardApi.logout();
+            Cookies.remove("authToken");
+            Cookies.remove("userRole");
+            Cookies.remove("username");
+            navigate("/login", { replace: true });
+        } catch (error) {
+            console.error("Lỗi khi đăng xuất:", error.message);
+            Cookies.remove("authToken");
+            Cookies.remove("userRole");
+            Cookies.remove("username");
+            navigate("/login", { replace: true });
+        }
+    };
 
     return (
         <div className="flex flex-col min-h-screen">
             <Header />
             <div className="flex-1 bg-gradient-to-br from-slate-50 to-blue-50 p-8 pt-24">
                 <div className="max-w-7xl mx-auto space-y-8">
-                    {/* Tabs with enhanced animations */}
+                    {/* Hiển thị thông báo lỗi */}
+                    {error && (
+                        <div className="bg-red-100 text-red-600 p-4 rounded-lg text-center">
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Tabs */}
                     <div className="flex justify-center mb-8">
                         <div className="bg-white rounded-lg shadow-md p-1 flex transform transition-all duration-300 hover:shadow-lg hover:scale-105">
                             <button
                                 onClick={() => {
-                                    setActiveTab("performance")
-                                    handleButtonPress("performance-tab")
+                                    setActiveTab("performance");
+                                    handleButtonPress("performance-tab");
                                 }}
                                 className={`px-6 py-2 rounded-md transition-all duration-300 transform ${activeTab === "performance"
                                     ? "bg-blue-600 text-white shadow-lg scale-105"
@@ -311,8 +227,8 @@ const Dashboard = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    setActiveTab("ranking")
-                                    handleButtonPress("ranking-tab")
+                                    setActiveTab("ranking");
+                                    handleButtonPress("ranking-tab");
                                 }}
                                 className={`px-6 py-2 rounded-md transition-all duration-300 transform ${activeTab === "ranking"
                                     ? "bg-blue-600 text-white shadow-lg scale-105"
@@ -326,14 +242,14 @@ const Dashboard = () => {
 
                     {activeTab === "performance" ? (
                         <div className="space-y-8 animate-in fade-in duration-500">
-                            {/* Header with animation */}
+                            {/* Header */}
                             <div className="text-center space-y-4 animate-in slide-in-from-top duration-700">
                                 <h1 className="text-4xl font-bold text-gray-900 transform transition-all duration-300 hover:scale-105">
                                     Báo cáo Hiệu suất Vận chuyển
                                 </h1>
                                 <p className="text-lg text-gray-600">Tổng quan hoạt động vận chuyển từ 2023 - 2025</p>
 
-                                {/* Filters with enhanced animations */}
+                                {/* Filters */}
                                 <div className="flex items-center justify-center gap-4 mt-6">
                                     <div className="flex items-center gap-2 transform transition-all duration-300 hover:scale-105">
                                         <span className="text-sm font-medium text-gray-700">Năm:</span>
@@ -348,7 +264,6 @@ const Dashboard = () => {
                                             <option value="Tất cả">Tất cả</option>
                                         </select>
                                     </div>
-
                                     <div className="flex items-center gap-2 transform transition-all duration-300 hover:scale-105">
                                         <span className="text-sm font-medium text-gray-700">Đơn vị:</span>
                                         <select
@@ -362,21 +277,21 @@ const Dashboard = () => {
                                             <option value="Chuyển Nhà Minh Anh">Chuyển Nhà Minh Anh</option>
                                         </select>
                                     </div>
-
                                     <button
                                         onClick={() => handleButtonPress("refresh")}
                                         className={`bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 ${pressedButton === "refresh" ? "scale-95 bg-blue-800" : ""
                                             }`}
                                     >
                                         <RefreshCw
-                                            className={`w-4 h-4 transition-transform duration-300 ${pressedButton === "refresh" ? "rotate-180" : ""}`}
+                                            className={`w-4 h-4 transition-transform duration-300 ${pressedButton === "refresh" ? "rotate-180" : ""
+                                                }`}
                                         />
                                         Cập nhật
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Stats Cards with enhanced hover effects */}
+                            {/* Stats Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 {[
                                     {
@@ -391,7 +306,7 @@ const Dashboard = () => {
                                     {
                                         id: "revenue",
                                         title: "Tổng doanh thu",
-                                        value: "2.513.800.009 đ",
+                                        value: transportData.revenue,
                                         growth: transportData.revenueGrowth,
                                         icon: DollarSign,
                                         gradient: "from-pink-500 to-pink-600",
@@ -400,7 +315,7 @@ const Dashboard = () => {
                                     {
                                         id: "delivery",
                                         title: "Tỷ lệ giao đúng hạn",
-                                        value: `${transportData.deliveryRate}%`,
+                                        value: transportData.deliveryRate === 0 ? "Chưa có dữ liệu" : `${transportData.deliveryRate}%`,
                                         growth: transportData.deliveryRateGrowth,
                                         icon: Target,
                                         gradient: "from-cyan-500 to-cyan-600",
@@ -409,7 +324,7 @@ const Dashboard = () => {
                                     {
                                         id: "volume",
                                         title: "Tổng khối lượng",
-                                        value: `${transportData.totalVolume} tấn`,
+                                        value: transportData.totalVolume === 0 ? "Chưa có dữ liệu" : `${transportData.totalVolume} tấn`,
                                         growth: transportData.volumeGrowth,
                                         icon: TrendingUp,
                                         gradient: "from-emerald-500 to-emerald-600",
@@ -445,7 +360,7 @@ const Dashboard = () => {
                                 ))}
                             </div>
 
-                            {/* Charts Row 1 with enhanced animations */}
+                            {/* Charts Row 1 */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Monthly Revenue Chart */}
                                 <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
@@ -457,7 +372,6 @@ const Dashboard = () => {
                                     </div>
                                     <div className="p-6">
                                         <div className="space-y-4">
-                                            {/* Legend with hover effects */}
                                             <div className="flex flex-wrap gap-4 text-sm">
                                                 {[
                                                     { color: "bg-red-500", label: "Chuyển Nhà 24H" },
@@ -473,15 +387,12 @@ const Dashboard = () => {
                                                     </div>
                                                 ))}
                                             </div>
-
-                                            {/* Enhanced Line Chart */}
                                             <div className="h-64 bg-gray-50 rounded-lg relative p-4 overflow-hidden">
                                                 <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-50"></div>
                                                 <svg className="w-full h-full relative z-10" viewBox="0 0 400 200">
-                                                    {/* Animated grid lines */}
                                                     <defs>
                                                         <pattern id="animated-grid" width="40" height="20" patternUnits="userSpaceOnUse">
-                                                            <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" strokeWidth="1" opacity="0.5" />
+                                                            <path d="M 40 0 L 0 0 0 20" fill='none' stroke="#e5e7eb" strokeWidth="1" opacity="0.5" />
                                                         </pattern>
                                                         <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                                             <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
@@ -497,62 +408,82 @@ const Dashboard = () => {
                                                         </linearGradient>
                                                     </defs>
                                                     <rect width="100%" height="100%" fill="url(#animated-grid)" />
-
-                                                    {/* Enhanced lines with gradients */}
-                                                    <polyline
-                                                        fill="none"
-                                                        stroke="url(#redGradient)"
-                                                        strokeWidth="3"
-                                                        points="40,120 120,100 200,95 280,85 360,80"
-                                                        className="animate-in draw-in duration-1000"
-                                                    />
-                                                    <polyline
-                                                        fill="none"
-                                                        stroke="url(#greenGradient)"
-                                                        strokeWidth="3"
-                                                        points="40,140 120,125 200,135 280,130 360,125"
-                                                        className="animate-in draw-in duration-1000 delay-300"
-                                                    />
-                                                    <polyline
-                                                        fill="none"
-                                                        stroke="url(#blueGradient)"
-                                                        strokeWidth="3"
-                                                        points="40,90 120,85 200,80 280,75 360,70"
-                                                        className="animate-in draw-in duration-1000 delay-600"
-                                                    />
-
-                                                    {/* Animated data points */}
-                                                    {[40, 120, 200, 280, 360].map((x, i) => (
-                                                        <g key={i}>
-                                                            <circle
-                                                                cx={x}
-                                                                cy={120 - i * 10}
-                                                                r="4"
-                                                                fill="#ef4444"
-                                                                className="animate-in zoom-in duration-500"
-                                                                style={{ animationDelay: `${i * 200 + 1000}ms` }}
+                                                    {monthlyRevenue.length > 0 && monthlyRevenue.every(data =>
+                                                        data.chuyenNha24H != null && data.dvChuyenNhaSaiGon != null && data.chuyenNhaMinhAnh != null &&
+                                                        !isNaN(data.chuyenNha24H) && !isNaN(data.dvChuyenNhaSaiGon) && !isNaN(data.chuyenNhaMinhAnh)
+                                                    ) ? (
+                                                        <>
+                                                            <polyline
+                                                                fill="none"
+                                                                stroke="url(#redGradient)"
+                                                                strokeWidth="3"
+                                                                points={monthlyRevenue.map((data, i) => {
+                                                                    const maxChuyenNha24H = Math.max(...monthlyRevenue.map(d => d.chuyenNha24H)) || 1;
+                                                                    const x = monthlyRevenue.length > 1 ? (i / (monthlyRevenue.length - 1)) * 360 + 40 : 200;
+                                                                    const y = 200 - (data.chuyenNha24H / maxChuyenNha24H) * 120;
+                                                                    return `${x},${y}`;
+                                                                }).join(" ")}
+                                                                className="animate-in draw-in duration-1000"
                                                             />
-                                                            <circle
-                                                                cx={x}
-                                                                cy={140 - i * 3}
-                                                                r="4"
-                                                                fill="#22c55e"
-                                                                className="animate-in zoom-in duration-500"
-                                                                style={{ animationDelay: `${i * 200 + 1300}ms` }}
+                                                            <polyline
+                                                                fill="none"
+                                                                stroke="url(#greenGradient)"
+                                                                strokeWidth="3"
+                                                                points={monthlyRevenue.map((data, i) => {
+                                                                    const maxDvChuyenNhaSaiGon = Math.max(...monthlyRevenue.map(d => d.dvChuyenNhaSaiGon)) || 1;
+                                                                    const x = monthlyRevenue.length > 1 ? (i / (monthlyRevenue.length - 1)) * 360 + 40 : 200;
+                                                                    const y = 200 - (data.dvChuyenNhaSaiGon / maxDvChuyenNhaSaiGon) * 120;
+                                                                    return `${x},${y}`;
+                                                                }).join(" ")}
+                                                                className="animate-in draw-in duration-1000 delay-300"
                                                             />
-                                                            <circle
-                                                                cx={x}
-                                                                cy={90 - i * 5}
-                                                                r="4"
-                                                                fill="#3b82f6"
-                                                                className="animate-in zoom-in duration-500"
-                                                                style={{ animationDelay: `${i * 200 + 1600}ms` }}
+                                                            <polyline
+                                                                fill="none"
+                                                                stroke="url(#blueGradient)"
+                                                                strokeWidth="3"
+                                                                points={monthlyRevenue.map((data, i) => {
+                                                                    const maxChuyenNhaMinhAnh = Math.max(...monthlyRevenue.map(d => d.chuyenNhaMinhAnh)) || 1;
+                                                                    const x = monthlyRevenue.length > 1 ? (i / (monthlyRevenue.length - 1)) * 360 + 40 : 200;
+                                                                    const y = 200 - (data.chuyenNhaMinhAnh / maxChuyenNhaMinhAnh) * 120;
+                                                                    return `${x},${y}`;
+                                                                }).join(" ")}
+                                                                className="animate-in draw-in duration-1000 delay-600"
                                                             />
-                                                        </g>
-                                                    ))}
+                                                            {monthlyRevenue.map((data, i) => (
+                                                                <g key={i}>
+                                                                    <circle
+                                                                        cx={monthlyRevenue.length > 1 ? (i / (monthlyRevenue.length - 1)) * 360 + 40 : 200}
+                                                                        cy={200 - (data.chuyenNha24H / (Math.max(...monthlyRevenue.map(d => d.chuyenNha24H)) || 1)) * 120}
+                                                                        r="4"
+                                                                        fill="#ef4444"
+                                                                        className="animate-in zoom-in duration-500"
+                                                                        style={{ animationDelay: `${i * 200 + 1000}ms` }}
+                                                                    />
+                                                                    <circle
+                                                                        cx={monthlyRevenue.length > 1 ? (i / (monthlyRevenue.length - 1)) * 360 + 40 : 200}
+                                                                        cy={200 - (data.dvChuyenNhaSaiGon / (Math.max(...monthlyRevenue.map(d => d.dvChuyenNhaSaiGon)) || 1)) * 120}
+                                                                        r="4"
+                                                                        fill="#22c55e"
+                                                                        className="animate-in zoom-in duration-500"
+                                                                        style={{ animationDelay: `${i * 200 + 1300}ms` }}
+                                                                    />
+                                                                    <circle
+                                                                        cx={monthlyRevenue.length > 1 ? (i / (monthlyRevenue.length - 1)) * 360 + 40 : 200}
+                                                                        cy={200 - (data.chuyenNhaMinhAnh / (Math.max(...monthlyRevenue.map(d => d.chuyenNhaMinhAnh)) || 1)) * 120}
+                                                                        r="4"
+                                                                        fill="#3b82f6"
+                                                                        className="animate-in zoom-in duration-500"
+                                                                        style={{ animationDelay: `${i * 200 + 1600}ms` }}
+                                                                    />
+                                                                </g>
+                                                            ))}
+                                                        </>
+                                                    ) : (
+                                                        <text x="200" y="100" textAnchor="middle" fill="#666" fontSize="14">
+                                                            Không có dữ liệu để hiển thị
+                                                        </text>
+                                                    )}
                                                 </svg>
-
-                                                {/* X-axis labels */}
                                                 <div className="absolute bottom-0 left-0 right-0 flex justify-between px-4 text-xs text-gray-600">
                                                     {monthlyRevenue.map((data, index) => (
                                                         <span
@@ -568,7 +499,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
 
-                                {/* Performance Chart with enhanced animations */}
+                                {/* Performance Chart */}
                                 <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
                                     <div className="p-6 border-b border-gray-200">
                                         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -578,7 +509,6 @@ const Dashboard = () => {
                                     </div>
                                     <div className="p-6">
                                         <div className="space-y-4">
-                                            {/* Legend with enhanced hover effects */}
                                             <div className="flex flex-wrap gap-4 text-sm">
                                                 {[
                                                     { color: "bg-teal-400", label: "Đúng hạn" },
@@ -596,8 +526,6 @@ const Dashboard = () => {
                                                     </div>
                                                 ))}
                                             </div>
-
-                                            {/* Enhanced Bar Chart */}
                                             <div className="h-64 bg-gray-50 rounded-lg flex items-end justify-around p-4 overflow-hidden relative">
                                                 <div className="absolute inset-0 bg-gradient-to-t from-gray-100 to-transparent opacity-50"></div>
                                                 {performanceData.map((data, index) => (
@@ -606,21 +534,21 @@ const Dashboard = () => {
                                                             <div
                                                                 className="w-8 bg-teal-400 rounded-t transform transition-all duration-700 hover:scale-110 hover:bg-teal-500 cursor-pointer animate-in slide-in-from-bottom"
                                                                 style={{
-                                                                    height: `${(data.dungHan / 400) * 180}px`,
+                                                                    height: `${(data.dungHan / (Math.max(...performanceData.map(d => d.dungHan)) || 1)) * 180}px`,
                                                                     animationDelay: `${index * 200}ms`,
                                                                 }}
                                                             ></div>
                                                             <div
                                                                 className="w-8 bg-pink-400 rounded-t transform transition-all duration-700 hover:scale-110 hover:bg-pink-500 cursor-pointer animate-in slide-in-from-bottom"
                                                                 style={{
-                                                                    height: `${(data.huy / 400) * 180}px`,
+                                                                    height: `${(data.huy / (Math.max(...performanceData.map(d => d.huy)) || 1)) * 180}px`,
                                                                     animationDelay: `${index * 200 + 100}ms`,
                                                                 }}
                                                             ></div>
                                                             <div
                                                                 className="w-8 bg-yellow-400 rounded-t transform transition-all duration-700 hover:scale-110 hover:bg-yellow-500 cursor-pointer animate-in slide-in-from-bottom"
                                                                 style={{
-                                                                    height: `${(data.tre / 400) * 180}px`,
+                                                                    height: `${(data.tre / (Math.max(...performanceData.map(d => d.tre)) || 1)) * 180}px`,
                                                                     animationDelay: `${index * 200 + 200}ms`,
                                                                 }}
                                                             ></div>
@@ -636,7 +564,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Charts Row 2 with enhanced animations */}
+                            {/* Charts Row 2 */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Revenue Comparison Chart */}
                                 <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
@@ -648,7 +576,6 @@ const Dashboard = () => {
                                     </div>
                                     <div className="p-6">
                                         <div className="space-y-4">
-                                            {/* Legend */}
                                             <div className="flex flex-wrap gap-4 text-sm">
                                                 {[
                                                     { color: "bg-sky-400", label: "Doanh thu thực tế" },
@@ -665,8 +592,6 @@ const Dashboard = () => {
                                                     </div>
                                                 ))}
                                             </div>
-
-                                            {/* Enhanced Bar Chart */}
                                             <div className="h-64 bg-gray-50 rounded-lg flex items-end justify-around p-4 relative overflow-hidden">
                                                 <div className="absolute inset-0 bg-gradient-to-t from-purple-50 to-transparent opacity-50"></div>
                                                 {monthlyRevenue.map((data, index) => (
@@ -675,19 +600,18 @@ const Dashboard = () => {
                                                             <div
                                                                 className="w-12 bg-sky-400 rounded-t transform transition-all duration-700 hover:scale-110 hover:bg-sky-500 cursor-pointer animate-in slide-in-from-bottom"
                                                                 style={{
-                                                                    height: `${Math.random() * 150 + 50}px`,
+                                                                    height: `${(data.chuyenNha24H / (Math.max(...monthlyRevenue.map(d => d.chuyenNha24H)) || 1)) * 150}px`,
                                                                     animationDelay: `${index * 200}ms`,
                                                                 }}
                                                             ></div>
                                                             <div
-                                                                className="w-12 bg-orange-400 rounded-t transform transition-all duration-700 hover:scale-110 hover:bg-orange-500 cursor-pointer animate-in slide-in-from-bottom"
+                                                                className="w-12 bg-orange-400 rounded-t transform transition-all duration-700 hover polynomials-scale-110 hover:bg-orange-500 cursor-pointer animate-in slide-in-from-bottom"
                                                                 style={{
-                                                                    height: `${Math.random() * 150 + 50}px`,
+                                                                    height: `${(data.dvChuyenNhaSaiGon / (Math.max(...monthlyRevenue.map(d => d.dvChuyenNhaSaiGon)) || 1)) * 150}px`,
                                                                     animationDelay: `${index * 200 + 100}ms`,
                                                                 }}
                                                             ></div>
                                                         </div>
-
                                                         <span className="text-xs text-gray-600 transform transition-all duration-300 hover:scale-110 hover:font-semibold cursor-pointer">
                                                             {data.month}
                                                         </span>
@@ -698,7 +622,7 @@ const Dashboard = () => {
                                     </div>
                                 </div>
 
-                                {/* Enhanced Pie Chart */}
+                                {/* Pie Chart */}
                                 <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
                                     <div className="p-6 border-b border-gray-200">
                                         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -709,7 +633,6 @@ const Dashboard = () => {
                                     <div className="p-6">
                                         <div className="flex items-center justify-center h-64">
                                             <div className="relative">
-                                                {/* Enhanced Donut Chart */}
                                                 <svg
                                                     className="w-48 h-48 transform transition-transform duration-500 hover:scale-110"
                                                     viewBox="0 0 200 200"
@@ -751,8 +674,6 @@ const Dashboard = () => {
                                                         className="animate-in draw-in duration-1000 delay-600 hover:stroke-yellow-600 transition-colors"
                                                     />
                                                 </svg>
-
-                                                {/* Enhanced Legend */}
                                                 <div className="absolute -right-24 top-1/2 transform -translate-y-1/2 space-y-2">
                                                     {[
                                                         { color: "bg-teal-400", label: "Đúng hạn" },
@@ -776,7 +697,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Enhanced Detail Table */}
+                            {/* Detail Table */}
                             <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:shadow-2xl">
                                 <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -789,7 +710,8 @@ const Dashboard = () => {
                                             }`}
                                     >
                                         <TrendingUp
-                                            className={`w-4 h-4 transition-transform duration-300 ${pressedButton === "export" ? "translate-y-1" : ""}`}
+                                            className={`w-4 h-4 transition-transform duration-300 ${pressedButton === "export" ? "translate-y-1" : ""
+                                                }`}
                                         />
                                         Xuất Excel
                                     </button>
@@ -848,15 +770,13 @@ const Dashboard = () => {
                         </div>
                     ) : (
                         <div className="space-y-8 animate-in fade-in duration-500">
-                            {/* Enhanced Header */}
+                            {/* Header */}
                             <div className="text-center space-y-4 animate-in slide-in-from-top duration-700">
                                 <h1 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-3 transform transition-all duration-300 hover:scale-105">
                                     <Crown className="w-10 h-10 text-yellow-500 transform transition-all duration-500 hover:rotate-12 hover:scale-125" />
                                     Xếp Hạng Hiệu Suất
                                 </h1>
                                 <p className="text-lg text-gray-600">Bảng xếp hạng nhân viên và đội nhóm xuất sắc</p>
-
-                                {/* Enhanced Filters */}
                                 <div className="flex items-center justify-center gap-4 mt-6">
                                     <div className="flex items-center gap-2 transform transition-all duration-300 hover:scale-105">
                                         <span className="text-sm font-medium text-gray-700">Thời gian:</span>
@@ -871,7 +791,6 @@ const Dashboard = () => {
                                             <option value="year">Năm này</option>
                                         </select>
                                     </div>
-
                                     <div className="flex items-center gap-2 transform transition-all duration-300 hover:scale-105">
                                         <span className="text-sm font-medium text-gray-700">Tiêu chí:</span>
                                         <select
@@ -888,7 +807,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Enhanced Top Performers Cards */}
+                            {/* Top Performers Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {rankingData.slice(0, 3).map((performer, index) => (
                                     <div
@@ -902,7 +821,8 @@ const Dashboard = () => {
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center gap-3">
                                                     <div
-                                                        className={`transform transition-all duration-500 ${hoveredCard === `performer-${index}` ? "scale-125 rotate-12" : ""}`}
+                                                        className={`transform transition-all duration-500 ${hoveredCard === `performer-${index}` ? "scale-125 rotate-12" : ""
+                                                            }`}
                                                     >
                                                         {getRankIcon(performer.rank)}
                                                     </div>
@@ -952,7 +872,7 @@ const Dashboard = () => {
                                 ))}
                             </div>
 
-                            {/* Enhanced Individual Ranking Table */}
+                            {/* Individual Ranking Table */}
                             <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:shadow-2xl">
                                 <div className="p-6 border-b border-gray-200">
                                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -990,7 +910,8 @@ const Dashboard = () => {
                                                         <td className="py-4 px-4">
                                                             <div className="flex items-center gap-2">
                                                                 <div
-                                                                    className={`transform transition-all duration-300 ${hoveredCard === `table-row-${index}` ? "scale-125" : ""}`}
+                                                                    className={`transform transition-all duration-300 ${hoveredCard === `table-row-${index}` ? "scale-125" : ""
+                                                                        }`}
                                                                 >
                                                                     {getRankIcon(performer.rank)}
                                                                 </div>
@@ -1055,7 +976,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Enhanced Team Ranking */}
+                            {/* Team Ranking */}
                             <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:shadow-2xl">
                                 <div className="p-6 border-b border-gray-200">
                                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -1082,7 +1003,8 @@ const Dashboard = () => {
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div className="flex items-center gap-2">
                                                             <div
-                                                                className={`transform transition-all duration-500 ${hoveredCard === `team-${index}` ? "scale-125 rotate-12" : ""}`}
+                                                                className={`transform transition-all duration-500 ${hoveredCard === `team-${index}` ? "scale-125 rotate-12" : ""
+                                                                    }`}
                                                             >
                                                                 {getRankIcon(team.rank)}
                                                             </div>
@@ -1105,14 +1027,12 @@ const Dashboard = () => {
                                                             <span className="font-medium">{team.change}</span>
                                                         </div>
                                                     </div>
-
                                                     <h3
                                                         className={`font-bold text-lg text-gray-800 mb-4 transform transition-all duration-300 ${hoveredCard === `team-${index}` ? "scale-105" : ""
                                                             }`}
                                                     >
                                                         {team.name}
                                                     </h3>
-
                                                     <div className="space-y-3">
                                                         {[
                                                             { label: "Tổng doanh thu:", value: team.totalRevenue, color: "text-green-600" },
@@ -1136,7 +1056,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Enhanced Achievement Section */}
+                            {/* Achievement Section */}
                             <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden relative">
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
                                 <div className="p-8 relative z-10">
@@ -1146,23 +1066,25 @@ const Dashboard = () => {
                                             Thành Tích Nổi Bật Tháng Này
                                         </h2>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                                            {[
-                                                { value: "156", label: "Chuyến giao thành công cao nhất", name: "Nguyễn Văn An" },
-                                                { value: "94.2%", label: "Tỷ lệ thành công cao nhất", name: "Nguyễn Văn An" },
-                                                { value: "+15%", label: "Tăng trưởng cao nhất", name: "Chuyển Nhà Minh Anh" },
-                                            ].map((achievement, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="text-center transform transition-all duration-500 hover:scale-110 cursor-pointer animate-in slide-in-from-bottom"
-                                                    style={{ animationDelay: `${index * 200}ms` }}
-                                                >
-                                                    <div className="text-4xl font-bold text-yellow-300 transform transition-all duration-300 hover:scale-125">
-                                                        {achievement.value}
+                                            {achievements.length > 0 ? (
+                                                achievements.map((achievement, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="text-center transform transition-all duration-500 hover:scale-110 cursor-pointer animate-in slide-in-from-bottom"
+                                                        style={{ animationDelay: `${index * 200}ms` }}
+                                                    >
+                                                        <div className="text-4xl font-bold text-yellow-300 transform transition-all duration-300 hover:scale-125">
+                                                            {achievement.value}
+                                                        </div>
+                                                        <div className="text-purple-100">{achievement.label}</div>
+                                                        <div className="text-sm text-purple-200 mt-1">{achievement.name}</div>
                                                     </div>
-                                                    <div className="text-purple-100">{achievement.label}</div>
-                                                    <div className="text-sm text-purple-200 mt-1">{achievement.name}</div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center col-span-3 text-purple-100">
+                                                    Không có dữ liệu thành tích để hiển thị
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1180,19 +1102,13 @@ const Dashboard = () => {
                 </button>
                 <button
                     className="w-full px-4 py-2 rounded-lg bg-white text-red-600 font-semibold hover:bg-red-100 transition"
-                    onClick={() => {
-                        Cookies.remove("authToken")
-                        Cookies.remove("userRole")
-                        Cookies.remove("username")
-                        navigate("/login")
-                    }}
+                    onClick={handleLogout}
                 >
                     Logout
                 </button>
-
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Dashboard
+export default Dashboard;
