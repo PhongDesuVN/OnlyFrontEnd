@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import useNotifications from '../hooks/useNotifications';
+import RequireAuth from './RequireAuth';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,29 +25,31 @@ const NotificationBell = () => {
   }, [isOpen]);
 
   return (
-    <div className="relative" ref={bellRef}>
-      <button
-        className="relative p-2 rounded-full hover:bg-white/20 transition-colors focus:outline-none"
-        onClick={() => setIsOpen((open) => !open)}
-        aria-label="Thông báo"
-      >
-        <Bell className="w-6 h-6 text-current" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center border-2 border-white">
-            {unreadCount}
-          </span>
+    <RequireAuth allowedRoles={["CUSTOMER"]}>
+      <div className="relative" ref={bellRef}>
+        <button
+          className="relative p-2 rounded-full hover:bg-white/20 transition-colors focus:outline-none"
+          onClick={() => setIsOpen((open) => !open)}
+          aria-label="Thông báo"
+        >
+          <Bell className="w-6 h-6 text-current" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[20px] text-center border-2 border-white">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+        {isOpen && (
+          <NotificationDropdown
+            notifications={notifications}
+            loading={loading}
+            error={error}
+            onNotificationClick={markAsRead}
+            onMarkAsRead={markAsRead}
+          />
         )}
-      </button>
-      {isOpen && (
-        <NotificationDropdown
-          notifications={notifications}
-          loading={loading}
-          error={error}
-          onNotificationClick={markAsRead}
-          onMarkAsRead={markAsRead}
-        />
-      )}
-    </div>
+      </div>
+    </RequireAuth>
   );
 };
 

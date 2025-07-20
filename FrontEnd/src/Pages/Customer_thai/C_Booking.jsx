@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import FurnitureSelector from './FurnitureSelector.jsx';
-import ImageUpload from './ImageUpload.jsx';
 import { Home, Users } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 const C_Booking = ({ isLoggedIn }) => {
@@ -48,6 +47,16 @@ const C_Booking = ({ isLoggedIn }) => {
     const [distanceError, setDistanceError] = useState(null);
     const [vehicleQuantity, setVehicleQuantity] = useState(1);
 
+    // New states for home type options
+    const [inAlley, setInAlley] = useState(false);
+    const [over3Floors, setOver3Floors] = useState(false);
+    const [noElevatorNhaThuong, setNoElevatorNhaThuong] = useState(false);
+    const [parkingOption, setParkingOption] = useState('sanh'); // 'sanh' for lobby, 'ham' for basement
+    const [noElevatorChungCu, setNoElevatorChungCu] = useState(false);
+    const [floorNumber, setFloorNumber] = useState(1);
+    const [basementHeightSufficient, setBasementHeightSufficient] = useState(null); // 'yes', 'no'
+
+
     useEffect(() => {
         const fetchOptions = async () => {
             if (!isLoggedIn || !selectedService) return;
@@ -71,6 +80,16 @@ const C_Booking = ({ isLoggedIn }) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+        if (name === 'homeType') {
+            // Reset all extra options when changing home type
+            setInAlley(false);
+            setOver3Floors(false);
+            setNoElevatorNhaThuong(false);
+            setParkingOption('sanh');
+            setNoElevatorChungCu(false);
+            setFloorNumber(1);
+            setBasementHeightSufficient(null);
+        }
         setBookingData(prev => ({
             ...prev,
             [name]: value
@@ -86,10 +105,60 @@ const C_Booking = ({ isLoggedIn }) => {
                 ...prev,
                 [type === 'transportId' ? 'transport' : type === 'operatorId' ? 'staff' : type === 'promotionId' ? 'promotion' : type]: false
             }));
+            
+            // If promotion is selected or deselected, recalculate the total with discount
+            if (type === 'promotionId') {
+                // If value is null, it means promotion was deselected
+                if (value === null) {
+                    // Recalculate total without discount
+                    updateTotal();
+                } else {
+                    // Apply selected promotion
+                    const selectedPromotion = promotions.find(p => p.id === value);
+                    if (selectedPromotion && bookingData.total > 0) {
+                        applyPromotion(selectedPromotion, bookingData.total);
+                    }
+                }
+            }
         }
     };
 
-    const calculateTotal = async (pickupLocation, deliveryLocation, furniture, selectedTransport, homeType) => {
+    // Function to apply promotion discount to total
+    const applyPromotion = (promotion, currentTotal) => {
+        if (!promotion) return;
+        
+        let discountedTotal = currentTotal;
+        
+        if (promotion.discountType === 'PERCENTAGE' && promotion.discountValue) {
+            // Apply percentage discount
+            const discountAmount = (currentTotal * promotion.discountValue) / 100;
+            discountedTotal = currentTotal - discountAmount;
+        } else if (promotion.discountType === 'AMOUNT' && promotion.discountValue) {
+            // Apply fixed amount discount
+            discountedTotal = Math.max(0, currentTotal - promotion.discountValue);
+        }
+        
+        // Update the total in booking data
+        setBookingData(prev => ({
+            ...prev,
+            total: Math.round(discountedTotal)
+        }));
+    };
+
+    const handleParkingOptionChange = (e) => {
+        const newOption = e.target.value;
+        setParkingOption(newOption);
+
+        // Reset conditional states when switching parking option
+        if (newOption === 'sanh') {
+            setBasementHeightSufficient(null);
+        } else if (newOption === 'ham') {
+            setNoElevatorChungCu(false);
+            setFloorNumber(1);
+        }
+    };
+
+    const calculateTotal = async (pickupLocation, deliveryLocation, furniture, selectedTransport, homeType, homeOptions) => {
         try {
             let totalVolume = 0;
             if (furniture && furniture.length > 0) {
@@ -127,10 +196,20 @@ const C_Booking = ({ isLoggedIn }) => {
             // Tổng tiền cơ bản
             let total = distance * vehicleQuantity * 10;
 
-            // Nếu nhà thường, cộng thêm 200000
+            // New logic for home type fees
             if (homeType === 'Nhà thường') {
-                total += 200000;
+                if (homeOptions.inAlley) {
+                    total += 50000;
+                }
+                if (homeOptions.over3Floors && homeOptions.noElevatorNhaThuong) {
+                    total += 50000;
+                }
+            } else if (homeType === 'Chung cư') {
+                if (homeOptions.noElevatorChungCu && homeOptions.floorNumber > 0) {
+                    total += 100000 * homeOptions.floorNumber;
+                }
             }
+            
             // Nếu có modular hoặc bulky, cộng thêm 50000 cho mỗi loại
             let hasModular = false, hasBulky = false;
             if (furniture && furniture.length > 0) {
@@ -142,6 +221,22 @@ const C_Booking = ({ isLoggedIn }) => {
 
             // Làm tròn tổng tiền về số nguyên sau khi cộng phụ phí
             total = Math.round(total);
+            
+            // Apply promotion discount if one is selected
+            if (bookingData.promotionId) {
+                const selectedPromotion = promotions.find(p => p.id === bookingData.promotionId);
+                if (selectedPromotion) {
+                    if (selectedPromotion.discountType === 'PERCENTAGE' && selectedPromotion.discountValue) {
+                        const discountAmount = (total * selectedPromotion.discountValue) / 100;
+                        total = total - discountAmount;
+                    } else if (selectedPromotion.discountType === 'AMOUNT' && selectedPromotion.discountValue) {
+                        total = Math.max(0, total - selectedPromotion.discountValue);
+                    }
+                    
+                    // Round again after applying discount
+                    total = Math.round(total);
+                }
+            }
 
             return { total, distance, totalVolume, geocodingError, vehicleQuantity };
         } catch (error) {
@@ -156,12 +251,20 @@ const C_Booking = ({ isLoggedIn }) => {
             setDistanceError(null);
             try {
                 const selectedTransport = transportUnits.find(t => t.transportId === bookingData.transportId);
+                const homeOptions = {
+                    inAlley,
+                    over3Floors,
+                    noElevatorNhaThuong,
+                    noElevatorChungCu,
+                    floorNumber
+                };
                 const { total, distance, totalVolume, geocodingError, vehicleQuantity: vq } = await calculateTotal(
                     bookingData.pickupLocation,
                     bookingData.deliveryLocation,
                     selectedFurniture,
                     selectedTransport,
-                    bookingData.homeType
+                    bookingData.homeType,
+                    homeOptions
                 );
 
                 setVehicleQuantity(vq || 1);
@@ -191,13 +294,26 @@ const C_Booking = ({ isLoggedIn }) => {
     };
 
     useEffect(() => {
-        if (bookingData.pickupLocation && bookingData.deliveryLocation) {
+        const canCalculate = bookingData.pickupLocation && bookingData.deliveryLocation && bookingData.transportId && bookingData.homeType;
+        if (canCalculate) {
             setLoadingDistance(true);
             setDistanceError(null);
             const timeoutId = setTimeout(updateTotal, 800);
             return () => clearTimeout(timeoutId);
         }
-    }, [bookingData.pickupLocation, bookingData.deliveryLocation, selectedFurniture]);
+    }, [
+        bookingData.pickupLocation,
+        bookingData.deliveryLocation,
+        bookingData.transportId,
+        bookingData.homeType,
+        bookingData.promotionId,
+        selectedFurniture,
+        inAlley,
+        over3Floors,
+        noElevatorNhaThuong,
+        noElevatorChungCu,
+        floorNumber
+    ]);
 
     useEffect(() => {
         if (bookingData.homeType && bookingData.pickupLocation && bookingData.deliveryLocation && bookingData.transportId) {
@@ -587,7 +703,17 @@ const C_Booking = ({ isLoggedIn }) => {
             homeType: bookingData.homeType,
             slotIndex: bookingData.slotIndex,
             items: items,
-            vehicleQuantity: vehicleQuantity // thêm vào đây
+            vehicleQuantity: vehicleQuantity, // thêm vào đây
+            apartmentInfo: bookingData.homeType === 'Chung cư' ? {
+                parking: parkingOption,
+                ...(parkingOption === 'sanh' && {
+                    hasElevator: !noElevatorChungCu,
+                    floor: noElevatorChungCu ? floorNumber : null,
+                }),
+                ...(parkingOption === 'ham' && {
+                    basementHeightSufficient: basementHeightSufficient === 'yes'
+                })
+            } : null
         };
 
         try {
@@ -722,6 +848,15 @@ const C_Booking = ({ isLoggedIn }) => {
                                 <div className="font-semibold text-yellow-800 mb-1">Thông tin khuyến mãi:</div>
                                 <div className="text-gray-800"><strong>Tên:</strong> {selectedOption.name}</div>
                                 <div className="text-gray-800"><strong>Mô tả:</strong> {selectedOption.description}</div>
+                                {selectedOption.discountType && selectedOption.discountValue && (
+                                    <div className="text-gray-800">
+                                        <strong>Giảm giá:</strong> {
+                                            selectedOption.discountType === 'PERCENTAGE' 
+                                                ? `${selectedOption.discountValue}%` 
+                                                : `${selectedOption.discountValue.toLocaleString()} VNĐ`
+                                        }
+                                    </div>
+                                )}
                                 <div className="text-gray-800">
                                     <strong>Áp dụng đến:</strong> {selectedOption.endDate ? new Date(selectedOption.endDate).toLocaleDateString('vi-VN') : 'Không xác định'}
                                 </div>
@@ -888,10 +1023,6 @@ const C_Booking = ({ isLoggedIn }) => {
                                                         <span className="font-semibold text-blue-800 ml-2">{bookingData.distance.toFixed(1)} km</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-600">Tổng tiền:</span>
-                                                        <span className="font-semibold text-green-600 ml-2">{bookingData.total.toLocaleString()} VNĐ</span>
-                                                    </div>
-                                                    <div>
                                                         <span className="text-gray-600">Tổng thể tích:</span>
                                                         <span className="font-semibold text-blue-800 ml-2">{bookingData.totalVolume ? bookingData.totalVolume.toFixed(2) : 0} m³</span>
                                                     </div>
@@ -899,12 +1030,51 @@ const C_Booking = ({ isLoggedIn }) => {
                                                         <span className="text-gray-600">Số lượng xe cần thiết:</span>
                                                         <span className="font-semibold text-orange-600 ml-2">{vehicleQuantity}</span>
                                                     </div>
-                                                    {bookingData.homeType === 'Nhà thường' && (
-                                                        <div className="col-span-2 text-blue-700">+200.000 VNĐ (phụ phí nhà thường)</div>
+                                                    
+                                                    {bookingData.homeType === 'Nhà thường' && inAlley && (
+                                                        <div className="col-span-2 text-blue-700">+50,000 VNĐ (phụ phí nhà trong hẻm)</div>
+                                                    )}
+                                                    {bookingData.homeType === 'Nhà thường' && over3Floors && noElevatorNhaThuong && (
+                                                        <div className="col-span-2 text-blue-700">+50,000 VNĐ (phụ phí nhà {'>'}3 tầng, không thang máy)</div>
+                                                    )}
+                                                    {bookingData.homeType === 'Chung cư' && noElevatorChungCu && floorNumber >= 1 && (
+                                                        <div className="col-span-2 text-blue-700">+{ (100000 * floorNumber).toLocaleString() } VNĐ (phụ phí chung cư không thang máy)</div>
                                                     )}
                                                     {(selectedFurniture.some(item => item.modular) || selectedFurniture.some(item => item.bulky)) && (
                                                         <div className="col-span-2 text-blue-700">+{selectedFurniture.some(item => item.modular) && selectedFurniture.some(item => item.bulky) ? '100.000' : '50.000'} VNĐ (phụ phí modular/bulky)</div>
                                                     )}
+                                                    
+                                                    {bookingData.promotionId && (
+                                                        <>
+                                                            <div className="col-span-2 border-t border-blue-200 mt-2 pt-2"></div>
+                                                            {(() => {
+                                                                const selectedPromotion = promotions.find(p => p.id === bookingData.promotionId);
+                                                                if (selectedPromotion) {
+                                                                    if (selectedPromotion.discountType === 'PERCENTAGE' && selectedPromotion.discountValue) {
+                                                                        return (
+                                                                            <div className="col-span-2 text-green-600">
+                                                                                Giảm giá {selectedPromotion.discountValue}% ({selectedPromotion.name})
+                                                                            </div>
+                                                                        );
+                                                                    } else if (selectedPromotion.discountType === 'AMOUNT' && selectedPromotion.discountValue) {
+                                                                        return (
+                                                                            <div className="col-span-2 text-green-600">
+                                                                                Giảm giá {selectedPromotion.discountValue.toLocaleString()} VNĐ ({selectedPromotion.name})
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                }
+                                                                return null;
+                                                            })()}
+                                                        </>
+                                                    )}
+                                                    
+                                                    <div className="col-span-2 border-t border-blue-200 mt-2 pt-2">
+                                                        <div className="flex justify-between font-medium">
+                                                            <span className="text-gray-700">Tổng tiền:</span>
+                                                            <span className="font-semibold text-green-600">{bookingData.total.toLocaleString()} VNĐ</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
                                             <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-blue-200">
@@ -933,29 +1103,108 @@ const C_Booking = ({ isLoggedIn }) => {
                                         <label className="block text-gray-700 font-medium mb-2">
                                             Loại nhà *
                                         </label>
-                                        <div className="space-y-3">
-                                            <label className="flex items-center space-x-3 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="homeType"
-                                                    value="Chung cư"
-                                                    checked={bookingData.homeType === 'Chung cư'}
-                                                    onChange={handleInputChange}
-                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                                />
-                                                <span className="text-gray-700">Chung cư</span>
-                                            </label>
-                                            <label className="flex items-center space-x-3 cursor-pointer">
-                                                <input
-                                                    type="radio"
-                                                    name="homeType"
-                                                    value="Nhà thường"
-                                                    checked={bookingData.homeType === 'Nhà thường'}
-                                                    onChange={handleInputChange}
-                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                                />
-                                                <span className="text-gray-700">Nhà thường</span>
-                                            </label>
+                                        <div className="flex flex-col sm:flex-row gap-4 items-start">
+                                            {/* Left side: Radio buttons */}
+                                            <div className="space-y-3 pt-2">
+                                                <label className="flex items-center space-x-3 cursor-pointer">
+                                                    <input
+                                                        type="radio" name="homeType" value="Chung cư"
+                                                        checked={bookingData.homeType === 'Chung cư'}
+                                                        onChange={handleInputChange}
+                                                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-gray-700">Chung cư</span>
+                                                </label>
+                                                <label className="flex items-center space-x-3 cursor-pointer">
+                                                    <input
+                                                        type="radio" name="homeType" value="Nhà thường"
+                                                        checked={bookingData.homeType === 'Nhà thường'}
+                                                        onChange={handleInputChange}
+                                                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-gray-700">Nhà thường</span>
+                                                </label>
+                                            </div>
+
+                                            {/* Right side: Conditional inputs */}
+                                            <div className="flex-1 w-full">
+                                                {bookingData.homeType === 'Nhà thường' && (
+                                                    <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                        <h5 className="font-semibold text-gray-700 text-sm">Thông tin thêm cho nhà thường</h5>
+                                                        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                            <input type="checkbox" checked={inAlley} onChange={e => setInAlley(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                            <span>Nhà trong hẻm (+50,000 VNĐ)</span>
+                                                        </label>
+                                                        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                            <input type="checkbox" checked={over3Floors} onChange={e => setOver3Floors(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                            <span>Nhà trên 3 tầng</span>
+                                                        </label>
+                                                        {over3Floors && (
+                                                            <div className="pl-6">
+                                                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                                    <input type="checkbox" checked={noElevatorNhaThuong} onChange={e => setNoElevatorNhaThuong(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                                    <span>Không có thang máy (+50,000 VNĐ)</span>
+                                                                </label>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {bookingData.homeType === 'Chung cư' && (
+                                                    <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                        <h5 className="font-semibold text-gray-700 text-sm">Thông tin thêm cho chung cư</h5>
+                                                        <div className="text-sm">
+                                                            <label className="block text-gray-600 mb-1">Vị trí lấy hàng:</label>
+                                                            <div className="flex gap-4">
+                                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                                    <input type="radio" name="parking" value="sanh" checked={parkingOption === 'sanh'} onChange={handleParkingOptionChange} className="text-blue-500 focus:ring-blue-500" />
+                                                                    <span>Sảnh chờ</span>
+                                                                </label>
+                                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                                    <input type="radio" name="parking" value="ham" checked={parkingOption === 'ham'} onChange={handleParkingOptionChange} className="text-blue-500 focus:ring-blue-500" />
+                                                                    <span>Hầm gửi xe</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Conditional inputs for "Sảnh chờ" */}
+                                                        {parkingOption === 'sanh' && (
+                                                            <div className="pl-4 border-l-2 border-gray-200 mt-2 space-y-2">
+                                                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                                    <input type="checkbox" checked={noElevatorChungCu} onChange={e => setNoElevatorChungCu(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                                    <span>Không có thang máy</span>
+                                                                </label>
+                                                                {noElevatorChungCu && (
+                                                                    <div className="pl-6">
+                                                                        <label className="flex items-center gap-2 text-sm text-gray-600">
+                                                                            <span>Số tầng (+100,000 VNĐ/tầng):</span>
+                                                                            <input type="number" value={floorNumber} onChange={e => setFloorNumber(Number(e.target.value))} min="1" className="w-20 px-2 py-1 border border-gray-300 rounded-md text-sm" />
+                                                                        </label>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Conditional inputs for "Hầm gửi xe" */}
+                                                        {parkingOption === 'ham' && (
+                                                            <div className="pl-4 border-l-2 border-gray-200 mt-2 space-y-2">
+                                                                <div className="text-sm">
+                                                                    <label className="block text-gray-600 mb-1">Chiều cao hầm có đủ cho xe tải 2.5m?</label>
+                                                                    <div className="flex gap-4">
+                                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                                            <input type="radio" name="basementHeight" value="yes" checked={basementHeightSufficient === 'yes'} onChange={e => setBasementHeightSufficient(e.target.value)} className="text-blue-500 focus:ring-blue-500" />
+                                                                            <span>Có</span>
+                                                                        </label>
+                                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                                            <input type="radio" name="basementHeight" value="no" checked={basementHeightSufficient === 'no'} onChange={e => setBasementHeightSufficient(e.target.value)} className="text-blue-500 focus:ring-blue-500" />
+                                                                            <span>Không</span>
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -994,20 +1243,6 @@ const C_Booking = ({ isLoggedIn }) => {
                                         placeholder="Không áp dụng khuyến mãi"
                                         isRequired={false}
                                     />
-
-                                    <div>
-                                        <label className="block text-gray-700 font-medium mb-2">
-                                            Nội dung vận chuyển
-                                        </label>
-                                        <textarea
-                                            name="note"
-                                            value={bookingData.note}
-                                            onChange={handleInputChange}
-                                            rows="4"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Mô tả chi tiết hàng hóa cần vận chuyển..."
-                                        ></textarea>
-                                    </div>
 
                                     <div className="flex gap-4">
                                         <button
@@ -1056,8 +1291,7 @@ const C_Booking = ({ isLoggedIn }) => {
                             </div>
 
                             <FurnitureSelector onFurnitureChange={handleFurnitureChange} />
-                            <ImageUpload />
-
+                            
                             {selectedFurniture.length > 0 && (
                                 <div className="bg-white rounded-2xl shadow-lg p-6">
                                     <h4 className="text-lg font-semibold text-gray-800 mb-4">Tóm tắt đồ đạc đã chọn:</h4>
