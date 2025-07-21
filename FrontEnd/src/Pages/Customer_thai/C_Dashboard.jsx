@@ -41,9 +41,12 @@ import {
 import { apiCall } from '../../utils/api';
 import C_Booking from './C_Booking';
 import C_Feedback from './C_Feedback';
-import C_Historycmt from './C_Historycmt';
+import C_BookingDetail from './C_BookingDetail.jsx';
+import C_History from './C_History.jsx';
 import ChatboxAI from '../ChatboxAI_TrungTran/ChatboxAI';
 import RequireAuth from '../../Components/RequireAuth';
+import FeedbackModal from './FeedbackModal.jsx';
+import { getAllBookingsOfCustomer } from './feedbackDataService';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
@@ -85,6 +88,8 @@ const C_Dashboard = () => {
     });
     const [promotions, setPromotions] = useState([]);
     const [isCustomer, setIsCustomer] = useState(false);
+    const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+    const [selectedBookingForFeedback, setSelectedBookingForFeedback] = useState(null);
 
     useEffect(() => {
         fetchCustomerData();
@@ -119,11 +124,7 @@ const C_Dashboard = () => {
 
     const fetchPromotions = async () => {
         try {
-            const response = await apiCall('/api/customer/promotions', {
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                }
-            });
+            const response = await apiCall('/api/customer/promotions', { auth: true });
             if (response.ok) {
                 const promotionsData = await response.json();
                 setPromotions(promotionsData);
@@ -141,14 +142,7 @@ const C_Dashboard = () => {
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
         try {
-            const response = await apiCall('/api/customer/profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                },
-                body: JSON.stringify(editFormData)
-            });
+            const response = await apiCall('/api/customer/profile', { auth: true });
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -166,11 +160,7 @@ const C_Dashboard = () => {
     const fetchCustomerData = async () => {
         try {
             // Fetch customer profile
-            const profileResponse = await apiCall('/api/customer/profile', {
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                }
-            });
+            const profileResponse = await apiCall('/api/customer/profile', { auth: true });
             if (profileResponse.ok) {
                 const profileData = await profileResponse.json();
                 // Map backend data to frontend state
@@ -184,51 +174,34 @@ const C_Dashboard = () => {
                 setUserInfo(formattedUserInfo);
             }
 
-            // Fetch bookings
-            const bookingsResponse = await apiCall('/api/customer/bookings', {
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                }
-            });
-            if (bookingsResponse.ok) {
-                const bookingsData = await bookingsResponse.json();
-                console.log('Bookings data:', bookingsData); // Debug log
-                setOrderHistory(bookingsData);
-                
+            // Fetch bookings bằng API mới
+            const bookings = await getAllBookingsOfCustomer();
+            setOrderHistory(bookings);
                 // Calculate statistics
-                const completedPayments = bookingsData.filter(order => order.paymentStatus === 'COMPLETED');
-                console.log('Completed payments:', completedPayments); // Debug log
-                
+            const completedPayments = bookings.filter(order => order.paymentStatus === 'COMPLETED');
                 const stats = {
-                    totalOrders: bookingsData.length,
-                    completedOrders: bookingsData.filter(order => order.status === 'COMPLETED').length,
-                    pendingOrders: bookingsData.filter(order => order.status === 'PENDING').length,
-                    shippingOrders: bookingsData.filter(order => order.status === 'SHIPPING').length,
-                    totalSpent: completedPayments.reduce((sum, order) => {
-                        console.log('Order total:', order.total, 'Order:', order); // Debug log
-                        return sum + (parseFloat(order.total) || 0);
-                    }, 0),
-                    averageRating: bookingsData.length > 0 ? 
-                        bookingsData.reduce((sum, order) => sum + (order.rating || 0), 0) / bookingsData.length : 0
+                totalOrders: bookings.length,
+                completedOrders: bookings.filter(order => order.status === 'COMPLETED').length,
+                pendingOrders: bookings.filter(order => order.status === 'PENDING').length,
+                shippingOrders: bookings.filter(order => order.status === 'SHIPPING').length,
+                totalSpent: completedPayments.reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0),
+                averageRating: bookings.length > 0 ? bookings.reduce((sum, order) => sum + (order.rating || 0), 0) / bookings.length : 0
                 };
-                console.log('Calculated stats:', stats); // Debug log
                 setCustomerStats(stats);
-            }
-
-            // Fetch complaints (if endpoint exists) - TẠM THỜI VÔ HIỆU HÓA VÌ ENDPOINT CHƯA TỒN TẠI
-            // const complaintsResponse = await apiCall('/api/customer/complaints', {
-            //     headers: {
-            //         'Authorization': `Bearer ${localStorage.getItem('token')}`
-            //     }
-            // });
-            // if (complaintsResponse.ok) {
-            //     const complaintsData = await complaintsResponse.json();
-            //     setComplaints(complaintsData);
-            // }
         } catch (error) {
             console.error('Error fetching customer data:', error);
         } finally {
             // setLoading(false); // Xóa
+        }
+    };
+
+    // Lấy tất cả booking của customer đang đăng nhập (API mới)
+    const fetchAllCustomerBookings = async () => {
+        try {
+            const bookings = await getAllBookingsOfCustomer();
+            setOrderHistory(bookings);
+        } catch (error) {
+            console.error('Lỗi lấy danh sách booking của customer:', error);
         }
     };
 
@@ -238,12 +211,7 @@ const C_Dashboard = () => {
         }
 
         try {
-            const response = await apiCall(`/api/customer/bookings/${bookingId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                }
-            });
+            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { auth: true });
 
             if (response.ok) {
                 alert('Hủy đơn hàng thành công!');
@@ -266,13 +234,13 @@ const C_Dashboard = () => {
                 type: 'TRANSPORTATION'
             };
 
-            const response = await apiCall(`/api/customer/feedback/transport/${bookingId}`, {
+            const response = await apiCall('/api/customer/feedback', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                 },
-                body: JSON.stringify(feedbackData)
+                body: JSON.stringify(feedbackData),
+                auth: true
             });
 
             if (response.ok) {
@@ -292,6 +260,16 @@ const C_Dashboard = () => {
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('isLoggedIn');
         window.location.href = '/c_homepage';
+    };
+
+    const openFeedbackModal = (booking) => {
+        setSelectedBookingForFeedback(booking);
+        setFeedbackModalOpen(true);
+    };
+
+    const closeFeedbackModal = () => {
+        setFeedbackModalOpen(false);
+        setSelectedBookingForFeedback(null);
     };
 
     const getStatusColor = (status) => {
@@ -315,7 +293,8 @@ const C_Dashboard = () => {
     };
 
     const getCustomerLevel = (totalOrders) => {
-        if (totalOrders >= 10) return { level: 'VIP', color: 'text-purple-600' };
+        console.log('Calculating customer level for totalOrders:', totalOrders); // Debug log
+        if (totalOrders >= 10) return { level: 'VIP', color: 'text-red-600' };
         if (totalOrders >= 5) return { level: 'Gold', color: 'text-yellow-600' };
         if (totalOrders >= 2) return { level: 'Silver', color: 'text-gray-600' };
         return { level: 'Bronze', color: 'text-orange-600' };
@@ -323,14 +302,15 @@ const C_Dashboard = () => {
 
     const getBarChartData = () => {
         const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
-        const currentMonth = new Date().getMonth();
         const data = new Array(12).fill(0);
 
-        // Simulate data for the last 6 months
-        for (let i = 0; i < 6; i++) {
-            const monthIndex = (currentMonth - i + 12) % 12;
-            data[monthIndex] = Math.floor(Math.random() * 5) + 1;
+        orderHistory.forEach(order => {
+            if (order.createdAt) {
+                const date = new Date(order.createdAt);
+                const monthIndex = date.getMonth(); // 0-11
+                data[monthIndex]++;
         }
+        });
 
         return {
             labels: months,
@@ -617,7 +597,7 @@ const C_Dashboard = () => {
                                 <div className="flex items-center space-x-4">
                                     {order.status === 'COMPLETED' && !order.rating && (
                                         <button
-                                            onClick={() => submitFeedback(order.bookingId)}
+                                            onClick={() => openFeedbackModal(order)}
                                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                         >
                                             Đánh giá
@@ -631,6 +611,12 @@ const C_Dashboard = () => {
                                             Hủy đơn
                                         </button>
                                     )}
+                                    <button
+                                        onClick={() => window.location.href = `/customer/booking/${order.bookingId}`}
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    >
+                                        Xem
+                                    </button>
                                 </div>
                                 <div className="text-sm text-gray-600">
                                     {order.rating && (
@@ -806,7 +792,7 @@ const C_Dashboard = () => {
             case 'promotions':
                 return renderPromotions();
             case 'historycmt':
-                return <C_Historycmt />;
+                return <C_History />;
             default:
                 return renderDashboard();
         }
@@ -955,6 +941,13 @@ const C_Dashboard = () => {
                     <main className="flex-1 p-6">
                         {renderActiveComponent()}
                         {isCustomer && <ChatboxAI />}
+                        <FeedbackModal
+                            isOpen={feedbackModalOpen}
+                            onClose={closeFeedbackModal}
+                            bookingId={selectedBookingForFeedback?.bookingId}
+                            storageId={selectedBookingForFeedback?.storageId}
+                            transportId={selectedBookingForFeedback?.transportId}
+                        />
                     </main>
                 </div>
             </div>

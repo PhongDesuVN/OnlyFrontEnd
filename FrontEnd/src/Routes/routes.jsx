@@ -36,6 +36,7 @@ import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
 import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_Dashboard from "../Pages/Customer_thai/C_Dashboard.jsx";
+import C_BookingDetail from "../Pages/Customer_thai/C_BookingDetail.jsx";
 
 import PaymentManagement from "../Pages/Receipts/PaymentManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
@@ -94,6 +95,7 @@ export default function AppRoutes() {
             <Route element={<AppLayout />}>
                 <Route path="/c_homepage" element={<C_HomePage />} />
                 <Route path="/c_dashboard" element={<C_Dashboard />} />
+                <Route path="/customer/booking/:bookingId" element={<C_BookingDetail />} />
             </Route>
 
             {/* Schedule Management - Protected Routes */}

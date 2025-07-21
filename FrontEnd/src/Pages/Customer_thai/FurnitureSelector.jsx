@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, X, Check, Home, Bed, Utensils, Bath } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, X, Check, Home, Bed, Utensils, Bath, Camera } from 'lucide-react';
+import ImageUpload from './ImageUpload';
 
 const FurnitureSelector = ({ onFurnitureChange }) => {
     const [furnitureData, setFurnitureData] = useState([]);
@@ -14,6 +15,7 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
     });
     const [userFurniture, setUserFurniture] = useState([]);
     const [editingFurniture, setEditingFurniture] = useState(null);
+    const [showImageUpload, setShowImageUpload] = useState(false);
 
     // Load dữ liệu đồ đạc từ database.json
     useEffect(() => {
@@ -42,6 +44,7 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
         setSearchTerm('');
         setSelectedFurniture(null);
         setIsAddingFurniture(false);
+        setShowImageUpload(false);
     };
 
     // Xử lý chọn đồ đạc
@@ -119,6 +122,24 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
         }
     };
 
+    // Xử lý nhận đồ đạc được phát hiện từ hình ảnh
+    const handleFurnitureDetected = (furnitureItems) => {
+        // Tạo ID mới cho mỗi món đồ
+        const newFurnitureItems = furnitureItems.map(item => ({
+            ...item,
+            id: Date.now() + Math.random()
+        }));
+        
+        const updatedFurniture = [...userFurniture, ...newFurnitureItems];
+        setUserFurniture(updatedFurniture);
+        
+        if (onFurnitureChange) {
+            onFurnitureChange(updatedFurniture);
+        }
+        
+        setShowImageUpload(false);
+    };
+
     // Xử lý hủy thao tác
     const handleCancel = () => {
         setIsAddingFurniture(false);
@@ -141,17 +162,9 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
     // Tính tổng số lượng và tổng thể tích cho toàn bộ userFurniture
     const totalQuantity = userFurniture.reduce((sum, item) => sum + item.quantity, 0);
     const totalVolume = userFurniture.reduce((sum, item) => sum + (item.quantity * item.volume), 0);
-    // Xác định loại xe
-    let vehicleType = 'Xe ba gác';
-    if (totalVolume > 7 && totalVolume <= 11) vehicleType = 'Xe Tải Mini';
-    else if (totalVolume > 11 && totalVolume <= 15) vehicleType = 'Xe tải tiêu chuẩn';
-    else if (totalVolume > 15 && totalVolume <= 20) vehicleType = 'Xe tải lớn';
-    else if (totalVolume > 20) vehicleType = 'Xe container';
 
-    // Box thông tin tổng hợp luôn hiển thị
     const InfoBox = () => (
         <div className="text-xs text-left p-0 bg-transparent border-none shadow-none min-w-[160px]">
-            <div><span className="font-semibold">Loại xe:</span> <span>{vehicleType}</span></div>
             <div><span className="font-semibold">Tổng số lượng:</span> <span>{totalQuantity}</span></div>
             <div><span className="font-semibold">Tổng thể tích:</span> <span>{totalVolume.toFixed(2)} m³</span></div>
         </div>
@@ -187,6 +200,32 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
             </div>
         );
     }
+    
+    // Hiển thị giao diện chụp và upload ảnh
+    if (showImageUpload) {
+        return (
+            <div className="bg-white rounded-2xl shadow-lg p-6 relative">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowImageUpload(false)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            {getRoomIcon(selectedRoom)}
+                            <h3 className="text-xl font-semibold text-gray-800 text-left mb-0">
+                                Nhận diện đồ đạc {selectedRoom}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <ImageUpload onFurnitureDetected={handleFurnitureDetected} room={selectedRoom} />
+            </div>
+        );
+    }
 
     // Render giao diện chọn đồ đạc trong phòng
     return (
@@ -206,17 +245,28 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
                 </div>
                 <InfoBox />
             </div>
-
-            {/* Thanh tìm kiếm */}
-            <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                    type="text"
-                    placeholder="Tìm kiếm đồ đạc..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+            
+            <div className="flex items-center justify-between mb-6">
+                {/* Thanh tìm kiếm */}
+                <div className="relative flex-1 mr-2">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm đồ đạc..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                </div>
+                
+                {/* Nút nhận diện qua hình ảnh */}
+                <button
+                    onClick={() => setShowImageUpload(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                    <Camera className="w-4 h-4" />
+                    Nhận diện từ hình ảnh
+                </button>
             </div>
 
             {/* Form thêm đồ đạc */}
