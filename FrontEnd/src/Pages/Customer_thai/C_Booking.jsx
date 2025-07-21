@@ -59,7 +59,7 @@ const C_Booking = ({ isLoggedIn }) => {
 
     useEffect(() => {
         const fetchOptions = async () => {
-            if (!isLoggedIn || !selectedService) return;
+            if (!isLoggedIn) return;
             try {
                 const [transportRes, storageRes, staffRes, promoRes] = await Promise.all([
                     apiCall('/api/customer/transport-units', { auth: true }),
@@ -76,7 +76,7 @@ const C_Booking = ({ isLoggedIn }) => {
             }
         };
         fetchOptions();
-    }, [isLoggedIn, selectedService]);
+    }, [isLoggedIn]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -1297,7 +1297,7 @@ const C_Booking = ({ isLoggedIn }) => {
                                             <div className="flex-1">
                                                 <div className="font-medium text-gray-800">{item.name}</div>
                                                 <div className="text-sm text-gray-600">
-                                                    Phòng: {item.room} | SL: {item.quantity} | Thể tích: {item.volume}m³ | Khối lượng: {item.weight}kg
+                                                    Phòng: {item.room} | SL: {item.quantity} | Thể tích: {item.volume}m³
                                                 </div>
                                             </div>
                                             <div className="flex gap-1">
