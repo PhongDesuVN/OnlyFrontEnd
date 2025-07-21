@@ -22,6 +22,7 @@ import {
 import { Line } from "react-chartjs-2";
 import { format, subDays, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = "/api/payments";
 
@@ -266,6 +267,7 @@ const DailyPaymentChart = React.memo(({ payments }) => {
 });
 
 export default function PaymentManagement() {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState("overview");
   const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -607,10 +609,16 @@ export default function PaymentManagement() {
     <div className="min-h-screen bg-gray-50 flex">
       <PaymentSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
       <div className="flex-1 p-8 overflow-auto">
+        <button
+          className="mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
+          onClick={() => navigate(-1)}
+        >
+          ← Quay lại
+        </button>
         <AnimatePresence mode="wait">
           {currentPage === "overview" && <>{Overview}</>}
           {currentPage === "list" && <>{PaymentList}</>}
-
+          {currentPage === "detail" && <>{Detail}</>}
         </AnimatePresence>
       </div>
     </div>

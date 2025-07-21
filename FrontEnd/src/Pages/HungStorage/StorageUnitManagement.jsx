@@ -23,7 +23,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"; // Thêm react-toastify để hiển thị thông báo
 import "react-toastify/dist/ReactToastify.css";
 
@@ -944,6 +944,7 @@ const StatsCards = React.memo(({ stats }) => (
 
 // Cập nhật StorageUnitManagement để truyền getAuthHeaders
 export default function StorageUnitManagement() {
+  const navigate = useNavigate();
   const [storages, setStorages] = useState([]);
   const [currentPage, setCurrentPage] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
@@ -1420,6 +1421,12 @@ export default function StorageUnitManagement() {
       <div className="min-h-screen bg-gray-50 flex">
         <Sidebar currentPage={currentPage} onPageChange={handlePageChangeMain} className="h-screen" />
         <div className="flex-1 min-h-screen p-8 overflow-auto">
+          <button
+            className="mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
+            onClick={() => navigate(-1)}
+          >
+            ← Quay lại
+          </button>
           <AnimatePresence mode="wait">
             {currentPage === "overview" && (
               <motion.div

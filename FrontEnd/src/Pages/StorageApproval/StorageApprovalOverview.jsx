@@ -5,10 +5,12 @@ import { BarChart3, CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-rea
 import {
   PieChart, Pie, Cell, Tooltip as ReTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, LineChart, Line, Legend
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 const COLORS = ["#F59E0B", "#10B981", "#EF4444", "#3B82F6"];
 
 export default function StorageApprovalOverview() {
+  const navigate = useNavigate();
   const [pendingUnits, setPendingUnits] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -132,6 +134,12 @@ export default function StorageApprovalOverview() {
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-8">
       <SidebarStorageApproval overview={{ totalPending, totalApproved, totalRejected, totalProcessed }} />
       <div className="ml-72 flex-1 p-8">
+        <button
+          className="mb-6 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
+          onClick={() => navigate(-1)}
+        >
+          ← Quay lại
+        </button>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Cards thống kê */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
