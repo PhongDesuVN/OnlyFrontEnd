@@ -307,6 +307,14 @@ const TransportUnitOverview = () => {
         ]
         : []
 
+    // Tổng quan nhanh cho section đầu trang
+    const quickStats = [
+        { label: "Đang chờ duyệt", value: dashboardStats?.pendingApprovals || 0, color: "bg-yellow-400" },
+        { label: "Đã duyệt", value: dashboardStats?.todayApprovals || 0, color: "bg-green-400" },
+        { label: "Từ chối", value: dashboardStats?.todayRejections || 0, color: "bg-red-400" },
+        { label: "Đã xử lý", value: (dashboardStats?.todayApprovals || 0) + (dashboardStats?.todayRejections || 0), color: "bg-blue-400" },
+    ];
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center">
@@ -340,6 +348,34 @@ const TransportUnitOverview = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {/* Tổng quan nhanh giống StorageApproval */}
+                <div className="mb-12">
+                    <h2 className="text-2xl font-bold text-blue-800 mb-4 flex items-center gap-2">
+                        <BarChart3 className="text-blue-400" /> Tổng quan đơn vị
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-4">
+                        {quickStats.map((stat, idx) => (
+                            <div key={stat.label} className={`flex flex-col items-center p-4 rounded-xl shadow bg-white/80 border ${stat.color}/30`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${stat.color}`} />
+                                <div className="text-2xl font-bold text-blue-900">{stat.value}</div>
+                                <div className="text-sm text-blue-700 mt-1">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Biểu đồ cột nhỏ */}
+                    <div className="flex items-end gap-4 h-24 justify-center mt-2">
+                        {quickStats.map((d, i) => (
+                            <div key={d.label} className="flex flex-col items-center w-12">
+                                <div
+                                    className={`rounded-t-md ${d.color}`}
+                                    style={{ height: `${Math.max(10, d.value * 10)}%`, minHeight: 10, width: 18, transition: 'height 0.3s' }}
+                                    title={d.label + ': ' + d.value}
+                                ></div>
+                                <span className="text-xs mt-1 text-blue-700 font-semibold">{d.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 {/* Enhanced Header */}
                 <div className="mb-12 flex justify-between items-center">
                     <div>
