@@ -233,58 +233,34 @@ const C_History = () => {
     const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
 
     // Component thanh phân trang
+    const getTotalPages = (data) => Math.ceil(data.length / itemsPerPage);
     const Pagination = () => {
-        // Không hiển thị phân trang nếu chỉ có 1 trang
+        const totalPages = getTotalPages(filteredFeedbacks);
         if (totalPages <= 1) return null;
-        
         return (
-            <div className="flex justify-center mt-8 space-x-2">
-                <button 
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            <div className="flex justify-center mt-8 gap-2">
+                <button
+                    className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 disabled:opacity-50"
                 >
-                    <ChevronLeft className="w-4 h-4" />
+                    Trước
                 </button>
-                
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    // Hiển thị 5 trang xung quanh trang hiện tại
-                    let pageNum;
-                    if (totalPages <= 5) {
-                        // Nếu tổng số trang <= 5, hiển thị tất cả
-                        pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                        // Nếu trang hiện tại gần đầu
-                        pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                        // Nếu trang hiện tại gần cuối
-                        pageNum = totalPages - 4 + i;
-                    } else {
-                        // Trang hiện tại ở giữa
-                        pageNum = currentPage - 2 + i;
-                    }
-
-                    return (
-                        <button 
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`px-4 py-2 rounded-lg ${
-                                currentPage === pageNum 
-                                ? 'bg-blue-600 text-white' 
-                                : 'border border-gray-300 bg-white text-gray-700'
-                            }`}
-                        >
-                            {pageNum}
-                        </button>
-                    );
-                })}
-                
-                <button 
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                {Array.from({ length: totalPages }, (_, i) => (
+                    <button
+                        key={i}
+                        className={`px-3 py-1 rounded-lg border ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                        onClick={() => setCurrentPage(i + 1)}
+                    >
+                        {i + 1}
+                    </button>
+                ))}
+                <button
+                    className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 disabled:opacity-50"
                 >
-                    <ChevronRight className="w-4 h-4" />
+                    Sau
                 </button>
             </div>
         );
@@ -292,14 +268,13 @@ const C_History = () => {
 
     return (
         <RequireAuth allowedRoles={["CUSTOMER"]}>
-            <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Nhật ký hoạt động</h1>
-                        <p className="text-gray-600 mb-6">Lịch sử đánh giá và tương tác của bạn</p>
-                        
-                        {/* Thanh tìm kiếm và lọc */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0 mb-6">
+            <div className="container mx-auto px-4 py-8">
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Nhật ký hoạt động</h1>
+                    <p className="text-gray-600 mb-6">Lịch sử đánh giá và tương tác của bạn</p>
+                    {/* Filter/Search section */}
+                    <div className="mb-6">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
                             <div className="relative w-full md:w-1/3">
                                 <input
                                     type="text"
@@ -413,7 +388,9 @@ const C_History = () => {
                                 </div>
                             </div>
                         </div>
-
+                    </div>
+                    {/* Data section */}
+                    <div>
                         {/* Hiển thị số lượng kết quả */}
                         <div className="flex justify-between items-center mb-4">
                             <p className="text-gray-600">
@@ -440,7 +417,6 @@ const C_History = () => {
                                 </select>
                             </div>
                         </div>
-
                         {/* Danh sách feedbacks */}
                         {loading ? (
                             <div className="py-12 text-center">
@@ -471,7 +447,6 @@ const C_History = () => {
                                 ))}
                             </div>
                         )}
-
                         {/* Phân trang */}
                         {!loading && !error && filteredFeedbacks.length > 0 && <Pagination />}
                     </div>
@@ -480,5 +455,4 @@ const C_History = () => {
         </RequireAuth>
     );
 };
-
 export default C_History; 

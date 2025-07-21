@@ -211,7 +211,7 @@ const C_Dashboard = () => {
         }
 
         try {
-            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { auth: true });
+            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { method: 'DELETE', auth: true });
 
             if (response.ok) {
                 alert('Hủy đơn hàng thành công!');
@@ -740,7 +740,7 @@ const C_Dashboard = () => {
     const renderPromotions = () => (
         <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Khuyến mãi hiện tại</h3>
+                <h1 className="text-4xl text-center font-semibold text-gray-800 mb-4">Khuyến mãi hiện tại</h1>
                 
                 {promotions.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

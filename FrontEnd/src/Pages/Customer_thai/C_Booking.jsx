@@ -906,512 +906,10 @@ const C_Booking = ({ isLoggedIn }) => {
         </div>
     );
 
-    if (selectedService) {
-        return (
-            <section id="booking" className="py-20 bg-yellow-50 relative overflow-hidden">
-                <div className="w-full mx-auto px-[50px]">
-                    <div className="text-center mb-16 relative">
-                        <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-lg mb-4 flex items-center justify-center gap-3">
-                            <span>
-                                <svg className="inline w-12 h-12 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" /></svg>
-                            </span>
-                            Đặt Xe Vận Chuyển
-                        </h2>
-                        <p className="text-xl text-gray-700 max-w-2xl mx-auto font-medium">
-                            Vui lòng nhập thông tin vận chuyển và chọn đồ đạc
-                        </p>
-                        <div className="absolute right-0 top-0 opacity-10 pointer-events-none select-none">
-                            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="60" cy="60" r="60" fill="url(#paint0_radial)" />
-                                <defs>
-                                    <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientTransform="translate(60 60) scale(60)" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#FDE68A" />
-                                        <stop offset="1" stopColor="#F59E42" stopOpacity="0.5" />
-                                    </radialGradient>
-                                </defs>
-                            </svg>
-                        </div>
-                    </div>
-                    <div className="flex flex-col md:flex-row gap-8 w-full mx-auto px-2">
-                        <div className="md:w-1/2 w-full relative">
-                            <div className="bg-white p-10 rounded-3xl shadow-2xl border border-yellow-100 relative">
-                                <div className="absolute -top-8 -left-8 opacity-20 text-yellow-300 text-[120px] pointer-events-none select-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-32 h-32">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" />
-                                    </svg>
-                                </div>
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="relative">
-                                        <label className="block text-gray-700 font-medium mb-2">
-                                            Thông tin vị trí nhận *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="pickupLocation"
-                                            value={bookingData.pickupLocation}
-                                            onChange={handlePickupLocationChange}
-                                            onKeyDown={handlePickupLocationKeyDown}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Nhập địa chỉ nhận hàng (nhấn Enter để tìm kiếm)"
-                                            required
-                                        />
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            💡 Nhấn Enter để tìm kiếm địa chỉ. Nhập địa chỉ chi tiết để có kết quả chính xác hơn.
-                                        </div>
-                                        {showPickupSuggestions && pickupSuggestions.length > 0 && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                                {pickupSuggestions.map((suggestion, index) => (
-                                                    <button
-                                                        key={index}
-                                                        type="button"
-                                                        onClick={() => handlePickupSuggestionSelect(suggestion)}
-                                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
-                                                    >
-                                                        <div className="text-sm text-gray-800">{suggestion.display_name}</div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="relative">
-                                        <label className="block text-gray-700 font-medium mb-2">
-                                            Thông tin vị trí đến *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="deliveryLocation"
-                                            value={bookingData.deliveryLocation}
-                                            onChange={handleDeliveryLocationChange}
-                                            onKeyDown={handleDeliveryLocationKeyDown}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            placeholder="Nhập địa chỉ giao hàng (nhấn Enter để tìm kiếm)"
-                                            required
-                                        />
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            💡 Nhấn Enter để tìm kiếm địa chỉ. Nhập địa chỉ chi tiết để có kết quả chính xác hơn.
-                                        </div>
-                                        {showDeliverySuggestions && deliverySuggestions.length > 0 && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                                {deliverySuggestions.map((suggestion, index) => (
-                                                    <button
-                                                        key={index}
-                                                        type="button"
-                                                        onClick={() => handleDeliverySuggestionSelect(suggestion)}
-                                                        className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
-                                                    >
-                                                        <div className="text-sm text-gray-800">{suggestion.display_name}</div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {(loadingDistance || distanceError || bookingData.total > 0 || bookingData.distance > 0) && (
-                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                            <h4 className="font-semibold text-blue-800 mb-2">Thông tin tính toán:</h4>
-                                            {loadingDistance && (
-                                                <div className="text-blue-600 text-sm mb-2">Đang tính toán khoảng cách...</div>
-                                            )}
-                                            {distanceError && (
-                                                <div className="text-red-600 text-sm mb-2">{distanceError}</div>
-                                            )}
-                                            {!loadingDistance && !distanceError && (
-                                                <div className="grid grid-cols-2 gap-4 text-sm">
-                                                    <div>
-                                                        <span className="text-gray-600">Quãng đường:</span>
-                                                        <span className="font-semibold text-blue-800 ml-2">{bookingData.distance.toFixed(1)} km</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-600">Tổng thể tích:</span>
-                                                        <span className="font-semibold text-blue-800 ml-2">{bookingData.totalVolume ? bookingData.totalVolume.toFixed(2) : 0} m³</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-gray-600">Số lượng xe cần thiết:</span>
-                                                        <span className="font-semibold text-orange-600 ml-2">{vehicleQuantity}</span>
-                                                    </div>
-                                                    
-                                                    {bookingData.homeType === 'Nhà thường' && inAlley && (
-                                                        <div className="col-span-2 text-blue-700">+50,000 VNĐ (phụ phí nhà trong hẻm)</div>
-                                                    )}
-                                                    {bookingData.homeType === 'Nhà thường' && over3Floors && noElevatorNhaThuong && (
-                                                        <div className="col-span-2 text-blue-700">+50,000 VNĐ (phụ phí nhà {'>'}3 tầng, không thang máy)</div>
-                                                    )}
-                                                    {bookingData.homeType === 'Chung cư' && noElevatorChungCu && floorNumber >= 1 && (
-                                                        <div className="col-span-2 text-blue-700">+{ (100000 * floorNumber).toLocaleString() } VNĐ (phụ phí chung cư không thang máy)</div>
-                                                    )}
-                                                    {(selectedFurniture.some(item => item.modular) || selectedFurniture.some(item => item.bulky)) && (
-                                                        <div className="col-span-2 text-blue-700">+{selectedFurniture.some(item => item.modular) && selectedFurniture.some(item => item.bulky) ? '100.000' : '50.000'} VNĐ (phụ phí modular/bulky)</div>
-                                                    )}
-                                                    
-                                                    {bookingData.promotionId && (
-                                                        <>
-                                                            <div className="col-span-2 border-t border-blue-200 mt-2 pt-2"></div>
-                                                            {(() => {
-                                                                const selectedPromotion = promotions.find(p => p.id === bookingData.promotionId);
-                                                                if (selectedPromotion) {
-                                                                    if (selectedPromotion.discountType === 'PERCENTAGE' && selectedPromotion.discountValue) {
-                                                                        return (
-                                                                            <div className="col-span-2 text-green-600">
-                                                                                Giảm giá {selectedPromotion.discountValue}% ({selectedPromotion.name})
-                                                                            </div>
-                                                                        );
-                                                                    } else if (selectedPromotion.discountType === 'AMOUNT' && selectedPromotion.discountValue) {
-                                                                        return (
-                                                                            <div className="col-span-2 text-green-600">
-                                                                                Giảm giá {selectedPromotion.discountValue.toLocaleString()} VNĐ ({selectedPromotion.name})
-                                                                            </div>
-                                                                        );
-                                                                    }
-                                                                }
-                                                                return null;
-                                                            })()}
-                                                        </>
-                                                    )}
-                                                    
-                                                    <div className="col-span-2 border-t border-blue-200 mt-2 pt-2">
-                                                        <div className="flex justify-between font-medium">
-                                                            <span className="text-gray-700">Tổng tiền:</span>
-                                                            <span className="font-semibold text-green-600">{bookingData.total.toLocaleString()} VNĐ</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-blue-200">
-                                                🔒 Sử dụng OpenStreetMap Nominatim API tuân thủ giới hạn 1 request/giây
-                                                <br />
-                                                ⚠️ Nếu gặp lỗi kết nối, vui lòng thử lại sau vài giây
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-gray-700 font-medium mb-2">
-                                            Ngày xuất phát *
-                                        </label>
-                                        <input
-                                            type="date"
-                                            name="deliveryDate"
-                                            value={bookingData.deliveryDate}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-gray-700 font-medium mb-2">
-                                            Loại nhà *
-                                        </label>
-                                        <div className="flex flex-col sm:flex-row gap-4 items-start">
-                                            {/* Left side: Radio buttons */}
-                                            <div className="space-y-3 pt-2">
-                                                <label className="flex items-center space-x-3 cursor-pointer">
-                                                    <input
-                                                        type="radio" name="homeType" value="Chung cư"
-                                                        checked={bookingData.homeType === 'Chung cư'}
-                                                        onChange={handleInputChange}
-                                                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-gray-700">Chung cư</span>
-                                                </label>
-                                                <label className="flex items-center space-x-3 cursor-pointer">
-                                                    <input
-                                                        type="radio" name="homeType" value="Nhà thường"
-                                                        checked={bookingData.homeType === 'Nhà thường'}
-                                                        onChange={handleInputChange}
-                                                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-gray-700">Nhà thường</span>
-                                                </label>
-                                            </div>
-
-                                            {/* Right side: Conditional inputs */}
-                                            <div className="flex-1 w-full">
-                                                {bookingData.homeType === 'Nhà thường' && (
-                                                    <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <h5 className="font-semibold text-gray-700 text-sm">Thông tin thêm cho nhà thường</h5>
-                                                        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                                            <input type="checkbox" checked={inAlley} onChange={e => setInAlley(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
-                                                            <span>Nhà trong hẻm (+50,000 VNĐ)</span>
-                                                        </label>
-                                                        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                                            <input type="checkbox" checked={over3Floors} onChange={e => setOver3Floors(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
-                                                            <span>Nhà trên 3 tầng</span>
-                                                        </label>
-                                                        {over3Floors && (
-                                                            <div className="pl-6">
-                                                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                                                    <input type="checkbox" checked={noElevatorNhaThuong} onChange={e => setNoElevatorNhaThuong(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
-                                                                    <span>Không có thang máy (+50,000 VNĐ)</span>
-                                                                </label>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                                {bookingData.homeType === 'Chung cư' && (
-                                                    <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                                        <h5 className="font-semibold text-gray-700 text-sm">Thông tin thêm cho chung cư</h5>
-                                                        <div className="text-sm">
-                                                            <label className="block text-gray-600 mb-1">Vị trí lấy hàng:</label>
-                                                            <div className="flex gap-4">
-                                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                                    <input type="radio" name="parking" value="sanh" checked={parkingOption === 'sanh'} onChange={handleParkingOptionChange} className="text-blue-500 focus:ring-blue-500" />
-                                                                    <span>Sảnh chờ</span>
-                                                                </label>
-                                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                                    <input type="radio" name="parking" value="ham" checked={parkingOption === 'ham'} onChange={handleParkingOptionChange} className="text-blue-500 focus:ring-blue-500" />
-                                                                    <span>Hầm gửi xe</span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Conditional inputs for "Sảnh chờ" */}
-                                                        {parkingOption === 'sanh' && (
-                                                            <div className="pl-4 border-l-2 border-gray-200 mt-2 space-y-2">
-                                                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                                                    <input type="checkbox" checked={noElevatorChungCu} onChange={e => setNoElevatorChungCu(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
-                                                                    <span>Không có thang máy</span>
-                                                                </label>
-                                                                {noElevatorChungCu && (
-                                                                    <div className="pl-6">
-                                                                        <label className="flex items-center gap-2 text-sm text-gray-600">
-                                                                            <span>Số tầng (+100,000 VNĐ/tầng):</span>
-                                                                            <input type="number" value={floorNumber} onChange={e => setFloorNumber(Number(e.target.value))} min="1" className="w-20 px-2 py-1 border border-gray-300 rounded-md text-sm" />
-                                                                        </label>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-
-                                                        {/* Conditional inputs for "Hầm gửi xe" */}
-                                                        {parkingOption === 'ham' && (
-                                                            <div className="pl-4 border-l-2 border-gray-200 mt-2 space-y-2">
-                                                                <div className="text-sm">
-                                                                    <label className="block text-gray-600 mb-1">Chiều cao hầm có đủ cho xe tải 2.5m?</label>
-                                                                    <div className="flex gap-4">
-                                                                        <label className="flex items-center gap-2 cursor-pointer">
-                                                                            <input type="radio" name="basementHeight" value="yes" checked={basementHeightSufficient === 'yes'} onChange={e => setBasementHeightSufficient(e.target.value)} className="text-blue-500 focus:ring-blue-500" />
-                                                                            <span>Có</span>
-                                                                        </label>
-                                                                        <label className="flex items-center gap-2 cursor-pointer">
-                                                                            <input type="radio" name="basementHeight" value="no" checked={basementHeightSufficient === 'no'} onChange={e => setBasementHeightSufficient(e.target.value)} className="text-blue-500 focus:ring-blue-500" />
-                                                                            <span>Không</span>
-                                                                        </label>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <CustomSelect
-                                        label="Chọn phương tiện vận chuyển"
-                                        type="transport"
-                                        options={transportUnits}
-                                        selectedId={bookingData.transportId}
-                                        placeholder="Bắt buộc chọn một phương tiện"
-                                        isRequired={true}
-                                    />
-
-                                    <CustomSelect
-                                        label="Thuê kho (tùy chọn)"
-                                        type="storage"
-                                        options={storageUnits}
-                                        selectedId={bookingData.storageId}
-                                        placeholder="Không thuê kho"
-                                        isRequired={false}
-                                    />
-
-                                    <CustomSelect
-                                        label="Chọn nhân viên hỗ trợ (tùy chọn)"
-                                        type="staff"
-                                        options={staffMembers}
-                                        selectedId={bookingData.operatorId}
-                                        placeholder="Bắt buộc chọn một nhân viên"
-                                        isRequired={true}
-                                    />
-
-                                    <CustomSelect
-                                        label="Chọn khuyến mãi (tùy chọn)"
-                                        type="promotion"
-                                        options={promotions}
-                                        selectedId={bookingData.promotionId}
-                                        placeholder="Không áp dụng khuyến mãi"
-                                        isRequired={false}
-                                    />
-
-                                    <div className="flex gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedService(null)}
-                                            className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
-                                        >
-                                            Quay lại
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={!isLoggedIn || loading}
-                                            className={`flex-1 ${isLoggedIn ? 'bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-gray-900 shadow-lg' : 'bg-gray-300 text-white cursor-not-allowed'} py-3 px-6 rounded-xl font-semibold transition-all ${loading ? 'opacity-60' : ''}`}
-                                        >
-                                            {loading ? 'Đang gửi...' : 'Xác nhận'}
-                                        </button>
-                                    </div>
-                                    {!isLoggedIn && (
-                                        <div className="text-red-500 text-center font-semibold">Bạn cần đăng nhập để đặt xe!</div>
-                                    )}
-                                </form>
-                            </div>
-                        </div>
-                        <div className="md:w-1/2 w-full flex flex-col gap-6">
-                            <div className="bg-white rounded-2xl shadow-lg overflow-auto p-6 flex flex-col gap-4">
-                                {mapData.pickupCoords && mapData.deliveryCoords ? (
-                                    <MapContainer
-                                        center={mapData.pickupCoords ? [mapData.pickupCoords.lat, mapData.pickupCoords.lon] : [21.0285, 105.8542]}
-                                        zoom={13}
-                                        style={{ height: '300px', width: '100%' }}
-                                        scrollWheelZoom={true}
-                                    >
-                                        <TileLayer
-                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                            attribution="&copy; OpenStreetMap contributors"
-                                        />
-                                        <Marker position={[mapData.pickupCoords.lat, mapData.pickupCoords.lon]} icon={L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] })} />
-                                        <Marker position={[mapData.deliveryCoords.lat, mapData.deliveryCoords.lon]} icon={L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] })} />
-                                        {mapData.route.length > 0 && (
-                                            <Polyline positions={mapData.route} color="blue" />
-                                        )}
-                                    </MapContainer>
-                                ) : (
-                                    <div className="flex items-center justify-center h-[300px] text-gray-400 text-lg">Nhập địa chỉ để xem bản đồ</div>
-                                )}
-                            </div>
-
-                            <FurnitureSelector onFurnitureChange={handleFurnitureChange} />
-                            
-                            {selectedFurniture.length > 0 && (
-                                <div className="bg-white rounded-2xl shadow-lg p-6">
-                                    <h4 className="text-lg font-semibold text-gray-800 mb-4">Tóm tắt đồ đạc đã chọn:</h4>
-                                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                                        {selectedFurniture.map((item, index) => (
-                                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-gray-800">{item.name}</div>
-                                                    <div className="text-sm text-gray-600">
-                                                        Phòng: {item.room} | SL: {item.quantity} | Thể tích: {item.volume}m³ | Khối lượng: {item.weight}kg
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    {item.modular && <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Modular</span>}
-                                                    {item.bulky && <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">Bulky</span>}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="mt-4 pt-4 border-t border-gray-200">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="font-medium">Tổng số lượng:</span>
-                                            <span>{selectedFurniture.reduce((sum, item) => sum + item.quantity, 0)}</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="font-medium">Tổng thể tích:</span>
-                                            <span>{selectedFurniture.reduce((sum, item) => sum + (item.volume * item.quantity), 0).toFixed(2)} m³</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="font-medium">Tổng khối lượng:</span>
-                                            <span>{selectedFurniture.reduce((sum, item) => sum + (item.weight * item.quantity), 0).toFixed(2)} kg</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {showSlotSelector && slotStatus && (
-                                <div className="bg-white rounded-2xl shadow-lg p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-lg font-semibold text-gray-800">
-                                            Chọn vị trí cất giữ - {slotStatus.storageName}
-                                        </h4>
-                                        <button
-                                            onClick={() => setShowSlotSelector(false)}
-                                            className="text-gray-500 hover:text-gray-700"
-                                        >
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    <div className="mb-4">
-                                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-4 h-4 bg-green-500 rounded"></div>
-                                                <span>Trống</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-4 h-4 bg-red-500 rounded"></div>
-                                                <span>Đã đặt</span>
-                                            </div>
-                                            {selectedSlot && (
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                                                    <span>Đã chọn: Slot {selectedSlot}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {slotStatus.slots.map((slot) => (
-                                            <button
-                                                key={slot.slotIndex}
-                                                onClick={() => !slot.booked && handleSlotSelect(slot.slotIndex)}
-                                                disabled={slot.booked}
-                                                className={`
-                                                    p-4 rounded-lg border-2 transition-all duration-200 text-center
-                                                    ${slot.booked
-                                                    ? 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed'
-                                                    : selectedSlot === slot.slotIndex
-                                                        ? 'bg-blue-100 border-blue-500 text-blue-700'
-                                                        : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
-                                                }
-                                                `}
-                                            >
-                                                <div className="font-semibold">Slot {slot.slotIndex}</div>
-                                                {slot.booked ? (
-                                                    <div className="text-xs mt-1">
-                                                        Đã có người đặt
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-xs mt-1">
-                                                        Trống
-                                                    </div>
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {selectedSlot && (
-                                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                            <div className="text-sm text-blue-800">
-                                                <strong>Đã chọn:</strong> Slot {selectedSlot} trong kho {slotStatus.storageName}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </section>
-        );
-    }
-
+    // Luôn render giao diện booking
     return (
         <section id="booking" className="py-20 bg-yellow-50 relative overflow-hidden">
-            <div className="w-full mx-auto px-[100px]">
+            <div className="w-full mx-auto px-[50px]">
                 <div className="text-center mb-16 relative">
                     <h2 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 drop-shadow-lg mb-4 flex items-center justify-center gap-3">
                         <span>
@@ -1434,19 +932,469 @@ const C_Booking = ({ isLoggedIn }) => {
                         </svg>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    <ServiceCard
-                        title="Chuyển nhà cá nhân"
-                        description="Dịch vụ vận chuyển đồ đạc, nội thất cho hộ gia đình với giá cả hợp lý và dịch vụ chuyên nghiệp"
-                        icon={Home}
-                        onClick={() => setSelectedService('personal')}
-                    />
-                    <ServiceCard
-                        title="Chuyển nhà doanh nghiệp"
-                        description="Dịch vụ vận chuyển văn phòng, thiết bị công ty với đội ngũ chuyên nghiệp và bảo hiểm đầy đủ"
-                        icon={Users}
-                        onClick={() => setSelectedService('business')}
-                    />
+                {/* Phần booking form và các thành phần liên quan giữ nguyên */}
+                <div className="flex flex-col md:flex-row gap-8 w-full mx-auto px-2">
+                    <div className="md:w-1/2 w-full relative">
+                        <div className="bg-white p-10 rounded-3xl shadow-2xl border border-yellow-100 relative">
+                            <div className="absolute -top-8 -left-8 opacity-20 text-yellow-300 text-[120px] pointer-events-none select-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-32 h-32">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0h6" />
+                                </svg>
+                            </div>
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="relative">
+                                    <label className="block text-gray-700 font-medium mb-2">
+                                        Thông tin vị trí nhận *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="pickupLocation"
+                                        value={bookingData.pickupLocation}
+                                        onChange={handlePickupLocationChange}
+                                        onKeyDown={handlePickupLocationKeyDown}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Nhập địa chỉ nhận hàng (nhấn Enter để tìm kiếm)"
+                                        required
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        💡 Nhấn Enter để tìm kiếm địa chỉ. Nhập địa chỉ chi tiết để có kết quả chính xác hơn.
+                                    </div>
+                                    {showPickupSuggestions && pickupSuggestions.length > 0 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            {pickupSuggestions.map((suggestion, index) => (
+                                                <button
+                                                    key={index}
+                                                    type="button"
+                                                    onClick={() => handlePickupSuggestionSelect(suggestion)}
+                                                    className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
+                                                >
+                                                    <div className="text-sm text-gray-800">{suggestion.display_name}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="relative">
+                                    <label className="block text-gray-700 font-medium mb-2">
+                                        Thông tin vị trí đến *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="deliveryLocation"
+                                        value={bookingData.deliveryLocation}
+                                        onChange={handleDeliveryLocationChange}
+                                        onKeyDown={handleDeliveryLocationKeyDown}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Nhập địa chỉ giao hàng (nhấn Enter để tìm kiếm)"
+                                        required
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        💡 Nhấn Enter để tìm kiếm địa chỉ. Nhập địa chỉ chi tiết để có kết quả chính xác hơn.
+                                    </div>
+                                    {showDeliverySuggestions && deliverySuggestions.length > 0 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                            {deliverySuggestions.map((suggestion, index) => (
+                                                <button
+                                                    key={index}
+                                                    type="button"
+                                                    onClick={() => handleDeliverySuggestionSelect(suggestion)}
+                                                    className="w-full px-4 py-2 text-left hover:bg-gray-100 border-b border-gray-200 last:border-b-0"
+                                                >
+                                                    <div className="text-sm text-gray-800">{suggestion.display_name}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {(loadingDistance || distanceError || bookingData.total > 0 || bookingData.distance > 0) && (
+                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <h4 className="font-semibold text-blue-800 mb-2">Thông tin tính toán:</h4>
+                                        {loadingDistance && (
+                                            <div className="text-blue-600 text-sm mb-2">Đang tính toán khoảng cách...</div>
+                                        )}
+                                        {distanceError && (
+                                            <div className="text-red-600 text-sm mb-2">{distanceError}</div>
+                                        )}
+                                        {!loadingDistance && !distanceError && (
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <span className="text-gray-600">Quãng đường:</span>
+                                                    <span className="font-semibold text-blue-800 ml-2">{bookingData.distance.toFixed(1)} km</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-600">Tổng thể tích:</span>
+                                                    <span className="font-semibold text-blue-800 ml-2">{bookingData.totalVolume ? bookingData.totalVolume.toFixed(2) : 0} m³</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-600">Số lượng xe cần thiết:</span>
+                                                    <span className="font-semibold text-orange-600 ml-2">{vehicleQuantity}</span>
+                                                </div>
+                                                
+                                                {bookingData.homeType === 'Nhà thường' && inAlley && (
+                                                    <div className="col-span-2 text-blue-700">+50,000 VNĐ (phụ phí nhà trong hẻm)</div>
+                                                )}
+                                                {bookingData.homeType === 'Nhà thường' && over3Floors && noElevatorNhaThuong && (
+                                                    <div className="col-span-2 text-blue-700">+50,000 VNĐ (phụ phí nhà {'>'}3 tầng, không thang máy)</div>
+                                                )}
+                                                {bookingData.homeType === 'Chung cư' && noElevatorChungCu && floorNumber >= 1 && (
+                                                    <div className="col-span-2 text-blue-700">+{ (100000 * floorNumber).toLocaleString() } VNĐ (phụ phí chung cư không thang máy)</div>
+                                                )}
+                                                {(selectedFurniture.some(item => item.modular) || selectedFurniture.some(item => item.bulky)) && (
+                                                    <div className="col-span-2 text-blue-700">+{selectedFurniture.some(item => item.modular) && selectedFurniture.some(item => item.bulky) ? '100.000' : '50.000'} VNĐ (phụ phí modular/bulky)</div>
+                                                )}
+                                                
+                                                {bookingData.promotionId && (
+                                                    <>
+                                                        <div className="col-span-2 border-t border-blue-200 mt-2 pt-2"></div>
+                                                        {(() => {
+                                                            const selectedPromotion = promotions.find(p => p.id === bookingData.promotionId);
+                                                            if (selectedPromotion) {
+                                                                if (selectedPromotion.discountType === 'PERCENTAGE' && selectedPromotion.discountValue) {
+                                                                    return (
+                                                                        <div className="col-span-2 text-green-600">
+                                                                            Giảm giá {selectedPromotion.discountValue}% ({selectedPromotion.name})
+                                                                        </div>
+                                                                    );
+                                                                } else if (selectedPromotion.discountType === 'AMOUNT' && selectedPromotion.discountValue) {
+                                                                    return (
+                                                                        <div className="col-span-2 text-green-600">
+                                                                            Giảm giá {selectedPromotion.discountValue.toLocaleString()} VNĐ ({selectedPromotion.name})
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                            }
+                                                            return null;
+                                                        })()}
+                                                    </>
+                                                )}
+                                                
+                                                <div className="col-span-2 border-t border-blue-200 mt-2 pt-2">
+                                                    <div className="flex justify-between font-large">
+                                                        <span className="text-gray-700">Tổng tiền:</span>
+                                                        <span className="font-semibold text-green-600">{bookingData.total.toLocaleString()} VNĐ</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-gray-700 font-medium mb-2">
+                                        Ngày xuất phát *
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="deliveryDate"
+                                        value={bookingData.deliveryDate}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-gray-700 font-medium mb-2">
+                                        Loại nhà *
+                                    </label>
+                                    <div className="flex flex-col sm:flex-row gap-4 items-start">
+                                        {/* Left side: Radio buttons */}
+                                        <div className="space-y-3 pt-2">
+                                            <label className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="radio" name="homeType" value="Chung cư"
+                                                    checked={bookingData.homeType === 'Chung cư'}
+                                                    onChange={handleInputChange}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <span className="text-gray-700">Chung cư</span>
+                                            </label>
+                                            <label className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="radio" name="homeType" value="Nhà thường"
+                                                    checked={bookingData.homeType === 'Nhà thường'}
+                                                    onChange={handleInputChange}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <span className="text-gray-700">Nhà thường</span>
+                                            </label>
+                                        </div>
+
+                                        {/* Right side: Conditional inputs */}
+                                        <div className="flex-1 w-full">
+                                            {bookingData.homeType === 'Nhà thường' && (
+                                                <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                    <h5 className="font-semibold text-gray-700 text-sm">Thông tin thêm cho nhà thường</h5>
+                                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                        <input type="checkbox" checked={inAlley} onChange={e => setInAlley(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                        <span>Nhà trong hẻm (+50,000 VNĐ)</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                        <input type="checkbox" checked={over3Floors} onChange={e => setOver3Floors(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                        <span>Nhà trên 3 tầng</span>
+                                                    </label>
+                                                    {over3Floors && (
+                                                        <div className="pl-6">
+                                                            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                                <input type="checkbox" checked={noElevatorNhaThuong} onChange={e => setNoElevatorNhaThuong(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                                <span>Không có thang máy (+50,000 VNĐ)</span>
+                                                            </label>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {bookingData.homeType === 'Chung cư' && (
+                                                <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                    <h5 className="font-semibold text-gray-700 text-sm">Thông tin thêm cho chung cư</h5>
+                                                    <div className="text-sm">
+                                                        <label className="block text-gray-600 mb-1">Vị trí lấy hàng:</label>
+                                                        <div className="flex gap-4">
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <input type="radio" name="parking" value="sanh" checked={parkingOption === 'sanh'} onChange={handleParkingOptionChange} className="text-blue-500 focus:ring-blue-500" />
+                                                                <span>Sảnh chờ</span>
+                                                            </label>
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <input type="radio" name="parking" value="ham" checked={parkingOption === 'ham'} onChange={handleParkingOptionChange} className="text-blue-500 focus:ring-blue-500" />
+                                                                <span>Hầm gửi xe</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Conditional inputs for "Sảnh chờ" */}
+                                                    {parkingOption === 'sanh' && (
+                                                        <div className="pl-4 border-l-2 border-gray-200 mt-2 space-y-2">
+                                                            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                                <input type="checkbox" checked={noElevatorChungCu} onChange={e => setNoElevatorChungCu(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500" />
+                                                                <span>Không có thang máy</span>
+                                                            </label>
+                                                            {noElevatorChungCu && (
+                                                                <div className="pl-6">
+                                                                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                                                                        <span>Số tầng (+100,000 VNĐ/tầng):</span>
+                                                                        <input type="number" value={floorNumber} onChange={e => setFloorNumber(Number(e.target.value))} min="1" className="w-20 px-2 py-1 border border-gray-300 rounded-md text-sm" />
+                                                                    </label>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Conditional inputs for "Hầm gửi xe" */}
+                                                    {parkingOption === 'ham' && (
+                                                        <div className="pl-4 border-l-2 border-gray-200 mt-2 space-y-2">
+                                                            <div className="text-sm">
+                                                                <label className="block text-gray-600 mb-1">Chiều cao hầm có đủ cho xe tải 2.5m?</label>
+                                                                <div className="flex gap-4">
+                                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                                        <input type="radio" name="basementHeight" value="yes" checked={basementHeightSufficient === 'yes'} onChange={e => setBasementHeightSufficient(e.target.value)} className="text-blue-500 focus:ring-blue-500" />
+                                                                        <span>Có</span>
+                                                                    </label>
+                                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                                        <input type="radio" name="basementHeight" value="no" checked={basementHeightSufficient === 'no'} onChange={e => setBasementHeightSufficient(e.target.value)} className="text-blue-500 focus:ring-blue-500" />
+                                                                        <span>Không</span>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <CustomSelect
+                                    label="Chọn phương tiện vận chuyển"
+                                    type="transport"
+                                    options={transportUnits}
+                                    selectedId={bookingData.transportId}
+                                    placeholder="Bắt buộc chọn một phương tiện"
+                                    isRequired={true}
+                                />
+
+                                <CustomSelect
+                                    label="Thuê kho (tùy chọn)"
+                                    type="storage"
+                                    options={storageUnits}
+                                    selectedId={bookingData.storageId}
+                                    placeholder="Không thuê kho"
+                                    isRequired={false}
+                                />
+
+                                <CustomSelect
+                                    label="Chọn nhân viên hỗ trợ (tùy chọn)"
+                                    type="staff"
+                                    options={staffMembers}
+                                    selectedId={bookingData.operatorId}
+                                    placeholder="Bắt buộc chọn một nhân viên"
+                                    isRequired={true}
+                                />
+
+                                <CustomSelect
+                                    label="Chọn khuyến mãi (tùy chọn)"
+                                    type="promotion"
+                                    options={promotions}
+                                    selectedId={bookingData.promotionId}
+                                    placeholder="Không áp dụng khuyến mãi"
+                                    isRequired={false}
+                                />
+
+                                <div className="flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedService(null)}
+                                        className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
+                                    >
+                                        Quay lại
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={!isLoggedIn || loading}
+                                        className={`flex-1 ${isLoggedIn ? 'bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-gray-900 shadow-lg' : 'bg-gray-300 text-white cursor-not-allowed'} py-3 px-6 rounded-xl font-semibold transition-all ${loading ? 'opacity-60' : ''}`}
+                                    >
+                                        {loading ? 'Đang gửi...' : 'Xác nhận'}
+                                    </button>
+                                </div>
+                                {!isLoggedIn && (
+                                    <div className="text-red-500 text-center font-semibold">Bạn cần đăng nhập để đặt xe!</div>
+                                )}
+                            </form>
+                        </div>
+                    </div>
+                    <div className="md:w-1/2 w-full flex flex-col gap-6">
+                        <div className="bg-white rounded-2xl shadow-lg overflow-auto p-6 flex flex-col gap-4">
+                            {mapData.pickupCoords && mapData.deliveryCoords ? (
+                                <MapContainer
+                                    center={mapData.pickupCoords ? [mapData.pickupCoords.lat, mapData.pickupCoords.lon] : [21.0285, 105.8542]}
+                                    zoom={13}
+                                    style={{ height: '300px', width: '100%' }}
+                                    scrollWheelZoom={true}
+                                >
+                                    <TileLayer
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        attribution="&copy; OpenStreetMap contributors"
+                                    />
+                                    <Marker position={[mapData.pickupCoords.lat, mapData.pickupCoords.lon]} icon={L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] })} />
+                                    <Marker position={[mapData.deliveryCoords.lat, mapData.deliveryCoords.lon]} icon={L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', iconSize: [32, 32], iconAnchor: [16, 32] })} />
+                                    {mapData.route.length > 0 && (
+                                        <Polyline positions={mapData.route} color="blue" />
+                                    )}
+                                </MapContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-[300px] text-gray-400 text-lg">Nhập địa chỉ để xem bản đồ</div>
+                            )}
+                        </div>
+
+                        <FurnitureSelector onFurnitureChange={handleFurnitureChange} />
+                        
+                        {selectedFurniture.length > 0 && (
+                            <div className="bg-white rounded-2xl shadow-lg p-6">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4">Tóm tắt đồ đạc đã chọn:</h4>
+                                <div className="space-y-3 max-h-64 overflow-y-auto">
+                                    {selectedFurniture.map((item, index) => (
+                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-800">{item.name}</div>
+                                                <div className="text-sm text-gray-600">
+                                                    Phòng: {item.room} | SL: {item.quantity} | Thể tích: {item.volume}m³ | Khối lượng: {item.weight}kg
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-1">
+                                                {item.modular && <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Modular</span>}
+                                                {item.bulky && <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">Bulky</span>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="font-medium">Tổng số lượng:</span>
+                                        <span>{selectedFurniture.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="font-medium">Tổng thể tích:</span>
+                                        <span>{selectedFurniture.reduce((sum, item) => sum + (item.volume * item.quantity), 0).toFixed(2)} m³</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {showSlotSelector && slotStatus && (
+                            <div className="bg-white rounded-2xl shadow-lg p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-lg font-semibold text-gray-800">
+                                        Chọn vị trí cất giữ - {slotStatus.storageName}
+                                    </h4>
+                                    <button
+                                        onClick={() => setShowSlotSelector(false)}
+                                        className="text-gray-500 hover:text-gray-700"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div className="mb-4">
+                                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-4 h-4 bg-green-500 rounded"></div>
+                                            <span>Trống</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-4 h-4 bg-red-500 rounded"></div>
+                                            <span>Đã đặt</span>
+                                        </div>
+                                        {selectedSlot && (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                                                <span>Đã chọn: Slot {selectedSlot}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                    {slotStatus.slots.map((slot) => (
+                                        <button
+                                            key={slot.slotIndex}
+                                            onClick={() => !slot.booked && handleSlotSelect(slot.slotIndex)}
+                                            disabled={slot.booked}
+                                            className={`
+                                                p-4 rounded-lg border-2 transition-all duration-200 text-center
+                                                ${slot.booked
+                                                ? 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed'
+                                                : selectedSlot === slot.slotIndex
+                                                    ? 'bg-blue-100 border-blue-500 text-blue-700'
+                                                    : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                                            }
+                                            `}
+                                        >
+                                            <div className="font-semibold">Slot {slot.slotIndex}</div>
+                                            {slot.booked ? (
+                                                <div className="text-xs mt-1">
+                                                    Đã có người đặt
+                                                </div>
+                                            ) : (
+                                                <div className="text-xs mt-1">
+                                                    Trống
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {selectedSlot && (
+                                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div className="text-sm text-blue-800">
+                                            <strong>Đã chọn:</strong> Slot {selectedSlot} trong kho {slotStatus.storageName}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </section>

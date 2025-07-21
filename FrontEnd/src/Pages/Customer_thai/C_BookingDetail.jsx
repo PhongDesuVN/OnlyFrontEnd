@@ -39,15 +39,13 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
 
     useEffect(() => {
         if (!booking && bookingId) {
-            // Nếu không có booking từ props, không fetch nữa hoặc có thể lấy từ localStorage/orderHistory nếu cần
-            setError('Không tìm thấy đơn hàng');
-            setLoading(false);
+            fetchBookingDetail(); // Gọi API để lấy thông tin đơn hàng
         } else {
             setLoading(false);
         }
         fetchCustomerInfo();
         fetchCustomerFeedbacks();
-    }, [bookingId, booking]);
+    }, [bookingId]);
 
     const fetchBookingDetail = async () => {
         try {
@@ -628,37 +626,7 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
                     </div>
                 </div>
             </div>
-            <FeedbackModal
-                isOpen={feedbackModalOpen}
-                onClose={closeFeedbackModal}
-                bookingId={bookingId}
-                storageId={booking?.storageId}
-                transportId={booking?.transportId}
-            />
-            {Array.isArray(feedbacks) && feedbacks.length > 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Nhật ký đánh giá của bạn</h3>
-                    <div className="space-y-4">
-                        {feedbacks.map((fb) => (
-                            <div key={fb.feedbackId} className="p-4 border-b last:border-b-0">
-                                <div className="flex items-center space-x-2 mb-1">
-                                    <Star className="w-4 h-4 text-yellow-400" />
-                                    <span className="font-medium">{fb.star}/5</span>
-                                    <span className="text-gray-500 text-xs ml-2">{new Date(fb.createdAt).toLocaleString('vi-VN')}</span>
-                                </div>
-                                <div className="text-gray-800 font-semibold">{fb.content}</div>
-                                <div className="text-gray-500 text-sm">Loại: {fb.type === 'STORAGE' ? 'Kho' : 'Vận chuyển'} | Đơn #{fb.bookingId}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6 text-center">
-                    <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Không tìm thấy đánh giá nào</h3>
-                    <p className="text-gray-500 mb-4">Bạn chưa có đánh giá nào cho các đơn hàng đã thực hiện.</p>
-                </div>
-            )}
+
         </RequireAuth>
     );
 };
