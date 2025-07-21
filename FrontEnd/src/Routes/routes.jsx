@@ -42,6 +42,9 @@ import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.js
 import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
 import PendingStaffManagement from '../Pages/PendingStaffManagement/PendingStaffManagement.jsx';
 
+import StorageApproval from '../Pages/StorageApproval/StorageApproval.jsx';
+import StorageApprovalOverview from '../Pages/StorageApproval/StorageApprovalOverview.jsx';
+
 export default function AppRoutes() {
     return (
         <Routes>
@@ -101,6 +104,8 @@ export default function AppRoutes() {
             <Route path="/storage-units" element={<StorageUnitManagement />} />
             <Route path="/staffperformance" element={<StaffPerformance />} />
             <Route path="/manager/pending-staff" element={<PendingStaffManagement />} />
+            <Route path="/manager/pending-storage-units" element={<StorageApproval />} />
+            <Route path="/storage-approval/overview" element={<StorageApprovalOverview />} />
 
         </Routes>
     );
