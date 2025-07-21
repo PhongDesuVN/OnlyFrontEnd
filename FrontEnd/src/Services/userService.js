@@ -1,5 +1,5 @@
 // Service để xử lý các API calls liên quan đến user management
-const API_BASE_URL = 'http://localhost:8083/api/users';
+const API_BASE_URL = 'http://localhost:8080/api/users';
 
 class UserService {
     // Lấy tất cả users hoặc tìm kiếm theo query parameters
@@ -186,6 +186,31 @@ class UserService {
     // Tìm kiếm nâng cao
     async advancedSearch(searchParams, token = null) {
         return this.getAllUsers(searchParams, token);
+    }
+
+    // Lấy profile user
+    async getProfile(token = null) {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE_URL}/profile`, {
+            method: 'GET',
+            headers,
+        });
+    }
+    //api get all staff
+    async getAllStaff(token = null) {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE_URL}/staff`, {
+            method: 'GET',
+            headers,
+        });
+        const data = await response.json();
+        return data;
     }
 }
 

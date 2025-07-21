@@ -166,6 +166,35 @@ const Otp = () => {
                             navigate("/staff");
                         }
                     }, 1000);
+
+                    let decoded = {};
+                    let decodedRole = null;
+                    let userId = null;
+                    let email = null;
+                    if (authResponse.accessToken) {
+                        try {
+                            decoded = jwtDecode(authResponse.accessToken);
+                            decodedRole = decoded.role;
+                            userId = decoded.userId || authResponse.userId;
+                            email = decoded.email || authResponse.email;
+                        } catch (decodeErr) {
+                            console.error("Lỗi decode JWT:", decodeErr);
+                            if (apiRole) {
+                                Cookies.set("userRole", apiRole, { expires: 7 });
+                                console.log("🔍 Fallback to API Role after decode error:", apiRole);
+                            }
+                            setError("Lỗi giải mã token. Vui lòng kiểm tra server.");
+                            setIsLoading(false);
+                            return;
+                        }
+                    }
+                    // Lưu userInfo vào localStorage
+                    localStorage.setItem('userInfo', JSON.stringify({
+                        ...authResponse,
+                        role: decodedRole || apiRole,
+                        userId: userId || authResponse.userId,
+                        email: email || authResponse.email
+                    }));
                 } else {
                     let errorMessage = "Mã OTP không đúng";
 
