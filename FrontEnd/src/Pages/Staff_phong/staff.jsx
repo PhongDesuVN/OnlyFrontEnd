@@ -1,9 +1,9 @@
-"use client"
+"use client";
 import RequireAuth from "../../Components/RequireAuth";
-import LogoutButton from "../../Pages/Login_Register_trung/Logout";
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-   import{ Truck,
+import {
+    Truck,
     Home,
     Users,
     Star,
@@ -19,7 +19,6 @@ import { NavLink } from "react-router-dom";
     ArrowLeft,
     ArrowRight,
     ChevronLeft,
-    DollarSign,
     Activity,
     Loader2,
     AlertCircle,
@@ -31,174 +30,154 @@ import { NavLink } from "react-router-dom";
     Plus,
     ChevronDown,
     ChevronRight,
-    Calendar,
-    Clock,
-    UserCheck,
-} from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
-import Cookies from "js-cookie"
-import DashBoardApi from "../../utils/DashBoard_phongApi.js"
-import { jwtDecode } from "jwt-decode" // Sửa import thành named import
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import DashBoardApi from "../../utils/DashBoard_phongApi.js";
+import { jwtDecode } from "jwt-decode";
 
 // Component chính quản lý thông tin chức vụ
 const Staff = () => {
     // ==================== STATES ====================
-    // State lưu thông tin chức vụ
     const [staff, setStaff] = useState({
         tenChucVu: "",
         tenChucVuPhu: "",
         moTa: "",
-        luongCoBan: "",
         trangThai: "active",
-    })
+    });
 
-    // State quản lý trạng thái loading, thông báo và dữ liệu API
-    const [isLoading, setIsLoading] = useState(false)
-    const [message, setMessage] = useState("")
-    const [messageType, setMessageType] = useState("")
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-    const [dashboardExpanded, setDashboardExpanded] = useState(true)
-    const [currentPage, setCurrentPage] = useState('main')
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState("");
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [dashboardExpanded, setDashboardExpanded] = useState(true);
+    const [currentPage, setCurrentPage] = useState("main");
     const [stats, setStats] = useState({
         newReceipts: 0,
         pendingOrders: 0,
         newCustomers: 0,
-        pendingSupport: 0,
-    })
-    const [activities, setActivities] = useState([])
-    const username = Cookies.get("username") || "Staff User"
-    const navigate = useNavigate()
+
+    });
+    const [activities, setActivities] = useState([]);
+    const username = Cookies.get("username") || "Staff User";
+    const navigate = useNavigate();
 
     // Lấy dữ liệu thống kê và hoạt động gần đây
     useEffect(() => {
         const token = Cookies.get("authToken");
         if (!token) {
-            // Nếu không có token thì chuyển về trang login
             navigate("/login", { replace: true });
             return;
         }
 
         const fetchData = async () => {
-            setIsLoading(true)
+            setIsLoading(true);
             try {
-                // Lấy thống kê
-                const statsData = await DashBoardApi.getDashboardStats()
+                const statsData = await DashBoardApi.getDashboardStats();
                 setStats({
                     newReceipts: statsData.newReceipts || 0,
                     pendingOrders: statsData.pendingOrders || 0,
                     newCustomers: statsData.newCustomers || 0,
-                    pendingSupport: statsData.pendingSupport || 0,
-                })
 
-                // Lấy hoạt động gần đây
-                const activitiesData = await DashBoardApi.getRecentActivities()
-                setActivities(Array.isArray(activitiesData) ? activitiesData : [])
+                });
+
+                const activitiesData = await DashBoardApi.getRecentActivities();
+                setActivities(Array.isArray(activitiesData) ? activitiesData : []);
             } catch (error) {
-                setMessage(error.message || "Lỗi khi tải dữ liệu thống kê hoặc hoạt động")
-                setMessageType("error")
+                setMessage(error.message || "Lỗi khi tải dữ liệu thống kê hoặc hoạt động");
+                setMessageType("error");
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
-        }
+        };
 
-        fetchData()
-    }, [navigate])
+        fetchData();
+    }, [navigate]);
 
     // ==================== FUNCTIONS ====================
-    // Hàm xử lý thay đổi giá trị input
     const handleChange = (e) => {
-        const { name, value } = e.target
+        const { name, value } = e.target;
         setStaff((prevState) => ({
             ...prevState,
             [name]: value,
-        }))
-        // Xóa thông báo khi user bắt đầu nhập lại
+        }));
         if (message) {
-            setMessage("")
-            setMessageType("")
+            setMessage("");
+            setMessageType("");
         }
-    }
+    };
 
-    // Hàm validate dữ liệu form
     const validateForm = () => {
         if (!staff.tenChucVu.trim()) {
-            setMessage("Vui lòng nhập tên chức vụ")
-            setMessageType("error")
-            return false
+            setMessage("Vui lòng nhập tên chức vụ");
+            setMessageType("error");
+            return false;
         }
-        if (!staff.luongCoBan.trim()) {
-            setMessage("Vui lòng nhập lương cơ bản")
-            setMessageType("error")
-            return false
-        }
-        if (isNaN(staff.luongCoBan) || Number.parseFloat(staff.luongCoBan) <= 0) {
-            setMessage("Lương cơ bản phải là số dương")
-            setMessageType("error")
-            return false
-        }
-        return true
-    }
+        return true;
+    };
 
-    // Hàm xử lý submit form
     const handleSubmit = async () => {
-        if (!validateForm()) return
+        if (!validateForm()) return;
 
-        setIsLoading(true)
+        setIsLoading(true);
 
         try {
-            // Lấy staffId từ token
-            const token = Cookies.get("authToken")
-            const decodedToken = jwtDecode(token)
-            const userId = decodedToken.staffId // Lấy staffId từ token
+            const token = Cookies.get("authToken");
+            const decodedToken = jwtDecode(token);
+            const userId = decodedToken.staffId;
 
             const positionData = {
                 title: staff.tenChucVu,
                 secondaryTitle: staff.tenChucVuPhu || "",
                 description: staff.moTa || "",
-                baseSalary: Number.parseFloat(staff.luongCoBan),
                 status: staff.trangThai === "active" ? "đang hoạt động" : "Tạm ngưng",
                 userId: userId,
-            }
+            };
 
-            const response = await DashBoardApi.addPosition(positionData)
+            const response = await DashBoardApi.addPosition(positionData);
 
-            setMessage(response.message || "Thêm/Cập nhật chức vụ thành công!")
-            setMessageType("success")
+            setMessage(response.message || "Thêm/Cập nhật chức vụ thành công!");
+            setMessageType("success");
 
-            // Reset form
             setStaff({
                 tenChucVu: "",
                 tenChucVuPhu: "",
                 moTa: "",
-                luongCoBan: "",
                 trangThai: "active",
-            })
+            });
         } catch (error) {
             if (error.message.includes("Người dùng này đã có một chức vụ")) {
-                setMessage("Người dùng đã có chức vụ. Vui lòng cập nhật hoặc xóa chức vụ hiện tại.")
+                setMessage("Người dùng đã có chức vụ. Vui lòng cập nhật hoặc xóa chức vụ hiện tại.");
             } else {
-                setMessage(error.message || "Có lỗi xảy ra. Vui lòng thử lại!")
+                setMessage(error.message || "Có lỗi xảy ra. Vui lòng thử lại!");
             }
-            setMessageType("error")
+            setMessageType("error");
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
+    };
 
-    // Hàm xử lý quay lại
     const handleGoBack = () => {
         if (window.confirm("Bạn có chắc muốn quay lại? Dữ liệu chưa lưu sẽ bị mất.")) {
-            window.history.back()
+            window.history.back();
         }
-    }
+    };
 
-    // Hàm format số tiền
-    const formatCurrency = (value) => {
-        if (!value) return ""
-        const number = Number.parseFloat(value)
-        if (isNaN(number)) return ""
-        return new Intl.NumberFormat("vi-VN").format(number) + " VNĐ"
-    }
+    const handleLogout = async () => {
+        Cookies.remove("authToken");
+        Cookies.remove("userRole");
+        Cookies.remove("username");
+        try {
+            await fetch("/api/dashboard/staff", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${Cookies.get("authToken")}`,
+                },
+                credentials: "include",
+            });
+        } catch (e) { }
+        window.location.href = "/login";
+    };
 
     // Dữ liệu menu
     const menuItems = [
@@ -213,18 +192,8 @@ const Staff = () => {
                 { name: "Hiệu suất bán hàng", icon: TrendingUp, path: "/dashboard", hasLink: true },
             ],
         },
-        {
-            name: "Quản Lý Lịch Làm Việc",
-            icon: Calendar,
-            hasLink: false,
-            hasSubmenu: true,
-            submenu: [
-                { name: "Lịch Làm Việc", icon: Calendar, path: "/schedule/calendar", hasLink: true },
-                { name: "Yêu Cầu Nghỉ Phép", icon: UserCheck, path: "/schedule/timeoff", hasLink: true },
-            ],
-        },
-        { name: 'Quản Lý Biên Lai', icon: Receipt, path: '/receipts', hasLink: true },
-        { name: 'Quản Lý Đơn Vị Lưu Trữ', icon: Package, hasLink: true, path: '/storage-units' },
+        { name: "Quản Lý Biên Lai", icon: Receipt, path: "/receipts", hasLink: true },
+        { name: "Quản Lý Đơn Vị Lưu Trữ", icon: Package, hasLink: true, path: "/storage-units" },
         { name: "Quản Lý Đơn Vị Vận Chuyển", icon: Truck, hasLink: false },
         { name: "Quản Lý Đơn Hàng", icon: ShoppingCart, path: "/manageorder", hasLink: true },
         { name: "Quản Lý Khách Hàng", icon: Users, path: "/manageuser", hasLink: true },
@@ -232,9 +201,7 @@ const Staff = () => {
         { name: "Hỗ Trợ Khách Hàng", icon: Headphones, hasLink: false },
         { name: "Báo Cáo", icon: TrendingUp, hasLink: false },
         { name: "Cài Đặt", icon: Settings, hasLink: false },
-    ]
-
-
+    ];
 
     // ==================== RENDER ====================
     return (
@@ -245,7 +212,6 @@ const Staff = () => {
                     className={`${sidebarCollapsed ? "w-20" : "w-72"} bg-white shadow-2xl transition-all duration-300 ease-in-out border-r border-gray-200`}
                 >
                     <div className="h-full flex flex-col">
-                        {/* Logo Header */}
                         <div className="p-6 border-b border-gray-100">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
@@ -274,14 +240,12 @@ const Staff = () => {
                             </div>
                         </div>
 
-                        {/* Navigation Menu */}
                         <nav className="flex-1 p-4 overflow-y-auto">
                             <ul className="space-y-2">
                                 {menuItems.map((item, index) => {
-                                    const IconComponent = item.icon
+                                    const IconComponent = item.icon;
                                     return (
                                         <li key={index}>
-                                            {/* Menu chính */}
                                             {item.hasSubmenu ? (
                                                 <div>
                                                     <div
@@ -311,11 +275,10 @@ const Staff = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* Submenu */}
                                                     {!sidebarCollapsed && dashboardExpanded && item.submenu && (
                                                         <div className="ml-6 mt-2 space-y-1">
                                                             {item.submenu.map((subItem, subIndex) => {
-                                                                const SubIconComponent = subItem.icon
+                                                                const SubIconComponent = subItem.icon;
                                                                 return subItem.hasLink ? (
                                                                     <Link
                                                                         key={subIndex}
@@ -337,59 +300,57 @@ const Staff = () => {
                                                                             {subItem.name}
                                                                         </span>
                                                                     </div>
-                                                                )
+                                                                );
                                                             })}
                                                         </div>
                                                     )}
                                                 </div>
-                                            ) : // Menu thường
-                                                item.hasLink ? (
-                                                    <Link
-                                                        to={item.path}
-                                                        className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 hover:shadow-md ${item.active
-                                                            ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                                                            : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
-                                                            }`}
-                                                    >
-                                                        <IconComponent className="w-5 h-5 mr-4" />
-                                                        {!sidebarCollapsed && (
-                                                            <span className="font-medium group-hover:translate-x-1 transition-transform">
-                                                                {item.name}
-                                                            </span>
-                                                        )}
-                                                        {item.active && !sidebarCollapsed && (
-                                                            <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
-                                                        )}
-                                                    </Link>
-                                                ) : (
-                                                    <div
-                                                        className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer hover:shadow-md ${item.active
-                                                            ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                                                            : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
-                                                            }`}
-                                                    >
-                                                        <IconComponent className="w-5 h-5 mr-4" />
-                                                        {!sidebarCollapsed && (
-                                                            <span className="font-medium group-hover:translate-x-1 transition-transform">
-                                                                {item.name}
-                                                            </span>
-                                                        )}
-                                                        {item.active && !sidebarCollapsed && (
-                                                            <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
-                                                        )}
-                                                    </div>
-                                                )}
+                                            ) : item.hasLink ? (
+                                                <Link
+                                                    to={item.path}
+                                                    className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 hover:shadow-md ${item.active
+                                                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
+                                                        : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                                                        }`}
+                                                >
+                                                    <IconComponent className="w-5 h-5 mr-4" />
+                                                    {!sidebarCollapsed && (
+                                                        <span className="font-medium group-hover:translate-x-1 transition-transform">
+                                                            {item.name}
+                                                        </span>
+                                                    )}
+                                                    {item.active && !sidebarCollapsed && (
+                                                        <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
+                                                    )}
+                                                </Link>
+                                            ) : (
+                                                <div
+                                                    className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer hover:shadow-md ${item.active
+                                                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
+                                                        : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                                                        }`}
+                                                >
+                                                    <IconComponent className="w-5 h-5 mr-4" />
+                                                    {!sidebarCollapsed && (
+                                                        <span className="font-medium group-hover:translate-x-1 transition-transform">
+                                                            {item.name}
+                                                        </span>
+                                                    )}
+                                                    {item.active && !sidebarCollapsed && (
+                                                        <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </li>
-                                    )
+                                    );
                                 })}
                             </ul>
                         </nav>
 
-                        {/* User Profile */}
                         {!sidebarCollapsed && (
                             <div className="p-4 border-t border-gray-100">
                                 <div className="userinfo-card bg-white rounded-xl shadow-xl p-4 flex flex-col gap-3" style={{ width: 250 }}>
-                                    {currentPage === 'main' ? (
+                                    {currentPage === "main" ? (
                                         <div className="flex items-center justify-between w-full">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
@@ -402,7 +363,7 @@ const Staff = () => {
                                             </div>
                                             <button
                                                 className="p-2 rounded-full hover:bg-gray-100 transition"
-                                                onClick={() => setCurrentPage('settings')}
+                                                onClick={() => setCurrentPage("settings")}
                                                 aria-label="Cài đặt"
                                             >
                                                 <Settings className="w-5 h-5 text-gray-400" />
@@ -422,19 +383,23 @@ const Staff = () => {
                                             <NavLink
                                                 to="/profile/main"
                                                 className={({ isActive }) =>
-                                                    `w-full block text-center px-4 py-2 rounded-lg font-semibold transition mt-2 ${
-                                                        isActive ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                                                    `w-full block text-center px-4 py-2 rounded-lg font-semibold transition mt-2 ${isActive
+                                                        ? "bg-blue-600 text-white"
+                                                        : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                                                     }`
                                                 }
                                             >
                                                 Thông tin cá nhân
                                             </NavLink>
-                                            <LogoutButton to="/logout">
-                                                <button className=" w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">Đăng xuất</button>
-                                            </LogoutButton>
+                                            <button
+                                                className="w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition"
+                                                onClick={handleLogout}
+                                            >
+                                                Đăng xuất
+                                            </button>
                                             <button
                                                 className="mt-2 text-xs text-gray-400 hover:underline"
-                                                onClick={() => setCurrentPage('main')}
+                                                onClick={() => setCurrentPage("main")}
                                             >
                                                 Quay lại
                                             </button>
@@ -446,9 +411,7 @@ const Staff = () => {
                     </div>
                 </aside>
 
-                {/* ==================== MAIN CONTENT ==================== */}
                 <main className="flex-1 flex flex-col overflow-hidden">
-                    {/* Top Header */}
                     <header className="bg-white shadow-sm border-b border-gray-200 px-8 py-6">
                         <div className="flex justify-between items-center">
                             <div>
@@ -480,9 +443,7 @@ const Staff = () => {
                         </div>
                     </header>
 
-                    {/* Content Area */}
                     <div className="flex-1 overflow-y-auto p-8">
-                        {/* Alert Messages */}
                         {message && (
                             <div
                                 className={`mb-8 p-4 rounded-xl border-l-4 shadow-sm animate-pulse ${messageType === "success"
@@ -507,10 +468,8 @@ const Staff = () => {
                         )}
 
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                            {/* Main Form */}
                             <div className="xl:col-span-2">
                                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                                    {/* Form Header */}
                                     <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8">
                                         <div className="flex items-center">
                                             <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mr-6 backdrop-blur-sm">
@@ -523,10 +482,8 @@ const Staff = () => {
                                         </div>
                                     </div>
 
-                                    {/* Form Body */}
                                     <div className="p-8">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Tên Chức Vụ */}
                                             <div className="space-y-3">
                                                 <label className="block text-sm font-semibold text-gray-700">
                                                     Tên Chức Vụ <span className="text-red-500">*</span>
@@ -542,7 +499,6 @@ const Staff = () => {
                                                 />
                                             </div>
 
-                                            {/* Tên chức vụ phụ */}
                                             <div className="space-y-3">
                                                 <label className="block text-sm font-semibold text-gray-700">Tên Chức Vụ Phụ</label>
                                                 <input
@@ -556,35 +512,6 @@ const Staff = () => {
                                                 />
                                             </div>
 
-                                            {/* Lương cơ bản */}
-                                            <div className="space-y-3">
-                                                <label className="block text-sm font-semibold text-gray-700">
-                                                    Lương Cơ Bản <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="number"
-                                                        name="luongCoBan"
-                                                        value={staff.luongCoBan}
-                                                        onChange={handleChange}
-                                                        placeholder="0"
-                                                        min="0"
-                                                        className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 bg-gray-50 focus:bg-white"
-                                                        disabled={isLoading}
-                                                    />
-                                                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold bg-gray-100 px-2 py-1 rounded-md text-xs">
-                                                        VNĐ
-                                                    </span>
-                                                </div>
-                                                {staff.luongCoBan && (
-                                                    <p className="text-sm font-semibold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg flex items-center">
-                                                        <DollarSign className="w-4 h-4 mr-2" />
-                                                        {formatCurrency(staff.luongCoBan)}
-                                                    </p>
-                                                )}
-                                            </div>
-
-                                            {/* Trạng thái */}
                                             <div className="space-y-3">
                                                 <label className="block text-sm font-semibold text-gray-700">Trạng Thái</label>
                                                 <select
@@ -599,7 +526,6 @@ const Staff = () => {
                                                 </select>
                                             </div>
 
-                                            {/* Mô tả */}
                                             <div className="md:col-span-2 space-y-3">
                                                 <label className="block text-sm font-semibold text-gray-700">Mô Tả Công Việc</label>
                                                 <textarea
@@ -614,7 +540,6 @@ const Staff = () => {
                                             </div>
                                         </div>
 
-                                        {/* Form Actions */}
                                         <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
                                             <button
                                                 type="button"
@@ -652,9 +577,7 @@ const Staff = () => {
                                 </div>
                             </div>
 
-                            {/* Sidebar Stats */}
                             <div className="space-y-6">
-                                {/* Quick Stats */}
                                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                                     <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
                                         <PieChart className="w-5 h-5 mr-2" />
@@ -663,12 +586,12 @@ const Staff = () => {
 
                                     <div className="space-y-4">
                                         {[
-                                            { label: "Biên Lai Mới", value: stats.newReceipts, color: "blue", icon: Receipt },
+                                            { label: "Đơn Hoàn Tất", value: stats.newReceipts, color: "blue", icon: Receipt },
                                             { label: "Đơn Hàng Chờ", value: stats.pendingOrders, color: "amber", icon: ShoppingCart },
                                             { label: "Khách Hàng Mới", value: stats.newCustomers, color: "emerald", icon: UserPlus },
-                                            { label: "Hỗ Trợ Chờ", value: stats.pendingSupport, color: "purple", icon: MessageCircle },
+
                                         ].map((stat, index) => {
-                                            const IconComponent = stat.icon
+                                            const IconComponent = stat.icon;
                                             return (
                                                 <div
                                                     key={index}
@@ -679,7 +602,7 @@ const Staff = () => {
                                                             : stat.color === "emerald"
                                                                 ? "bg-emerald-50 border border-emerald-100"
                                                                 : "bg-purple-50 border border-purple-100"
-                                                            }`}
+                                                        }`}
                                                 >
                                                     <div className="flex items-center justify-between">
                                                         <div>
@@ -731,12 +654,11 @@ const Staff = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            )
+                                            );
                                         })}
                                     </div>
                                 </div>
 
-                                {/* Recent Activity */}
                                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
                                     <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
                                         <Activity className="w-5 h-5 mr-2" />
@@ -765,7 +687,7 @@ const Staff = () => {
                 </main>
             </div>
         </RequireAuth>
-    )
-}
+    );
+};
 
-export default Staff
+export default Staff;
