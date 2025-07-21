@@ -7,7 +7,7 @@ import RequireAuth from "../../Components/RequireAuth";
 import Header from "../../Components/FormLogin_yen/Header";
 import Footer from "../../Components/FormLogin_yen/Footer";
 import {
-    Users, Package, TrendingUp, MapPin, ChevronDown, Calendar, Filter
+    Users, Package, TrendingUp, MapPin, ChevronDown, Calendar, Filter, DollarSign
 } from "lucide-react";
 import { Settings, User, Circle } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
@@ -180,6 +180,19 @@ const Dashboard = () => {
                         <button onClick={() => navigate("/manager/pending-staff")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
                             <Users className="w-5 h-5" /> Duyệt nhân viên mới
                         </button>
+                        <button onClick={() => navigate("/managerevenue")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
+                            <DollarSign className="w-5 h-5" /> Quản lý doanh thu
+                        </button>
+                        <button onClick={() => navigate("/schedule/calendar")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-purple-600 rounded-lg shadow hover:opacity-90">
+                            <Calendar className="w-5 h-5" /> Lịch làm việc
+                        </button>
+                        <button onClick={() => navigate("/schedule/shifts")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-indigo-600 rounded-lg shadow hover:opacity-90">
+                            <Settings className="w-5 h-5" /> Quản lý ca làm
+                        </button>
+                        <button onClick={() => navigate("/schedule/timeoff")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-teal-600 rounded-lg shadow hover:opacity-90">
+                            <User className="w-5 h-5" /> Yêu cầu nghỉ phép
+                        </button>
+
                         {/* User Profile */}
                         <div className="p-2 border-t border-blue-200">
                             <div className="userinfo-card bg-blue-100 rounded-lg p-3 flex flex-col gap-2 border border-gray-200">
@@ -222,8 +235,7 @@ const Dashboard = () => {
                                         <NavLink
                                             to="/profile/main"
                                             className={({ isActive }) =>
-                                                `block px-3 py-1.5 rounded text-sm font-medium transition ${
-                                                    isActive ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                                                `block px-3 py-1.5 rounded text-sm font-medium transition ${isActive ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                                                 }`
                                             }
                                         >
@@ -292,11 +304,10 @@ const Dashboard = () => {
                                                 <button
                                                     key={option.value}
                                                     onClick={() => setRange(option.value)}
-                                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                                                        range === option.value
+                                                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${range === option.value
                                                             ? 'bg-blue-600 text-white'
                                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {option.label}
                                                 </button>
@@ -306,11 +317,10 @@ const Dashboard = () => {
                                         <div className="border-t pt-3">
                                             <button
                                                 onClick={() => setRange("range")}
-                                                className={`w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 mb-3 ${
-                                                    range === "range"
+                                                className={`w-full px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 mb-3 ${range === "range"
                                                         ? 'bg-blue-600 text-white'
                                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                }`}
+                                                    }`}
                                             >
                                                 Khoảng ngày tùy chọn
                                             </button>
