@@ -1,16 +1,59 @@
-
-
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import axios from "../../utils/axiosInstance.js";
+import Header from '../../Components/FormLogin_yen/Header.jsx';
 import Footer from "../../Components/FormLogin_yen/Footer.jsx";
 import {
-    Edit,MessageSquare, Ban, Search,Phone,Mail, MapPin,User,X,
-    Check, AlertTriangle,Loader2,Shield,Home, ChevronLeft,Zap, Download, LogOut,
+    Edit, MessageSquare, Ban, Search, Phone, Mail, MapPin, User, X,
+    AlertTriangle, Loader2, Shield, Home, ChevronLeft, Zap, Download, LogOut, Truck
 } from "lucide-react";
+
+// Hàm validate
+const validateField = (field, value) => {
+    switch (field) {
+        case "searchTerm":
+            if (value.length > 100) return "Tìm kiếm không được vượt quá 100 ký tự";
+            if (!/^[a-zA-Z0-9\s\-_]*$/.test(value)) return "Tìm kiếm chỉ chứa chữ cái, số, dấu cách, dấu gạch ngang, dấu gạch dưới";
+            return "";
+        case "username":
+            if (!value) return "Tên đăng nhập không được để trống";
+            if (value.length < 3 || value.length > 50) return "Tên đăng nhập phải từ 3-50 ký tự";
+            if (!/^[a-zA-Z0-9_]+$/.test(value)) return "Tên đăng nhập chỉ chứa chữ cái, số, dấu gạch dưới";
+            return "";
+        case "fullName":
+            if (!value) return "Họ và tên không được để trống";
+            if (value.length < 2 || value.length > 100) return "Họ và tên phải từ 2-100 ký tự";
+            if (!/^[a-zA-Z\s\-]+$/.test(value)) return "Họ và tên chỉ chứa chữ cái, dấu cách, dấu gạch ngang";
+            return "";
+        case "email":
+            if (!value) return "Email không được để trống";
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Email không hợp lệ";
+            return "";
+        case "phone":
+            if (!value) return "Số điện thoại không được để trống";
+            if (!/^(?:\+84|0)(?:3[2-9]|5[689]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/.test(value)) return "Số điện thoại không hợp lệ (VD: +84987654321 hoặc 0987654321)";
+            return "";
+        case "address":
+            if (!value) return "Địa chỉ không được để trống";
+            if (value.length < 5 || value.length > 200) return "Địa chỉ phải từ 5-200 ký tự";
+            return "";
+        case "gender":
+            if (!value || !["MALE", "FEMALE"].includes(value)) return "Vui lòng chọn giới tính";
+            return "";
+        case "status":
+            if (!value || !["ACTIVE", "INACTIVE"].includes(value)) return "Vui lòng chọn trạng thái";
+            return "";
+        case "feedback":
+            if (!value) return "Phản hồi không được để trống";
+            if (value.length > 500) return "Phản hồi không được vượt quá 500 ký tự";
+            return "";
+        default:
+            return "";
+    }
+};
 
 // Component hiển thị trường thông tin nhân viên
 const StaffInfoField = ({ icon: Icon, value }) => (
@@ -25,16 +68,16 @@ const StaffInfoField = ({ icon: Icon, value }) => (
 );
 
 // Component Modal Phản hồi
-const FeedbackModal = ({ staff, feedback, setFeedback, onSubmit, onClose }) => (
+const FeedbackModal = ({ staff, feedback, setFeedback, onSubmit, onClose, errors }) => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-2xl p-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 w-full max-w-2xl p-6">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                     <div className="p-2 bg-blue-500 rounded-lg">
                         <MessageSquare className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-800">Gửi Phản Hồi</h2>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">Gửi Phản Hồi</h2>
                         <p className="text-slate-600 text-sm">Đến: {staff.username}</p>
                     </div>
                 </div>
@@ -42,18 +85,25 @@ const FeedbackModal = ({ staff, feedback, setFeedback, onSubmit, onClose }) => (
                     <X className="w-6 h-6 text-slate-400" />
                 </button>
             </div>
-            <textarea
-                rows={4}
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Viết phản hồi của bạn tại đây..."
-            />
+            <div className="relative">
+                <textarea
+                    rows={4}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    className={`w-full border ${errors.feedback ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm placeholder-gray-400`}
+                    placeholder="Viết phản hồi của bạn tại đây..."
+                />
+                {errors.feedback && <p className="text-red-500 text-sm mt-1">{errors.feedback}</p>}
+            </div>
             <div className="mt-4 flex justify-end gap-4">
-                <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <button onClick={onClose} className="px-4 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 focus:ring-2 focus:ring-gray-400 transition-all duration-300 shadow-sm hover:shadow-md">
                     Hủy Bỏ
                 </button>
-                <button onClick={onSubmit} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button
+                    onClick={onSubmit}
+                    disabled={!!errors.feedback}
+                    className={`px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg focus:ring-2 focus:ring-blue-400 transition-all duration-300 shadow-sm hover:shadow-md ${errors.feedback ? "opacity-50 cursor-not-allowed" : "hover:from-blue-700 hover:to-blue-800"}`}
+                >
                     Gửi Phản Hồi
                 </button>
             </div>
@@ -62,16 +112,16 @@ const FeedbackModal = ({ staff, feedback, setFeedback, onSubmit, onClose }) => (
 );
 
 // Component Modal Chỉnh sửa
-const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose }) => (
+const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose, errors }) => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-2xl p-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 w-full max-w-2xl p-6">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                     <div className="p-2 bg-green-500 rounded-lg">
                         <Edit className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-800">Chỉnh Sửa Nhân Viên</h2>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">Chỉnh Sửa Nhân Viên</h2>
                         <p className="text-slate-600 text-sm">{staff.username}</p>
                     </div>
                 </div>
@@ -81,51 +131,55 @@ const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose }) => (
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <label className="block text-sm font-bold text-blue-700 mb-1 flex items-center gap-2">
                         <User className="w-4 h-4" /> Tên Đăng Nhập
                     </label>
                     <input
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className={`w-full border ${errors.username ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm`}
                         value={editForm.username}
                         onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
                     />
+                    {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <label className="block text-sm font-bold text-blue-700 mb-1 flex items-center gap-2">
                         <Mail className="w-4 h-4" /> Email
                     </label>
                     <input
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className={`w-full border ${errors.email ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm`}
                         value={editForm.email}
                         onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     />
+                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <label className="block text-sm font-bold text-blue-700 mb-1 flex items-center gap-2">
                         <User className="w-4 h-4" /> Họ và Tên
                     </label>
                     <input
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className={`w-full border ${errors.fullName ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm`}
                         value={editForm.fullName}
                         onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
                     />
+                    {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <label className="block text-sm font-bold text-blue-700 mb-1 flex items-center gap-2">
                         <Phone className="w-4 h-4" /> Số Điện Thoại
                     </label>
                     <input
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className={`w-full border ${errors.phone ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm`}
                         value={editForm.phone}
                         onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                     />
+                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <label className="block text-sm font-bold text-blue-700 mb-1 flex items-center gap-2">
                         <User className="w-4 h-4" /> Giới Tính
                     </label>
                     <select
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className={`w-full border ${errors.gender ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm`}
                         value={editForm.gender || ""}
                         onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
                     >
@@ -133,13 +187,14 @@ const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose }) => (
                         <option value="MALE">Nam</option>
                         <option value="FEMALE">Nữ</option>
                     </select>
+                    {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <label className="block text-sm font-bold text-blue-700 mb-1 flex items-center gap-2">
                         <Shield className="w-4 h-4" /> Trạng Thái
                     </label>
                     <select
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className={`w-full border ${errors.status ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm`}
                         value={editForm.status || ""}
                         onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                     >
@@ -147,23 +202,29 @@ const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose }) => (
                         <option value="ACTIVE">Hoạt động</option>
                         <option value="INACTIVE">Không hoạt động</option>
                     </select>
+                    {errors.status && <p className="text-red-500 text-sm mt-1">{errors.status}</p>}
                 </div>
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                    <label className="block text-sm font-bold text-blue-700 mb-1 flex items-center gap-2">
                         <MapPin className="w-4 h-4" /> Địa Chỉ
                     </label>
                     <input
-                        className="w-full border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className={`w-full border ${errors.address ? "border-red-500" : "border-gray-300"} rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 shadow-sm`}
                         value={editForm.address}
                         onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                     />
+                    {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
                 </div>
             </div>
             <div className="mt-4 flex justify-end gap-4">
-                <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <button onClick={onClose} className="px-4 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 focus:ring-2 focus:ring-gray-400 transition-all duration-300 shadow-sm hover:shadow-md">
                     Hủy Bỏ
                 </button>
-                <button onClick={onSubmit} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <button
+                    onClick={onSubmit}
+                    disabled={Object.values(errors).some((error) => error)}
+                    className={`px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg focus:ring-2 focus:ring-green-400 transition-all duration-300 shadow-sm hover:shadow-md ${Object.values(errors).some((error) => error) ? "opacity-50 cursor-not-allowed" : "hover:from-green-700 hover:to-green-800"}`}
+                >
                     Cập Nhật
                 </button>
             </div>
@@ -174,20 +235,20 @@ const EditModal = ({ staff, editForm, setEditForm, onSubmit, onClose }) => (
 // Component Modal Xác nhận
 const ConfirmModal = ({ onConfirm, onClose }) => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-lg p-6 text-center">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 w-full max-w-lg p-6 text-center">
             <div className="mx-auto w-16 h-16 bg-red-500 rounded-lg flex items-center justify-center mb-4">
                 <AlertTriangle className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Xác Nhận Chặn</h2>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-2">Xác Nhận Chặn</h2>
             <p className="text-slate-600 mb-4">
                 Bạn có chắc chắn muốn chặn nhân viên này không?<br />
                 <span className="font-bold text-red-600">Hành động này không thể hoàn tác!</span>
             </p>
             <div className="flex justify-center gap-4">
-                <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <button onClick={onClose} className="px-4 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 focus:ring-2 focus:ring-gray-400 transition-all duration-300 shadow-sm hover:shadow-md">
                     Hủy Bỏ
                 </button>
-                <button onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                <button onClick={onConfirm} className="px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 focus:ring-2 focus:ring-red-400 transition-all duration-300 shadow-sm hover:shadow-md">
                     Chặn
                 </button>
             </div>
@@ -198,14 +259,14 @@ const ConfirmModal = ({ onConfirm, onClose }) => (
 // Component Modal Chi tiết Nhân viên
 const StaffDetailsModal = ({ staff, onClose }) => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg w-full max-w-2xl p-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 w-full max-w-2xl p-6">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                     <div className="p-2 bg-indigo-500 rounded-lg">
                         <User className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-800">Thông Tin Nhân Viên</h2>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">Thông Tin Nhân Viên</h2>
                         <p className="text-slate-600 text-sm">{staff.username}</p>
                     </div>
                 </div>
@@ -219,16 +280,79 @@ const StaffDetailsModal = ({ staff, onClose }) => (
                 <StaffInfoField icon={Mail} value={staff.email} />
                 <StaffInfoField icon={Phone} value={staff.phone} />
                 <StaffInfoField icon={MapPin} value={staff.address} />
-                <StaffInfoField icon={Shield} value={staff.status === "ACTIVE" ? "Hoạt động" : "Không hoạt động"} />
+                <StaffInfoField icon={Shield} value={staff.status === "ACTIVE" ? "Hoạt động" : staff.status === "INACTIVE" ? "Không hoạt động" : "Bị chặn"} />
                 <StaffInfoField icon={User} value={staff.gender === "MALE" ? "Nam" : staff.gender === "FEMALE" ? "Nữ" : "Chưa có"} />
             </div>
             <div className="mt-4 flex justify-end">
-                <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                <button onClick={onClose} className="px-4 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 focus:ring-2 focus:ring-gray-400 transition-all duration-300 shadow-sm hover:shadow-md">
                     Đóng
                 </button>
             </div>
         </div>
     </div>
+);
+
+// Component Sidebar
+const LeftMenu = ({ onBackToHome, onStaffList, onOverview, onLogout }) => (
+    <aside className="w-64 sticky top-28 self-start h-[calc(100vh-112px)] z-20 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl border-r border-blue-700/30 backdrop-blur-sm">
+        <div className="mb-10 p-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-blue-300/5 to-transparent blur-2xl rounded-2xl"></div>
+            <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Hệ thống quản lý</h2>
+                    </div>
+                </div>
+                <div className="w-16 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-transparent rounded-full"></div>
+            </div>
+        </div>
+        <nav className="px-4 space-y-3">
+            <button
+                onClick={onBackToHome}
+                className="w-full group flex items-center gap-4 p-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
+            >
+                <div className="p-2 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
+                    <Home className="w-5 h-5 text-blue-300 group-hover:text-blue-100" />
+                </div>
+                <span className="flex-1 text-left font-semibold">Về trang chủ</span>
+            </button>
+            <button
+                onClick={onStaffList}
+                className="w-full group flex items-center gap-4 p-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40"
+            >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                <div className="p-2 rounded-xl bg-blue-500/40 shadow-lg">
+                    <User className="w-5 h-5 text-blue-100" />
+                </div>
+                <span className="flex-1 text-left font-semibold">Danh sách</span>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+            </button>
+            <button
+                onClick={onOverview}
+                className="w-full group flex items-center gap-4 p-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
+            >
+                <div className="p-2 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
+                    <Zap className="w-5 h-5 text-blue-300 group-hover:text-blue-100" />
+                </div>
+                <span className="flex-1 text-left font-semibold">Tổng quan</span>
+            </button>
+            <button
+                onClick={onLogout}
+                className="w-full group flex items-center gap-4 p-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
+            >
+                <div className="p-2 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
+                    <LogOut className="w-5 h-5 text-blue-300 group-hover:text-blue-100" />
+                </div>
+                <span className="flex-1 text-left font-semibold">Đăng Xuất</span>
+            </button>
+        </nav>
+        <div className="absolute bottom-8 left-6 right-6">
+            <div className="relative">
+                <div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent blur-sm"></div>
+            </div>
+        </div>
+    </aside>
 );
 
 export default function StaffManagement() {
@@ -242,6 +366,7 @@ export default function StaffManagement() {
         feedback: "",
         editStaff: null,
         editForm: { email: "", fullName: "", phone: "", address: "", username: "", gender: "", status: "" },
+        errors: { searchTerm: "", username: "", fullName: "", email: "", phone: "", address: "", gender: "", status: "", feedback: "" },
         currentPage: 0,
         totalPages: 0,
         confirmAction: { type: "", staffId: null },
@@ -271,13 +396,46 @@ export default function StaffManagement() {
         }
     }, [state.managerId, state.filter]);
 
+    useEffect(() => {
+        setState((prev) => ({
+            ...prev,
+            errors: { ...prev.errors, searchTerm: validateField("searchTerm", prev.searchTerm) }
+        }));
+    }, [state.searchTerm]);
+
+    useEffect(() => {
+        if (state.editStaff) {
+            setState((prev) => ({
+                ...prev,
+                errors: {
+                    ...prev.errors,
+                    username: validateField("username", prev.editForm.username),
+                    fullName: validateField("fullName", prev.editForm.fullName),
+                    email: validateField("email", prev.editForm.email),
+                    phone: validateField("phone", prev.editForm.phone),
+                    address: validateField("address", prev.editForm.address),
+                    gender: validateField("gender", prev.editForm.gender),
+                    status: validateField("status", prev.editForm.status),
+                }
+            }));
+        }
+    }, [state.editForm]);
+
+    useEffect(() => {
+        if (state.selectedStaff) {
+            setState((prev) => ({
+                ...prev,
+                errors: { ...prev.errors, feedback: validateField("feedback", prev.feedback) }
+            }));
+        }
+    }, [state.feedback]);
+
     const fetchStaffList = async (page = 0) => {
         setState((prev) => ({ ...prev, loading: true }));
         try {
             const params = { page, size: 5 };
-            let url = `/api/v1/manager/${state.managerId}/staff`; // Default endpoint
+            let url = `/api/v1/manager/${state.managerId}/staff`;
 
-            // Nếu có searchTerm hoặc filter, sử dụng endpoint /filter
             if (state.searchTerm || state.filter) {
                 url = `/api/v1/manager/${state.managerId}/staff/filter`;
                 if (state.searchTerm) params.searchTerm = state.searchTerm;
@@ -309,16 +467,24 @@ export default function StaffManagement() {
     };
 
     const handleSearch = async () => {
+        if (state.errors.searchTerm) {
+            alert(state.errors.searchTerm);
+            return;
+        }
         fetchStaffList();
     };
 
     const handleFeedback = async () => {
+        if (state.errors.feedback) {
+            alert(state.errors.feedback);
+            return;
+        }
         try {
             await axios.post(`/api/v1/manager/${state.managerId}/staff/${state.selectedStaff.operatorId}/feedback`, {
                 message: state.feedback,
             });
             alert("Phản hồi đã được gửi thành công");
-            setState((prev) => ({ ...prev, feedback: "", selectedStaff: null }));
+            setState((prev) => ({ ...prev, feedback: "", selectedStaff: null, errors: { ...prev.errors, feedback: "" } }));
         } catch (error) {
             console.error("Failed to send feedback:", error);
             alert("Không thể gửi phản hồi");
@@ -339,15 +505,28 @@ export default function StaffManagement() {
     };
 
     const handleEdit = async () => {
+        const errors = {
+            username: validateField("username", state.editForm.username),
+            fullName: validateField("fullName", state.editForm.fullName),
+            email: validateField("email", state.editForm.email),
+            phone: validateField("phone", state.editForm.phone),
+            address: validateField("address", state.editForm.address),
+            gender: validateField("gender", state.editForm.gender),
+            status: validateField("status", state.editForm.status),
+        };
+        if (Object.values(errors).some((error) => error)) {
+            setState((prev) => ({ ...prev, errors }));
+            alert("Vui lòng kiểm tra lại các trường thông tin");
+            return;
+        }
         try {
             await axios.put(`/api/v1/manager/${state.managerId}/staff/${state.editStaff.operatorId}`, state.editForm);
             alert("Nhân viên đã được cập nhật");
             fetchStaffList(state.currentPage);
+            setState((prev) => ({ ...prev, editStaff: null, errors: { ...prev.errors, username: "", fullName: "", email: "", phone: "", address: "", gender: "", status: "" } }));
         } catch (error) {
             console.error("Failed to update staff:", error);
             alert("Cập nhật thất bại");
-        } finally {
-            setState((prev) => ({ ...prev, editStaff: null }));
         }
     };
 
@@ -440,294 +619,260 @@ export default function StaffManagement() {
 
     if (!state.managerId) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="w-12 h-12 animate-spin text-white mx-auto mb-2" />
                     <p className="text-white text-lg font-medium">Đang tải thông tin quản lý...</p>
-                    <p className="text-purple-200 text-sm mt-1">Vui lòng đợi trong giây lát</p>
+                    <p className="text-blue-200 text-sm mt-1">Vui lòng đợi trong giây lát</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-400 via-indigo-200 to-purple-300">
+        <div className="flex flex-col min-h-screen">
+            <Header />
             <div className="flex flex-1">
-                <div className="w-64 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4 text-white shadow-lg">
-                    <div className="mb-8">
-                        <h2 className="text-xl font-bold mb-4">Menu</h2>
-                        <ul className="space-y-2">
-                            <li>
-                                <button
-                                    onClick={handleBackToHome}
-                                    className="flex items-center gap-2 w-full text-left p-2 rounded-lg hover:bg-purple-800 hover:text-white"
-                                >
-                                    <Home className="w-5 h-5" /> Về trang chủ
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => fetchStaffList()}
-                                    className="flex items-center gap-2 w-full text-left p-2 rounded-lg hover:bg-purple-800 hover:text-white"
-                                >
-                                    <User className="w-5 h-5" /> Danh sách
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => navigate("/staffperformance")}
-                                    className="flex items-center gap-2 w-full text-left p-2 rounded-lg hover:bg-purple-800 hover:text-white"
-                                >
-                                    <Zap className="w-5 h-5" /> Tổng quan
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div className="mt-auto">
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-2 text-red-400 hover:text-red-200 w-full text-left p-2 rounded-lg hover:bg-purple-800"
-                        >
-                            <LogOut className="w-5 h-5" /> Logout
-                        </button>
-                    </div>
-                </div>
-                <div className="flex-1 p-4">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="mb-6">
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="p-2 bg-purple-600 rounded-lg">
-                                    <User className="w-8 h-8 text-white" />
-                                </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
-                                        Quản Lý Nhân Viên
-                                    </h1>
-                                    <p className="text-slate-600 flex items-center gap-2 text-sm">
-                                        <Zap className="w-4 h-4 text-yellow-500" />
-                                        Quản lý đội ngũ của bạn một cách hiệu quả
-                                    </p>
-                                </div>
+                <LeftMenu
+                    onBackToHome={handleBackToHome}
+                    onStaffList={() => fetchStaffList()}
+                    onOverview={() => navigate("/staffperformance")}
+                    onLogout={handleLogout}
+                />
+                <main className="flex-1 pt-20 pb-16 px-6">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-8">
+                        Quản Lý Nhân Viên
+                    </h1>
+                    <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-blue-200 mb-8">
+                        <div className="flex flex-col sm:flex-row gap-3 items-center">
+                            <div className="relative flex-1">
+                                <input
+                                    className={`w-full px-4 py-2.5 bg-white border ${state.errors.searchTerm ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 text-gray-800 shadow-sm placeholder-gray-400`}
+                                    placeholder="Tìm kiếm theo tên, email hoặc username..."
+                                    value={state.searchTerm}
+                                    onChange={(e) => setState((prev) => ({ ...prev, searchTerm: e.target.value }))}
+                                    onKeyPress={(e) => e.key === "Enter" && !state.errors.searchTerm && handleSearch()}
+                                />
+                                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 w-5 h-5 hover:text-blue-600 transition-colors duration-200" />
+                                {state.errors.searchTerm && <p className="text-red-500 text-sm mt-1">{state.errors.searchTerm}</p>}
                             </div>
+                            <div className="w-full sm:w-48">
+                                <select
+                                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 text-gray-800 shadow-sm"
+                                    value={state.filter}
+                                    onChange={(e) => setState((prev) => ({ ...prev, filter: e.target.value }))}
+                                >
+                                    <option value="">Tất cả</option>
+                                    <option value="ACTIVE">Trạng thái: Hoạt động</option>
+                                    <option value="INACTIVE">Trạng thái: Không hoạt động</option>
+                                    <option value="BLOCKED">Trạng thái: Bị chặn</option>
+                                    <option value="MALE">Giới tính: Nam</option>
+                                    <option value="FEMALE">Giới tính: Nữ</option>
+                                </select>
+                            </div>
+                            <button
+                                onClick={handleSearch}
+                                disabled={state.loading || state.errors.searchTerm}
+                                className={`px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg focus:ring-2 focus:ring-blue-400 transition-all duration-300 shadow-sm hover:shadow-md ${state.loading || state.errors.searchTerm ? "opacity-50 cursor-not-allowed" : "hover:from-blue-700 hover:to-blue-800"}`}
+                                title="Tìm kiếm nhân viên"
+                            >
+                                {state.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                                Tìm
+                            </button>
+                            <button
+                                onClick={handleExportExcel}
+                                disabled={state.exporting || state.loading}
+                                className={`px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg focus:ring-2 focus:ring-green-400 transition-all duration-300 shadow-sm hover:shadow-md ${state.exporting || state.loading ? "opacity-50 cursor-not-allowed" : "hover:from-green-700 hover:to-green-800"}`}
+                                title="Xuất danh sách nhân viên"
+                            >
+                                {state.exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                                Xuất
+                            </button>
+                            {state.filtered && (
+                                <button
+                                    onClick={() => {
+                                        setState((prev) => ({ ...prev, searchTerm: "", filter: "", filtered: false, errors: { ...prev.errors, searchTerm: "" } }));
+                                        fetchStaffList();
+                                    }}
+                                    className="px-4 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 focus:ring-2 focus:ring-gray-400 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2"
+                                    title="Quay lại danh sách đầy đủ"
+                                >
+                                    <ChevronLeft className="w-4 h-4" /> Quay lại
+                                </button>
+                            )}
                         </div>
-
-                        <div className="mb-6">
-                            <div className="bg-white rounded-lg p-4">
-                                <div className="flex items-center gap-4 flex-wrap">
-                                    <div className="relative flex-1 min-w-[200px]">
-                                        <input
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                            placeholder="Tìm kiếm theo tên, email hoặc username..."
-                                            value={state.searchTerm}
-                                            onChange={(e) => setState((prev) => ({ ...prev, searchTerm: e.target.value }))}
-                                            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                                        />
-                                        <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                                    </div>
-                                    <select
-                                        className="border border-gray-200 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                        value={state.filter}
-                                        onChange={(e) => setState((prev) => ({ ...prev, filter: e.target.value }))}
-                                    >
-                                        <option value="">Tất cả</option>
-                                        <option value="ACTIVE">Trạng thái: Hoạt động</option>
-                                        <option value="INACTIVE">Trạng thái: Không hoạt động</option>
-                                        <option value="BLOCKED">Trạng thái: Bị chặn</option>
-                                        <option value="MALE">Giới tính: Nam</option>
-                                        <option value="FEMALE">Giới tính: Nữ</option>
-                                    </select>
-                                    <button
-                                        onClick={handleSearch}
-                                        disabled={state.loading}
-                                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-                                    >
-                                        {state.loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
-                                        Tìm kiếm
-                                    </button>
-                                    <button
-                                        onClick={handleExportExcel}
-                                        disabled={state.exporting || state.loading}
-                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                                    >
-                                        {state.exporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-                                        Export Excel
-                                    </button>
-                                    {state.filtered && (
-                                        <button
-                                            onClick={() => {
-                                                setState((prev) => ({ ...prev, searchTerm: "", filter: "", filtered: false }));
-                                                fetchStaffList();
-                                            }}
-                                            className="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300"
-                                        >
-                                            <ChevronLeft className="w-5 h-5" /> Quay lại
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
+                    </div>
+                    {state.loading ? (
+                        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 p-6 text-center">
+                            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-2" />
+                            <p className="text-slate-700 text-lg font-bold">Đang tải danh sách nhân viên...</p>
+                            <p className="text-slate-500 text-sm">Chuẩn bị dữ liệu cho bạn</p>
                         </div>
-
-                        {state.loading ? (
-                            <div className="bg-white rounded-lg p-6 text-center">
-                                <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-2" />
-                                <p className="text-slate-700 text-lg font-bold">Đang tải danh sách nhân viên...</p>
-                                <p className="text-slate-500 text-sm">Chuẩn bị dữ liệu cho bạn</p>
-                            </div>
-                        ) : state.staffList.length === 0 ? (
-                            <div className="bg-white rounded-lg p-6 text-center">
-                                <User className="w-16 h-16 text-gray-300 mx-auto mb-2" />
-                                <p className="text-slate-700 text-lg font-bold">Không tìm thấy nhân viên nào</p>
-                                <p className="text-slate-600 text-sm">Thử điều chỉnh từ khóa tìm kiếm hoặc thêm nhân viên mới</p>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full bg-white border border-gray-200 rounded-lg">
-                                    <thead>
-                                    <tr className="bg-purple-600 text-white">
-                                        <th className="p-3 text-left">Họ và Tên</th>
-                                        <th className="p-3 text-left">Username</th>
-                                        <th className="p-3 text-left">Email</th>
-                                        <th className="p-3 text-left">Số Điện Thoại</th>
-                                        <th className="p-3 text-left">Địa Chỉ</th>
-                                        <th className="p-3 text-left">Trạng Thái</th>
-                                        <th className="p-3 text-left">Giới Tính</th>
-                                        <th className="p-3 text-left">Hành Động</th>
+                    ) : state.staffList.length === 0 ? (
+                        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 p-6 text-center">
+                            <User className="w-16 h-16 text-gray-300 mx-auto mb-2" />
+                            <p className="text-slate-700 text-lg font-bold">Không tìm thấy nhân viên nào</p>
+                            <p className="text-slate-600 text-sm">Thử điều chỉnh từ khóa tìm kiếm hoặc thêm nhân viên mới</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6 overflow-hidden">
+                            <table className="w-full bg-white/90 border border-blue-200 rounded-xl shadow-lg">
+                                <thead>
+                                <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-sm rounded-t-xl">
+                                    <th className="p-4 text-left">Họ và Tên</th>
+                                    <th className="p-4 text-left">Username</th>
+                                    <th className="p-4 text-left">Email</th>
+                                    <th className="p-4 text-left">Số Điện Thoại</th>
+                                    <th className="p-4 text-left">Địa Chỉ</th>
+                                    <th className="p-4 text-left">Trạng Thái</th>
+                                    <th className="p-4 text-left">Giới Tính</th>
+                                    <th className="p-4 text-left">Hành Động</th>
+                                </tr>
+                                </thead>
+                                <tbody className="rounded-b-xl">
+                                {state.staffList.map((staff) => (
+                                    <tr key={staff.operatorId} className="border-b hover:bg-gray-50">
+                                        <td className="p-4">{staff.fullName || "Chưa có"}</td>
+                                        <td className="p-4">@{staff.username || "Chưa có"}</td>
+                                        <td className="p-4">{staff.email || "Chưa có"}</td>
+                                        <td className="p-4">{staff.phone || "Chưa có"}</td>
+                                        <td className="p-4">{staff.address || "Chưa có"}</td>
+                                        <td className="p-4">{staff.status === "ACTIVE" ? "Hoạt động" : staff.status === "INACTIVE" ? "Không hoạt động" : "Bị chặn"}</td>
+                                        <td className="p-4">{staff.gender === "MALE" ? "Nam" : staff.gender === "FEMALE" ? "Nữ" : "Chưa có"}</td>
+                                        <td className="p-4 flex gap-2">
+                                            <button
+                                                onClick={() => fetchStaffDetails(staff.operatorId)}
+                                                className="p-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300"
+                                                title="Xem chi tiết"
+                                            >
+                                                <User className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => setState((prev) => ({ ...prev, selectedStaff: staff, feedback: "", errors: { ...prev.errors, feedback: "" } }))}
+                                                className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+                                                title="Gửi phản hồi"
+                                            >
+                                                <MessageSquare className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() =>
+                                                    setState((prev) => ({
+                                                        ...prev,
+                                                        editStaff: staff,
+                                                        editForm: {
+                                                            username: staff.username,
+                                                            email: staff.email,
+                                                            fullName: staff.fullName || "",
+                                                            phone: staff.phone || "",
+                                                            address: staff.address || "",
+                                                            gender: staff.gender || "",
+                                                            status: staff.status || "",
+                                                        },
+                                                        errors: {
+                                                            ...prev.errors,
+                                                            username: "",
+                                                            fullName: "",
+                                                            email: "",
+                                                            phone: "",
+                                                            address: "",
+                                                            gender: "",
+                                                            status: "",
+                                                        }
+                                                    }))
+                                                }
+                                                className="p-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300"
+                                                title="Chỉnh sửa"
+                                            >
+                                                <Edit className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() =>
+                                                    setState((prev) => ({ ...prev, confirmAction: { type: "block", staffId: staff.operatorId } }))
+                                                }
+                                                className="p-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300"
+                                                title="Chặn nhân viên"
+                                            >
+                                                <Ban className="w-5 h-5" />
+                                            </button>
+                                        </td>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-                                    {state.staffList.map((staff, index) => (
-                                        <tr key={staff.operatorId} className="border-b hover:bg-gray-50">
-                                            <td className="p-3">{staff.fullName || "Chưa có"}</td>
-                                            <td className="p-3">@{staff.username || "Chưa có"}</td>
-                                            <td className="p-3">{staff.email || "Chưa có"}</td>
-                                            <td className="p-3">{staff.phone || "Chưa có"}</td>
-                                            <td className="p-3">{staff.address || "Chưa có"}</td>
-                                            <td className="p-3">{staff.status || "Chưa có"}</td>
-                                            <td className="p-3">{staff.gender || "Chưa có"}</td>
-                                            <td className="p-3 flex gap-2">
-                                                <button
-                                                    onClick={() => fetchStaffDetails(staff.operatorId)}
-                                                    className="p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600"
-                                                >
-                                                    <User className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setState((prev) => ({ ...prev, selectedStaff: staff }))}
-                                                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                                                >
-                                                    <MessageSquare className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        setState((prev) => ({
-                                                            ...prev,
-                                                            editStaff: staff,
-                                                            editForm: {
-                                                                username: staff.username,
-                                                                email: staff.email,
-                                                                fullName: staff.fullName || "",
-                                                                phone: staff.phone || "",
-                                                                address: staff.address || "",
-                                                                gender: staff.gender || "",
-                                                                status: staff.status || "",
-                                                            },
-                                                        }))
-                                                    }
-                                                    className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                                                >
-                                                    <Edit className="w-5 h-5" />
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        setState((prev) => ({ ...prev, confirmAction: { type: "block", staffId: staff.operatorId } }))
-                                                    }
-                                                    className="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-                                                >
-                                                    <Ban className="w-5 h-5" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-
-                        {state.totalPages > 1 && (
-                            <div className="flex justify-center gap-3 mt-4 items-center">
-                                <button
-                                    onClick={goToPrevious}
-                                    disabled={state.currentPage === 0}
-                                    className="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                {getPageNumbers().map((page) => (
-                                    <button
-                                        key={page}
-                                        onClick={() => fetchStaffList(page)}
-                                        className={`px-3 py-1 rounded-full ${
-                                            page === state.currentPage
-                                                ? "bg-purple-600 text-white shadow-md"
-                                                : "bg-gray-200 text-purple-600 hover:bg-gray-300"
-                                        } transition-all duration-300`}
-                                    >
-                                        {page + 1}
-                                    </button>
                                 ))}
-                                <button
-                                    onClick={goToNext}
-                                    disabled={state.currentPage === state.totalPages - 1}
-                                    className="p-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <ChevronLeft className="w-5 h-5 rotate-180" />
-                                </button>
-                                <span className="text-sm text-gray-600 font-medium">
-                  Trang {state.currentPage + 1} / {state.totalPages}
-                </span>
-                            </div>
-                        )}
-
-                        {state.selectedStaff && (
-                            <FeedbackModal
-                                staff={state.selectedStaff}
-                                feedback={state.feedback}
-                                setFeedback={(value) => setState((prev) => ({ ...prev, feedback: value }))}
-                                onSubmit={handleFeedback}
-                                onClose={() => setState((prev) => ({ ...prev, selectedStaff: null }))}
-                            />
-                        )}
-
-                        {state.editStaff && (
-                            <EditModal
-                                staff={state.editStaff}
-                                editForm={state.editForm}
-                                setEditForm={(value) => setState((prev) => ({ ...prev, editForm: value }))}
-                                onSubmit={handleEdit}
-                                onClose={() => setState((prev) => ({ ...prev, editStaff: null }))}
-                            />
-                        )}
-
-                        {state.confirmAction.type && (
-                            <ConfirmModal
-                                onConfirm={handleBlock}
-                                onClose={() => setState((prev) => ({ ...prev, confirmAction: { type: "", staffId: null } }))}
-                            />
-                        )}
-
-                        {state.showDetailsModal && state.staffDetails && (
-                            <StaffDetailsModal
-                                staff={state.staffDetails}
-                                onClose={() => setState((prev) => ({ ...prev, showDetailsModal: false }))}
-                            />
-                        )}
-                    </div>
-                </div>
+                                </tbody>
+                            </table>
+                            {state.totalPages > 1 && (
+                                <div className="flex justify-center gap-3 mt-12 items-center">
+                                    <button
+                                        onClick={goToPrevious}
+                                        disabled={state.currentPage === 0}
+                                        className="p-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Trang trước"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    {getPageNumbers().map((page) => (
+                                        <button
+                                            key={page}
+                                            onClick={() => fetchStaffList(page)}
+                                            className={`px-4 py-2 rounded-full ${
+                                                page === state.currentPage
+                                                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md"
+                                                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                            } transition-all duration-300`}
+                                            title={`Trang ${page + 1}`}
+                                        >
+                                            {page + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={goToNext}
+                                        disabled={state.currentPage === state.totalPages - 1}
+                                        className="p-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Trang sau"
+                                    >
+                                        <ChevronLeft className="w-5 h-5 rotate-180" />
+                                    </button>
+                                    <span className="text-sm text-gray-600 font-medium">
+                                        Trang {state.currentPage + 1} / {state.totalPages}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </main>
             </div>
-            <Footer
-                className="w-full bg-gray-800 text-white p-4 fixed bottom-0 left-0 z-10"
-                style={{ width: "calc(100% - 256px)" }}
-            />
+            <Footer />
+            {state.selectedStaff && (
+                <FeedbackModal
+                    staff={state.selectedStaff}
+                    feedback={state.feedback}
+                    setFeedback={(value) => setState((prev) => ({ ...prev, feedback: value }))}
+                    onSubmit={handleFeedback}
+                    onClose={() => setState((prev) => ({ ...prev, selectedStaff: null, feedback: "", errors: { ...prev.errors, feedback: "" } }))}
+                    errors={state.errors}
+                />
+            )}
+            {state.editStaff && (
+                <EditModal
+                    staff={state.editStaff}
+                    editForm={state.editForm}
+                    setEditForm={(value) => setState((prev) => ({ ...prev, editForm: value }))}
+                    onSubmit={handleEdit}
+                    onClose={() => setState((prev) => ({ ...prev, editStaff: null, errors: { ...prev.errors, username: "", fullName: "", email: "", phone: "", address: "", gender: "", status: "" } }))}
+                    errors={state.errors}
+                />
+            )}
+            {state.confirmAction.type && (
+                <ConfirmModal
+                    onConfirm={handleBlock}
+                    onClose={() => setState((prev) => ({ ...prev, confirmAction: { type: "", staffId: null } }))}
+                />
+            )}
+            {state.showDetailsModal && state.staffDetails && (
+                <StaffDetailsModal
+                    staff={state.staffDetails}
+                    onClose={() => setState((prev) => ({ ...prev, showDetailsModal: false }))}
+                />
+            )}
         </div>
     );
 }

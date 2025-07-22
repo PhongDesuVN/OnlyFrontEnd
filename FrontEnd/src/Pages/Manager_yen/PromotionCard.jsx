@@ -1,143 +1,167 @@
+"use client"
+
 import { useState } from "react"
-import {
-    Gift, Save, Trash2, TrendingUp,
-    Clock, AlertCircle, X, Tag, Edit
-} from "lucide-react"
+import { Save, Trash2 } from "lucide-react"
 
 const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false)
     const [editedPromo, setEditedPromo] = useState({
         id: promo.id,
         name: promo.name || "",
         description: promo.description || "",
-        startDate: new Date(promo.startDate).toISOString().split("T")[0],
-        endDate: new Date(promo.endDate).toISOString().split("T")[0],
-        status: promo.status || "Active" // Added status to editedPromo
+        startDate: new Date(promo.startDate).toISOString().split("T")[0] || "",
+        endDate: new Date(promo.endDate).toISOString().split("T")[0] || "",
+        status: promo.status || "Hoạt động",
+        discountType: promo.discountType || "PERCENTAGE",
+        discountValue: promo.discountValue || 0
     })
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
-            case "active": return "bg-green-100 text-green-700"
-            case "expired": return "bg-red-100 text-red-700"
-            case "pending": return "bg-yellow-100 text-yellow-700"
-            case "cancelled": return "bg-gray-200 text-gray-600"
+            case "hoạt động": return "bg-green-100 text-green-700"
+            case "hết hạn": return "bg-red-100 text-red-700"
+            case "đang chờ": return "bg-yellow-100 text-yellow-700"
+            case "đã hủy": return "bg-gray-200 text-gray-600"
             case "sắp bắt đầu": return "bg-blue-100 text-blue-700"
             default: return "bg-blue-100 text-blue-700"
         }
     }
 
-    const getStatusIcon = (status) => {
-        switch (status?.toLowerCase()) {
-            case "active": return <TrendingUp className="w-4 h-4" />
-            case "expired": return <Clock className="w-4 h-4" />
-            case "pending": return <AlertCircle className="w-4 h-4" />
-            case "cancelled": return <X className="w-4 h-4" />
-            case "sắp bắt đầu": return <Tag className="w-4 h-4" />
-            default: return <Tag className="w-4 h-4" />
-        }
-    }
-
     return (
-        <div className="p-2 border rounded-lg bg-white flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2 w-1/5">
-                <div className="p-1 bg-gradient-to-br from-rose-500 to-indigo-500 text-white rounded">
-                    <Gift className="w-5 h-5" />
+        <>
+            <div
+                className="grid grid-cols-7 gap-4 p-4 items-center text-sm min-h-[60px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                style={{ gridTemplateColumns: "1fr 2fr 1.5fr 1fr 1fr 1fr 1.2fr" }}
+            >
+
+            <span className="pl-4 text-center truncate">{promo.name || "Chưa có tên"}</span>
+                <span className="text-center truncate">{promo.description || "Chưa có mô tả"}</span>
+                <span className="text-center truncate">
+                    {promo.startDate && promo.endDate
+                        ? `${new Date(promo.startDate).toLocaleDateString()} - ${new Date(promo.endDate).toLocaleDateString()}`
+                        : "N/A"}
+                </span>
+                <span className={`text-center truncate px-2 py-1 rounded-full ${getStatusColor(promo.status)}`}>
+                    {promo.status || "Hoạt động"}
+                </span>
+                <span className="text-center truncate">
+                    {promo.discountType === "PERCENTAGE" ? "Phần trăm" : "Số tiền"}
+                </span>
+                <span className="text-center truncate">
+                    {promo.discountValue ? `${promo.discountValue}${promo.discountType === "PERCENTAGE" ? "%" : " VNĐ"}` : "N/A"}
+                </span>
+                <div className="pr-4 text-center flex justify-center gap-2">
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="px-3 py-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-300"
+                    >
+                        <Save className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={() => onCancel(promo.id)}
+                        className="px-3 py-1 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 shadow-md hover:shadow-lg transition-all duration-300"
+                    >
+                        <Trash2 className="w-5 h-5" />
+                    </button>
                 </div>
-                <span className="truncate">{promo.name || "Chưa có tên"}</span>
-            </div>
-            <div className="w-1/5">
-                <span>{new Date(promo.startDate).toLocaleDateString()} - {new Date(promo.endDate).toLocaleDateString()}</span>
-            </div>
-            <div className="w-1/5">
-                <span className="break-words">{promo.description || "Chưa có mô tả"}</span>
-            </div>
-            <div className={`w-1/5 flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(promo.status)}`}>
-                {getStatusIcon(promo.status)} {promo.status}
-            </div>
-            <div className="w-1/5 flex items-center gap-2">
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                    <Edit className="w-4 h-4" />
-                </button>
-                <button
-                    onClick={() => onCancel(promo.id)}
-                    className="p-1 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                    <Trash2 className="w-4 h-4" />
-                </button>
-                <button
-                    onClick={() => setIsDescriptionModalOpen(true)}
-                    className="p-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-                >
-                    <Edit className="w-4 h-4" />
-                </button>
             </div>
 
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h2 className="text-lg font-bold mb-4">Chỉnh sửa khuyến mãi</h2>
+                    <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-xl border-2 border-blue-100 w-full max-w-md">
+                        <h2 className="text-lg font-bold text-blue-900 mb-4">Chỉnh sửa khuyến mãi</h2>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Tên</label>
+                                <label className="block text-sm font-medium text-blue-700">Tên</label>
                                 <input
                                     type="text"
                                     value={editedPromo.name}
-                                    onChange={(e) => setEditedPromo({ ...editedPromo, name: e.target.value })}
-                                    className="mt-1 p-2 w-full border rounded"
+                                    onChange={(e) => {
+                                        if (e.target.value.length <= 100) {
+                                            setEditedPromo({ ...editedPromo, name: e.target.value })
+                                        } else {
+                                            alert("Tên khuyến mãi không được vượt quá 100 ký tự!")
+                                        }
+                                    }}
+                                    className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
                                 />
                             </div>
                             <div className="flex gap-2">
                                 <div className="w-1/2">
-                                    <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
+                                    <label className="block text-sm font-medium text-blue-700">Ngày bắt đầu</label>
                                     <input
                                         type="date"
                                         value={editedPromo.startDate}
                                         onChange={(e) => setEditedPromo({ ...editedPromo, startDate: e.target.value })}
-                                        className="mt-1 p-2 w-full border rounded"
+                                        className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
                                     />
                                 </div>
                                 <div className="w-1/2">
-                                    <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
+                                    <label className="block text-sm font-medium text-blue-700">Ngày kết thúc</label>
                                     <input
                                         type="date"
                                         value={editedPromo.endDate}
                                         onChange={(e) => setEditedPromo({ ...editedPromo, endDate: e.target.value })}
-                                        className="mt-1 p-2 w-full border rounded"
+                                        className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Mô tả</label>
+                                <label className="block text-sm font-medium text-blue-700">Mô tả</label>
                                 <input
                                     type="text"
                                     value={editedPromo.description}
-                                    onChange={(e) => setEditedPromo({ ...editedPromo, description: e.target.value })}
-                                    className="mt-1 p-2 w-full border rounded"
+                                    onChange={(e) => {
+                                        if (e.target.value.length <= 200) {
+                                            setEditedPromo({ ...editedPromo, description: e.target.value })
+                                            onUpdateDescription({ id: editedPromo.id, description: e.target.value })
+                                        } else {
+                                            alert("Mô tả không được vượt quá 200 ký tự!")
+                                        }
+                                    }}
+                                    className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
+                                <label className="block text-sm font-medium text-blue-700">Trạng thái</label>
                                 <select
                                     value={editedPromo.status}
                                     onChange={(e) => setEditedPromo({ ...editedPromo, status: e.target.value })}
-                                    className="mt-1 p-2 w-full border rounded"
+                                    className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
                                 >
-                                    <option value="Active">Active</option>
-                                    <option value="Expired">Expired</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Hoạt động">Hoạt động</option>
+                                    <option value="Hết hạn">Hết hạn</option>
+                                    <option value="Đang chờ">Đang chờ</option>
+                                    <option value="Đã hủy">Đã hủy</option>
                                     <option value="Sắp bắt đầu">Sắp bắt đầu</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-blue-700">Loại giảm giá</label>
+                                <select
+                                    value={editedPromo.discountType}
+                                    onChange={(e) => setEditedPromo({ ...editedPromo, discountType: e.target.value })}
+                                    className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
+                                >
+                                    <option value="PERCENTAGE">Phần trăm</option>
+                                    <option value="AMOUNT">Số tiền cố định</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-blue-700">Giá trị giảm giá</label>
+                                <input
+                                    type="number"
+                                    value={editedPromo.discountValue}
+                                    onChange={(e) => setEditedPromo({ ...editedPromo, discountValue: e.target.value })}
+                                    className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
+                                    min="0"
+                                />
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-4">
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg"
                             >
                                 Hủy
                             </button>
@@ -147,10 +171,22 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                         alert("Ngày bắt đầu phải trước ngày kết thúc!")
                                         return
                                     }
+                                    if (editedPromo.discountValue < 0) {
+                                        alert("Giá trị giảm giá không được âm!")
+                                        return
+                                    }
+                                    if (editedPromo.name.length > 100) {
+                                        alert("Tên khuyến mãi không được vượt quá 100 ký tự!")
+                                        return
+                                    }
+                                    if (editedPromo.description.length > 200) {
+                                        alert("Mô tả không được vượt quá 200 ký tự!")
+                                        return
+                                    }
                                     onUpdate(editedPromo)
                                     setIsModalOpen(false)
                                 }}
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg"
                             >
                                 Lưu
                             </button>
@@ -158,43 +194,7 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                     </div>
                 </div>
             )}
-
-            {isDescriptionModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h2 className="text-lg font-bold mb-4">Cập nhật mô tả</h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Mô tả</label>
-                                <input
-                                    type="text"
-                                    value={editedPromo.description}
-                                    onChange={(e) => setEditedPromo({ ...editedPromo, description: e.target.value })}
-                                    className="mt-1 p-2 w-full border rounded"
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end gap-4">
-                            <button
-                                onClick={() => setIsDescriptionModalOpen(false)}
-                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={() => {
-                                    onUpdateDescription({ id: editedPromo.id, description: editedPromo.description })
-                                    setIsDescriptionModalOpen(false)
-                                }}
-                                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                            >
-                                Lưu
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+        </>
     )
 }
 

@@ -21,10 +21,14 @@ import {
 } from "recharts"
 import { jsPDF } from "jspdf"
 import { Download, TrendingUp, Users, Clock, CheckCircle, AlertCircle, XCircle, BarChart3 } from "lucide-react"
-import { API_BASE_URL } from "../../utils/api";
+import { API_BASE_URL } from "../../utils/api"
+import Header from '../../Components/FormLogin_yen/Header.jsx'
+import Footer from '../../Components/FormLogin_yen/Footer.jsx'
+import Sidebar from '../../Components/Sidebar_Trung/Sidebar.jsx'
 
 let fontLoaded = false
-const apiRoot = API_BASE_URL + "/api";
+const apiRoot = API_BASE_URL + "/api"
+
 const loadFont = async () => {
     if (fontLoaded) return
     try {
@@ -176,8 +180,6 @@ const exportToPDF = (
     doc.save(fileName)
 }
 
-
-
 const TransportUnitOverview = () => {
     const [allUnits, setAllUnits] = useState([])
     const [dashboardStats, setDashboardStats] = useState(null)
@@ -193,22 +195,6 @@ const TransportUnitOverview = () => {
     const COLORS = ["#3B82F6", "#10B981", "#EF4444", "#F59E0B", "#8B5CF6", "#06B6D4"]
 
     useEffect(() => {
-        const loadFont = async () => {
-            try {
-                const res = await fetch("/fonts/Roboto-Regular.txt")
-                const RobotoRegular = await res.text()
-                jsPDF.API.events.push([
-                    "addFonts",
-                    function () {
-                        this.addFileToVFS("Roboto-Regular.ttf", RobotoRegular)
-                        this.addFont("Roboto-Regular.ttf", "Roboto-Regular", "normal")
-                        this.addFont("Roboto-Regular.ttf", "Roboto-Regular", "bold")
-                    },
-                ])
-            } catch (error) {
-                console.error("Lỗi khi tải font Roboto:", error)
-            }
-        }
         loadFont()
     }, [])
 
@@ -309,365 +295,396 @@ const TransportUnitOverview = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center">
-                <div className="text-center bg-white/80 backdrop-blur-sm rounded-2xl p-12 shadow-2xl border border-blue-200">
-                    <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-600 border-t-transparent mx-auto"></div>
-                    <p className="mt-6 text-blue-700 text-xl font-semibold">Đang tải dữ liệu dashboard...</p>
-                    <p className="mt-2 text-blue-500">Vui lòng chờ trong giây lát</p>
+            <div className="min-h-screen flex flex-col">
+                <div className="flex min-h-screen bg-blue-50">
+                    <Sidebar />
+                    <div className="flex-1 min-h-screen">
+                        <Header />
+                        <main className="flex-grow pt-10 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl border border-blue-100 flex items-center justify-center m-4 p-4">
+                            <div className="text-center bg-white/80 backdrop-blur-sm rounded-2xl p-12 shadow-2xl border border-blue-200">
+                                <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-600 border-t-transparent mx-auto"></div>
+                                <p className="mt-6 text-blue-700 text-xl font-semibold">Đang tải dữ liệu dashboard...</p>
+                                <p className="mt-2 text-blue-500">Vui lòng chờ trong giây lát</p>
+                            </div>
+                        </main>
+                    </div>
                 </div>
+                <footer className="w-full">
+                    <Footer />
+                </footer>
             </div>
         )
     }
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center">
-                <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8 max-w-md shadow-2xl">
-                    <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                            <XCircle className="h-8 w-8 text-red-500" />
-                        </div>
-                        <div className="ml-4">
-                            <h3 className="text-lg font-bold text-red-800">Lỗi tải dữ liệu</h3>
-                            <div className="mt-2 text-sm text-red-700">{error}</div>
-                        </div>
+            <div className="min-h-screen flex flex-col">
+                <div className="flex min-h-screen bg-blue-50">
+                    <Sidebar />
+                    <div className="flex-1 min-h-screen">
+                        <Header />
+                        <main className="flex-grow pt-10 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl border border-blue-100 flex items-center justify-center m-4 p-4">
+                            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-8 max-w-md shadow-2xl">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <XCircle className="h-8 w-8 text-red-500" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg font-bold text-red-800">Lỗi tải dữ liệu</h3>
+                                        <div className="mt-2 text-sm text-red-700">{error}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
                     </div>
                 </div>
+                <footer className="w-full">
+                    <Footer />
+                </footer>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Enhanced Header */}
-                <div className="mb-12 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-800 bg-clip-text text-transparent">
-                            Dashboard Đơn Vị Vận Tải
-                        </h1>
-                        <p className="mt-3 text-blue-600 text-lg font-medium">Tổng quan hiệu suất và phân tích dữ liệu chi tiết</p>
-                        <div className="mt-2 flex items-center gap-2 text-sm text-blue-500">
-                            <Clock className="w-4 h-4" />
-                            Cập nhật lần cuối: {new Date().toLocaleString("vi-VN")}
-                        </div>
-                    </div>
-                    <button
-                        onClick={async () => {
-                            await loadFont()
-                            exportToPDF(
-                                dashboardStats,
-                                performanceMetrics,
-                                total,
-                                historicalData,
-                                weeklyActivity,
-                                managerPerformance,
-                                approvalTrends,
-                            )
-                        }}
-                        className="inline-flex items-center px-6 py-4 border-2 border-blue-300 text-sm font-bold rounded-2xl shadow-xl text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 transform hover:scale-105"
-                    >
-                        <Download className="w-5 h-5 mr-2" />
-                        Xuất báo cáo PDF
-                    </button>
-                </div>
-
-                {/* Enhanced Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <Users className="w-8 h-8 text-white" />
+        <div className="min-h-screen flex flex-col">
+            <div className="flex min-h-screen bg-blue-50">
+                <Sidebar />
+                <div className="flex-1 min-h-screen">
+                    <Header />
+                    <main className="flex-grow pt-10 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl border border-blue-100 m-4 p-4 pb-8">
+                        {/* Enhanced Header */}
+                        <div className="mb-12 flex justify-between items-center">
+                            <div>
+                                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 via-blue-600 to-blue-800 bg-clip-text text-transparent">
+                                    Dashboard Đơn Vị Vận Tải
+                                </h1>
+                                <p className="mt-3 text-blue-600 text-lg font-medium">Tổng quan hiệu suất và phân tích dữ liệu chi tiết</p>
+                                <div className="mt-2 flex items-center gap-2 text-sm text-blue-500">
+                                    <Clock className="w-4 h-4" />
+                                    Cập nhật lần cuối: {new Date().toLocaleString("vi-VN")}
                                 </div>
                             </div>
-                            <div className="ml-5">
-                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tổng đơn vị</p>
-                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.totalUnits : 0}</p>
-                            </div>
+                            <button
+                                onClick={async () => {
+                                    await loadFont()
+                                    exportToPDF(
+                                        dashboardStats,
+                                        performanceMetrics,
+                                        total,
+                                        historicalData,
+                                        weeklyActivity,
+                                        managerPerformance,
+                                        approvalTrends,
+                                    )
+                                }}
+                                className="inline-flex items-center px-6 py-4 border-2 border-blue-300 text-sm font-bold rounded-2xl shadow-xl text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 transform hover:scale-105"
+                            >
+                                <Download className="w-5 h-5 mr-2" />
+                                Xuất báo cáo PDF
+                            </button>
                         </div>
-                    </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <AlertCircle className="w-8 h-8 text-white" />
-                                </div>
-                            </div>
-                            <div className="ml-5">
-                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Đang chờ duyệt</p>
-                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.pendingApprovals : 0}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <CheckCircle className="w-8 h-8 text-white" />
-                                </div>
-                            </div>
-                            <div className="ml-5">
-                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tỷ lệ duyệt</p>
-                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.approvalRate?.toFixed(1) : 0}%</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <Clock className="w-8 h-8 text-white" />
-                                </div>
-                            </div>
-                            <div className="ml-5">
-                                <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Thời gian xử lý TB</p>
-                                <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.avgProcessingTime?.toFixed(1) : 0}h</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Enhanced Charts Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
-                        <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <BarChart3 className="w-6 h-6 text-blue-600" />
-                            Phân bố trạng thái
-                        </h3>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <PieChart>
-                                <Pie
-                                    data={statusChartData.length ? statusChartData : [{ name: 'Không có dữ liệu', value: 0 }]}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                    outerRadius={120}
-                                    fill="#3B82F6"
-                                    dataKey="value"
-                                >
-                                    {statusChartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
-                        <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <TrendingUp className="w-6 h-6 text-blue-600" />
-                            Tổng quan đơn vị
-                        </h3>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <BarChart data={overviewBarData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="name" stroke="#374151" />
-                                <YAxis stroke="#374151" />
-                                <Tooltip />
-                                <Bar dataKey="value" fill="#3B82F6" radius={[8, 8, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Historical Data Chart */}
-                {historicalData.length > 0 && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
-                        <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <BarChart3 className="w-6 h-6 text-blue-600" />
-                            Dữ liệu lịch sử theo tháng
-                        </h3>
-                        <ResponsiveContainer width="100%" height={450}>
-                            <AreaChart data={historicalData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="period" stroke="#374151" />
-                                <YAxis stroke="#374151" />
-                                <Tooltip />
-                                <Area
-                                    type="monotone"
-                                    dataKey="totalUnits"
-                                    stackId="1"
-                                    stroke="#3B82F6"
-                                    fill="#3B82F6"
-                                    fillOpacity={0.6}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="activeUnits"
-                                    stackId="1"
-                                    stroke="#10B981"
-                                    fill="#10B981"
-                                    fillOpacity={0.6}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="pendingUnits"
-                                    stackId="1"
-                                    stroke="#F59E0B"
-                                    fill="#F59E0B"
-                                    fillOpacity={0.6}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-
-                {/* Weekly Activity Chart */}
-                {weeklyActivity.length > 0 && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
-                        <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <TrendingUp className="w-6 h-6 text-blue-600" />
-                            Hoạt động theo tuần
-                        </h3>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={weeklyActivity}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="week" stroke="#374151" />
-                                <YAxis stroke="#374151" />
-                                <Tooltip />
-                                <Legend />
-                                <Line type="monotone" dataKey="approvals" stroke="#10B981" strokeWidth={3} />
-                                <Line type="monotone" dataKey="rejections" stroke="#EF4444" strokeWidth={3} />
-                                <Line type="monotone" dataKey="pending" stroke="#F59E0B" strokeWidth={3} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-
-                {/* Performance Metrics Table */}
-                {performanceMetrics && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl mb-12 border-2 border-blue-100 overflow-hidden">
-                        <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-100 to-blue-50">
-                            <h3 className="text-xl font-bold text-blue-900 flex items-center gap-3">
-                                <BarChart3 className="w-6 h-6 text-blue-600" />
-                                Chỉ số hiệu suất hệ thống
-                            </h3>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y-2 divide-blue-100">
-                                <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
-                                <tr>
-                                    <th className="px-8 py-4 text-left text-sm font-bold text-blue-800 uppercase tracking-wider">
-                                        Chỉ số
-                                    </th>
-                                    <th className="px-8 py-4 text-left text-sm font-bold text-blue-800 uppercase tracking-wider">
-                                        Giá trị
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody className="bg-white/50 divide-y divide-blue-100">
-                                <tr className="hover:bg-blue-50/50 transition-colors duration-200">
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
-                                        Thời gian duyệt trung bình
-                                    </td>
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
-                                        {performanceMetrics.avgApprovalTime?.toFixed(2)} giờ
-                                    </td>
-                                </tr>
-                                <tr className="hover:bg-blue-50/50 transition-colors duration-200">
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
-                                        Thời gian từ chối trung bình
-                                    </td>
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
-                                        {performanceMetrics.avgRejectionTime?.toFixed(2)} giờ
-                                    </td>
-                                </tr>
-                                <tr className="hover:bg-blue-50/50 transition-colors duration-200">
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
-                                        Bottleneck (&gt; 48h)
-                                    </td>
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
-                                        {performanceMetrics.bottleneckCount}
-                                    </td>
-                                </tr>
-                                <tr className="hover:bg-blue-50/50 transition-colors duration-200">
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
-                                        Hiệu suất hệ thống
-                                    </td>
-                                    <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
-                                        {performanceMetrics.systemEfficiency?.toFixed(2)}%
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* Manager Performance Chart */}
-                {managerPerformance.length > 0 && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
-                        <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <Users className="w-6 h-6 text-blue-600" />
-                            Hiệu suất quản lý
-                        </h3>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <BarChart data={managerPerformance}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="managerName" stroke="#374151" />
-                                <YAxis stroke="#374151" />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="approvedCount" fill="#10B981" name="Đã duyệt" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="rejectedCount" fill="#EF4444" name="Đã từ chối" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="pendingCount" fill="#F59E0B" name="Đang chờ" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-
-                {/* Approval Trends Chart */}
-                {approvalTrends.length > 0 && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
-                        <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <TrendingUp className="w-6 h-6 text-blue-600" />
-                            Xu hướng duyệt (30 ngày gần nhất)
-                        </h3>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={approvalTrends}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="date" stroke="#374151" />
-                                <YAxis stroke="#374151" />
-                                <Tooltip />
-                                <Legend />
-                                <Line type="monotone" dataKey="approvals" stroke="#10B981" strokeWidth={3} name="Duyệt" />
-                                <Line type="monotone" dataKey="rejections" stroke="#EF4444" strokeWidth={3} name="Từ chối" />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
-
-                {/* Top Rejection Reasons */}
-                {performanceMetrics?.topRejectionReasons && performanceMetrics.topRejectionReasons.length > 0 && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-100 overflow-hidden">
-                        <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-white">
-                            <h3 className="text-xl font-bold text-blue-900 flex items-center gap-3">
-                                <XCircle className="w-6 h-6 text-red-600" />
-                                Lý do từ chối phổ biến
-                            </h3>
-                        </div>
-                        <div className="p-8">
-                            <div className="space-y-6">
-                                {performanceMetrics.topRejectionReasons.map((reason, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center p-4 bg-gradient-to-r from-red-50 to-red-100/50 rounded-xl border border-red-200"
-                                    >
-                                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
-                                            <span className="text-sm font-bold text-white">{index + 1}</span>
-                                        </div>
-                                        <div className="ml-4">
-                                            <p className="text-sm font-medium text-red-900">{reason}</p>
+                        {/* Enhanced Stats Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <Users className="w-8 h-8 text-white" />
                                         </div>
                                     </div>
-                                ))}
+                                    <div className="ml-5">
+                                        <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tổng đơn vị</p>
+                                        <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.totalUnits : 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <AlertCircle className="w-8 h-8 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="ml-5">
+                                        <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Đang chờ duyệt</p>
+                                        <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.pendingApprovals : 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <CheckCircle className="w-8 h-8 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="ml-5">
+                                        <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Tỷ lệ duyệt</p>
+                                        <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.approvalRate?.toFixed(1) : 0}%</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <Clock className="w-8 h-8 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="ml-5">
+                                        <p className="text-sm font-bold text-blue-700 uppercase tracking-wider">Thời gian xử lý TB</p>
+                                        <p className="text-3xl font-bold text-blue-900">{dashboardStats ? dashboardStats.avgProcessingTime?.toFixed(1) : 0}h</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+
+                        {/* Enhanced Charts Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
+                                <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                    <BarChart3 className="w-6 h-6 text-blue-600" />
+                                    Phân bố trạng thái
+                                </h3>
+                                <ResponsiveContainer width="100%" height={350}>
+                                    <PieChart>
+                                        <Pie
+                                            data={statusChartData.length ? statusChartData : [{ name: 'Không có dữ liệu', value: 0 }]}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            outerRadius={120}
+                                            fill="#3B82F6"
+                                            dataKey="value"
+                                        >
+                                            {statusChartData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
+                                <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                    <TrendingUp className="w-6 h-6 text-blue-600" />
+                                    Tổng quan đơn vị
+                                </h3>
+                                <ResponsiveContainer width="100%" height={350}>
+                                    <BarChart data={overviewBarData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                        <XAxis dataKey="name" stroke="#374151" />
+                                        <YAxis stroke="#374151" />
+                                        <Tooltip />
+                                        <Bar dataKey="value" fill="#3B82F6" radius={[8, 8, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* Historical Data Chart */}
+                        {historicalData.length > 0 && (
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
+                                <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                    <BarChart3 className="w-6 h-6 text-blue-600" />
+                                    Dữ liệu lịch sử theo tháng
+                                </h3>
+                                <ResponsiveContainer width="100%" height={450}>
+                                    <AreaChart data={historicalData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                        <XAxis dataKey="period" stroke="#374151" />
+                                        <YAxis stroke="#374151" />
+                                        <Tooltip />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="totalUnits"
+                                            stackId="1"
+                                            stroke="#3B82F6"
+                                            fill="#3B82F6"
+                                            fillOpacity={0.6}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="activeUnits"
+                                            stackId="1"
+                                            stroke="#10B981"
+                                            fill="#10B981"
+                                            fillOpacity={0.6}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="pendingUnits"
+                                            stackId="1"
+                                            stroke="#F59E0B"
+                                            fill="#F59E0B"
+                                            fillOpacity={0.6}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+
+                        {/* Weekly Activity Chart */}
+                        {weeklyActivity.length > 0 && (
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
+                                <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                    <TrendingUp className="w-6 h-6 text-blue-600" />
+                                    Hoạt động theo tuần
+                                </h3>
+                                <ResponsiveContainer width="100%" height={350}>
+                                    <LineChart data={weeklyActivity}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                        <XAxis dataKey="week" stroke="#374151" />
+                                        <YAxis stroke="#374151" />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Line type="monotone" dataKey="approvals" stroke="#10B981" strokeWidth={3} />
+                                        <Line type="monotone" dataKey="rejections" stroke="#EF4444" strokeWidth={3} />
+                                        <Line type="monotone" dataKey="pending" stroke="#F59E0B" strokeWidth={3} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+
+                        {/* Performance Metrics Table */}
+                        {performanceMetrics && (
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl mb-12 border-2 border-blue-100 overflow-hidden">
+                                <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-100 to-blue-50">
+                                    <h3 className="text-xl font-bold text-blue-900 flex items-center gap-3">
+                                        <BarChart3 className="w-6 h-6 text-blue-600" />
+                                        Chỉ số hiệu suất hệ thống
+                                    </h3>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y-2 divide-blue-100">
+                                        <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
+                                        <tr>
+                                            <th className="px-8 py-4 text-left text-sm font-bold text-blue-800 uppercase tracking-wider">
+                                                Chỉ số
+                                            </th>
+                                            <th className="px-8 py-4 text-left text-sm font-bold text-blue-800 uppercase tracking-wider">
+                                                Giá trị
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody className="bg-white/50 divide-y divide-blue-100">
+                                        <tr className="hover:bg-blue-50/50 transition-colors duration-200">
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
+                                                Thời gian duyệt trung bình
+                                            </td>
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
+                                                {performanceMetrics.avgApprovalTime?.toFixed(2)} giờ
+                                            </td>
+                                        </tr>
+                                        <tr className="hover:bg-blue-50/50 transition-colors duration-200">
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
+                                                Thời gian từ chối trung bình
+                                            </td>
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
+                                                {performanceMetrics.avgRejectionTime?.toFixed(2)} giờ
+                                            </td>
+                                        </tr>
+                                        <tr className="hover:bg-blue-50/50 transition-colors duration-200">
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
+                                                Bottleneck (> 48h)
+                                            </td>
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
+                                                {performanceMetrics.bottleneckCount}
+                                            </td>
+                                        </tr>
+                                        <tr className="hover:bg-blue-50/50 transition-colors duration-200">
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm font-semibold text-blue-900">
+                                                Hiệu suất hệ thống
+                                            </td>
+                                            <td className="px-8 py-5 whitespace-nowrap text-sm text-blue-700 font-medium">
+                                                {performanceMetrics.systemEfficiency?.toFixed(2)}%
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Manager Performance Chart */}
+                        {managerPerformance.length > 0 && (
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
+                                <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                    <Users className="w-6 h-6 text-blue-600" />
+                                    Hiệu suất quản lý
+                                </h3>
+                                <ResponsiveContainer width="100%" height={350}>
+                                    <BarChart data={managerPerformance}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                        <XAxis dataKey="managerName" stroke="#374151" />
+                                        <YAxis stroke="#374151" />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="approvedCount" fill="#10B981" name="Đã duyệt" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="rejectedCount" fill="#EF4444" name="Đã từ chối" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="pendingCount" fill="#F59E0B" name="Đang chờ" radius={[4, 4, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+
+                        {/* Approval Trends Chart */}
+                        {approvalTrends.length > 0 && (
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border-2 border-blue-100">
+                                <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                    <TrendingUp className="w-6 h-6 text-blue-600" />
+                                    Xu hướng duyệt (30 ngày gần nhất)
+                                </h3>
+                                <ResponsiveContainer width="100%" height={350}>
+                                    <LineChart data={approvalTrends}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                        <XAxis dataKey="date" stroke="#374151" />
+                                        <YAxis stroke="#374151" />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Line type="monotone" dataKey="approvals" stroke="#10B981" strokeWidth={3} name="Duyệt" />
+                                        <Line type="monotone" dataKey="rejections" stroke="#EF4444" strokeWidth={3} name="Từ chối" />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+
+                        {/* Top Rejection Reasons */}
+                        {performanceMetrics?.topRejectionReasons && performanceMetrics.topRejectionReasons.length > 0 && (
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-100 overflow-hidden">
+                                <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-white">
+                                    <h3 className="text-xl font-bold text-blue-900 flex items-center gap-3">
+                                        <XCircle className="w-6 h-6 text-red-600" />
+                                        Lý do từ chối phổ biến
+                                    </h3>
+                                </div>
+                                <div className="p-8">
+                                    <div className="space-y-6">
+                                        {performanceMetrics.topRejectionReasons.map((reason, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center p-4 bg-gradient-to-r from-red-50 to-red-100/50 rounded-xl border border-red-200"
+                                            >
+                                                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                                                    <span className="text-sm font-bold text-white">{index + 1}</span>
+                                                </div>
+                                                <div className="ml-4">
+                                                    <p className="text-sm font-medium text-red-900">{reason}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
             </div>
+            <footer className="w-full">
+                <Footer />
+            </footer>
         </div>
     )
 }
