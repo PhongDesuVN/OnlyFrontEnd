@@ -3,6 +3,14 @@
 import { useState } from "react"
 import { Save, Trash2 } from "lucide-react"
 
+// Hàm validate discountValue dựa trên discountType
+const validateDiscountValue = (value, discountType) => {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue < 0) return false;
+    if (discountType === "Phần trăm" && numValue > 100) return false;
+    return true;
+}
+
 const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [editedPromo, setEditedPromo] = useState({
@@ -12,9 +20,10 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
         startDate: new Date(promo.startDate).toISOString().split("T")[0] || "",
         endDate: new Date(promo.endDate).toISOString().split("T")[0] || "",
         status: promo.status || "Hoạt động",
-        discountType: promo.discountType || "PERCENTAGE",
+        discountType: promo.discountType || "Phần trăm",
         discountValue: promo.discountValue || 0
     })
+    const [discountValueError, setDiscountValueError] = useState("")
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
@@ -33,8 +42,7 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                 className="grid grid-cols-7 gap-4 p-4 items-center text-sm min-h-[60px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
                 style={{ gridTemplateColumns: "1fr 2fr 1.5fr 1fr 1fr 1fr 1.2fr" }}
             >
-
-            <span className="pl-4 text-center truncate">{promo.name || "Chưa có tên"}</span>
+                <span className="pl-4 text-center truncate">{promo.name || "Chưa có tên"}</span>
                 <span className="text-center truncate">{promo.description || "Chưa có mô tả"}</span>
                 <span className="text-center truncate">
                     {promo.startDate && promo.endDate
@@ -45,10 +53,10 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                     {promo.status || "Hoạt động"}
                 </span>
                 <span className="text-center truncate">
-                    {promo.discountType === "PERCENTAGE" ? "Phần trăm" : "Số tiền"}
+                    {promo.discountType || "Phần trăm"}
                 </span>
                 <span className="text-center truncate">
-                    {promo.discountValue ? `${promo.discountValue}${promo.discountType === "PERCENTAGE" ? "%" : " VNĐ"}` : "N/A"}
+                    {promo.discountValue ? `${promo.discountValue}${promo.discountType === "Phần trăm" ? "%" : " VNĐ"}` : "N/A"}
                 </span>
                 <div className="pr-4 text-center flex justify-center gap-2">
                     <button
@@ -140,30 +148,60 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                 <label className="block text-sm font-medium text-blue-700">Loại giảm giá</label>
                                 <select
                                     value={editedPromo.discountType}
-                                    onChange={(e) => setEditedPromo({ ...editedPromo, discountType: e.target.value })}
+                                    onChange={(e) => {
+                                        setEditedPromo({ ...editedPromo, discountType: e.target.value, discountValue: "" })
+                                        setDiscountValueError("")
+                                    }}
                                     className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
                                 >
-                                    <option value="PERCENTAGE">Phần trăm</option>
-                                    <option value="AMOUNT">Số tiền cố định</option>
+                                    <option value="Phần trăm">Phần trăm</option>
+                                    <option value="Số tiền cố định">Số tiền cố định</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-blue-700">Giá trị giảm giá</label>
-                                <input
-                                    type="number"
-                                    value={editedPromo.discountValue}
-                                    onChange={(e) => setEditedPromo({ ...editedPromo, discountValue: e.target.value })}
-                                    className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
-                                    min="0"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={editedPromo.discountValue}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                            setEditedPromo({ ...editedPromo, discountValue: value })
+                                            if (value && !validateDiscountValue(value, editedPromo.discountType)) {
+                                                setDiscountValueError(
+                                                    editedPromo.discountType === "Phần trăm"
+                                                        ? "Giá trị giảm giá phải từ 0 đến 100!"
+                                                        : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!"
+                                                )
+                                            } else {
+                                                setDiscountValueError("")
+                                            }
+                                        }}
+                                        className={`mt-1 p-2 w-full border-2 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm pr-12 ${
+                                            discountValueError ? "border-red-500" : "border-blue-200"
+                                        }`}
+                                        min="0"
+                                        step={editedPromo.discountType === "Phần trăm" ? "0.1" : "1000"}
+                                        placeholder={editedPromo.discountType === "Phần trăm" ? "Ví dụ: 10" : "Ví dụ: 50000"}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                        {editedPromo.discountType === "Phần trăm" ? "%" : "VND"}
+                                    </span>
+                                </div>
+                                {discountValueError && (
+                                    <p className="text-red-500 text-xs mt-1">{discountValueError}</p>
+                                )}
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-4">
                             <button
-                                onClick={() => setIsModalOpen(false)}
+                                onClick={() => {
+                                    setIsModalOpen(false)
+                                    setDiscountValueError("")
+                                }}
                                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg"
                             >
-                                Hủy
+                                Thoát
                             </button>
                             <button
                                 onClick={() => {
@@ -171,8 +209,10 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                         alert("Ngày bắt đầu phải trước ngày kết thúc!")
                                         return
                                     }
-                                    if (editedPromo.discountValue < 0) {
-                                        alert("Giá trị giảm giá không được âm!")
+                                    if (!validateDiscountValue(editedPromo.discountValue, editedPromo.discountType)) {
+                                        alert(editedPromo.discountType === "Phần trăm"
+                                            ? "Giá trị giảm giá phải từ 0 đến 100 cho loại phần trăm!"
+                                            : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!")
                                         return
                                     }
                                     if (editedPromo.name.length > 100) {
@@ -185,8 +225,12 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                     }
                                     onUpdate(editedPromo)
                                     setIsModalOpen(false)
+                                    setDiscountValueError("")
                                 }}
-                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg"
+                                className={`px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg ${
+                                    discountValueError ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
+                                disabled={discountValueError}
                             >
                                 Lưu
                             </button>

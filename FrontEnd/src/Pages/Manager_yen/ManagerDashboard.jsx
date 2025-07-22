@@ -211,599 +211,599 @@ const Dashboard = () => {
             <div className="flex min-h-screen bg-gray-50">
                 <Header/>
                 <div className="flex flex-1 pt-[70px]">
-                {/* Sidebar */}
-                <aside className="w-80 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white pb-[336px] h-full shadow-2xl border-r border-blue-700/30 backdrop-blur-sm z-20 mr-4">
-                    {/* Enhanced Header */}
-                    <div className="mb-10 p-6 relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-blue-300/5 to-transparent blur-2xl rounded-2xl"></div>
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-4">
+                    {/* Sidebar */}
+                    <aside className="w-80 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white pb-[336px] h-full shadow-2xl border-r border-blue-700/30 backdrop-blur-sm z-20 mr-4">
+                        {/* Enhanced Header */}
+                        <div className="mb-10 p-6 relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-blue-300/5 to-transparent blur-2xl rounded-2xl"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
 
-                                <div>
-                                    <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Hệ Thống Quản Lý</h2>
-                                </div>
-                            </div>
-                            <div className="w-16 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-transparent rounded-full"></div>
-                        </div>
-                    </div>
-
-                    <nav className="px-4 space-y-2"> {/* Giảm space-y từ 3 xuống 2 để giảm khoảng cách giữa các mục */}
-                        <NavLink
-                            to="/manager-dashboard"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}` // Giảm p-4 xuống p-3, gap-4 xuống gap-3, text-sm xuống text-xs, rounded-2xl xuống rounded-xl
-                            }
-                        >
-                            {isActive("/manager-dashboard") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/manager-dashboard") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`} // Giảm p-2.5 xuống p-2, rounded-xl xuống rounded-lg
-                            >
-                                <LayoutDashboard
-                                    size={18} // Giảm size từ 22 xuống 18
-                                    className={`transition-all duration-300 ${isActive("/manager-dashboard") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Dashboard Quản Lý</span>
-                            </div>
-                            {isActive("/manager-dashboard") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div> // Giảm w-1.5 h-12 xuống w-1 h-8
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/managerstaff"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/managerstaff") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/managerstaff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <Users
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/managerstaff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Quản Lý Nhân Viên</span>
-                            </div>
-                            {isActive("/managerstaff") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/promotions"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/promotions") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/promotions") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <Package
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/promotions") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Quản Lý Khuyến Mãi</span>
-                            </div>
-                            {isActive("/promotions") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/report"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/report") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/report") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <TrendingUp
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/report") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Báo Cáo Hiệu Suất</span>
-                            </div>
-                            {isActive("/report") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/transport-units/overview"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/transport-units/overview") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/transport-units/overview") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <MapPin
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/transport-units/overview") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Quản Lý Vận Chuyển</span>
-                            </div>
-                            {isActive("/transport-units/overview") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/manager/pending-staff"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/manager/pending-staff") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/manager/pending-staff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <Users
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/manager/pending-staff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Duyệt Nhân Viên Mới</span>
-                            </div>
-                            {isActive("/manager/pending-staff") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/managerevenue"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/managerevenue") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/managerevenue") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <Package
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/managerevenue") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Quản Lý Doanh Thu</span>
-                            </div>
-
-                            {isActive("/managerevenue") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/schedule/calendar"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/schedule/calendar") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/calendar") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <Users
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/schedule/calendar") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Lịch Làm Việc</span>
-                            </div>
-                            {isActive("/schedule/calendar") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/schedule/shifts"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/schedule/shifts") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/shifts") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <Users
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/schedule/shifts") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Quản Lý Ca Làm</span>
-                            </div>
-                            {isActive("/schedule/shifts") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                        <NavLink
-                            to="/schedule/timeoff"
-                            className={({ isActive }) =>
-                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                            }
-                        >
-                            {isActive("/schedule/timeoff") && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                            )}
-                            <div
-                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/timeoff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                            >
-                                <Users
-                                    size={18}
-                                    className={`transition-all duration-300 ${isActive("/schedule/timeoff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                />
-                            </div>
-                            <div className="flex-1 relative z-10">
-                                <span className="font-semibold">Yêu cầu nghỉ phép</span>
-                            </div>
-                            {isActive("/schedule/timeoff") && (
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                            )}
-                        </NavLink>
-                    </nav>
-
-                    {/* User Profile Section */}
-                    <div className="absolute bottom-8 left-6 right-6">
-                        <div className="relative">
-                            <div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-                            <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent blur-sm"></div>
-                        </div>
-                        {currentPage === 'main' ? (
-                            <div className="flex items-center justify-between p-4 hover:bg-blue-800/60 transition-all duration-150 rounded-2xl">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                                        <User className="w-5 h-5 text-white" />
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Hệ Thống Quản Lý</h2>
                                     </div>
-                                    <div className="text-sm">
-                                        <p className="font-semibold text-blue-50">{username || "Tài khoản"}</p>
-                                        <div className="flex items-center gap-1">
-                                            <p className="text-xs text-blue-300">Nhân viên</p>
-                                            <Circle className="w-2 h-2 text-green-400" />
+                                </div>
+                                <div className="w-16 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-transparent rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <nav className="px-4 space-y-2"> {/* Giảm space-y từ 3 xuống 2 để giảm khoảng cách giữa các mục */}
+                            <NavLink
+                                to="/manager-dashboard"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}` // Giảm p-4 xuống p-3, gap-4 xuống gap-3, text-sm xuống text-xs, rounded-2xl xuống rounded-xl
+                                }
+                            >
+                                {isActive("/manager-dashboard") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/manager-dashboard") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`} // Giảm p-2.5 xuống p-2, rounded-xl xuống rounded-lg
+                                >
+                                    <LayoutDashboard
+                                        size={18} // Giảm size từ 22 xuống 18
+                                        className={`transition-all duration-300 ${isActive("/manager-dashboard") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Dashboard Quản Lý</span>
+                                </div>
+                                {isActive("/manager-dashboard") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div> // Giảm w-1.5 h-12 xuống w-1 h-8
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/managerstaff"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/managerstaff") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/managerstaff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <Users
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/managerstaff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Quản Lý Nhân Viên</span>
+                                </div>
+                                {isActive("/managerstaff") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/promotions"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/promotions") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/promotions") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <Package
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/promotions") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Quản Lý Khuyến Mãi</span>
+                                </div>
+                                {isActive("/promotions") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/report"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/report") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/report") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <TrendingUp
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/report") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Báo Cáo Hiệu Suất</span>
+                                </div>
+                                {isActive("/report") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/transport-units/overview"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/transport-units/overview") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/transport-units/overview") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <MapPin
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/transport-units/overview") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Quản Lý Vận Chuyển</span>
+                                </div>
+                                {isActive("/transport-units/overview") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/manager/pending-staff"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/manager/pending-staff") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/manager/pending-staff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <Users
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/manager/pending-staff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Duyệt Nhân Viên Mới</span>
+                                </div>
+                                {isActive("/manager/pending-staff") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/managerevenue"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/managerevenue") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/managerevenue") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <Package
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/managerevenue") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Quản Lý Doanh Thu</span>
+                                </div>
+
+                                {isActive("/managerevenue") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/schedule/calendar"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/schedule/calendar") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/calendar") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <Users
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/schedule/calendar") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Lịch Làm Việc</span>
+                                </div>
+                                {isActive("/schedule/calendar") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/schedule/shifts"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/schedule/shifts") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/shifts") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <Users
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/schedule/shifts") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Quản Lý Ca Làm</span>
+                                </div>
+                                {isActive("/schedule/shifts") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/schedule/timeoff"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/schedule/timeoff") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/timeoff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <Users
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/schedule/timeoff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Yêu cầu nghỉ phép</span>
+                                </div>
+                                {isActive("/schedule/timeoff") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                        </nav>
+
+                        {/* User Profile Section */}
+                        <div className="absolute bottom-8 left-6 right-6">
+                            <div className="relative">
+                                <div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                                <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent blur-sm"></div>
+                            </div>
+                            {currentPage === 'main' ? (
+                                <div className="flex items-center justify-between p-4 hover:bg-blue-800/60 transition-all duration-150 rounded-2xl">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                            <User className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div className="text-sm">
+                                            <p className="font-semibold text-blue-50">{username || "Tài khoản"}</p>
+                                            <div className="flex items-center gap-1">
+                                                <p className="text-xs text-blue-300">Nhân viên</p>
+                                                <Circle className="w-2 h-2 text-green-400" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <button
-                                    className="p-2 rounded-xl hover:bg-blue-700/50 transition-all duration-150 pointer-events-auto"
-                                    onClick={() => setCurrentPage('settings')}
-                                    aria-label="Cài đặt"
-                                >
-                                    <Settings className="w-5 h-5 text-blue-300 hover:text-blue-100" />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-3 p-4">
-                                <div className="flex items-center gap-3 hover:bg-blue-800/60 transition-all duration-150 rounded-2xl">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                                        <User className="w-5 h-5 text-white" />
-                                    </div>
-                                    <div className="text-sm">
-                                        <p className="font-semibold text-blue-50">{username || "Tài khoản"}</p>
-                                        <div className="flex items-center gap-1">
-                                            <p className="text-xs text-blue-300">Nhân viên</p>
-                                            <Circle className="w-2 h-2 text-green-400" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <NavLink
-                                    to="/profile/main"
-                                    className={({ isActive }) =>
-                                        `group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden pointer-events-auto ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                                    }
-                                >
-                                    {isActive("/profile/main") && (
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                                    )}
-                                    <div
-                                        className={`p-2.5 rounded-xl transition-all duration-300 ${isActive("/profile/main") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                                    >
-                                        <User
-                                            size={22}
-                                            className={`transition-all duration-300 ${isActive("/profile/main") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                        />
-                                    </div>
-                                    <div className="flex-1 relative z-10">
-                                        <span className="font-semibold">Thông Tin Cá Nhân</span>
-                                    </div>
-                                    {isActive("/profile/main") && (
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                                    )}
-                                </NavLink>
-                                <LogoutButton to="/logout">
                                     <button
-                                        className="group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01] pointer-events-auto"
-                                        onClick={handleLogout}
+                                        className="p-2 rounded-xl hover:bg-blue-700/50 transition-all duration-150 pointer-events-auto"
+                                        onClick={() => setCurrentPage('settings')}
+                                        aria-label="Cài đặt"
                                     >
-                                        <div className="p-2.5 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
-                                            <LogOut
+                                        <Settings className="w-5 h-5 text-blue-300 hover:text-blue-100" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-3 p-4">
+                                    <div className="flex items-center gap-3 hover:bg-blue-800/60 transition-all duration-150 rounded-2xl">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                            <User className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div className="text-sm">
+                                            <p className="font-semibold text-blue-50">{username || "Tài khoản"}</p>
+                                            <div className="flex items-center gap-1">
+                                                <p className="text-xs text-blue-300">Nhân viên</p>
+                                                <Circle className="w-2 h-2 text-green-400" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <NavLink
+                                        to="/profile/main"
+                                        className={({ isActive }) =>
+                                            `group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden pointer-events-auto ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                        }
+                                    >
+                                        {isActive("/profile/main") && (
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                        )}
+                                        <div
+                                            className={`p-2.5 rounded-xl transition-all duration-300 ${isActive("/profile/main") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                        >
+                                            <User
                                                 size={22}
-                                                className="transition-all duration-300 text-blue-300 group-hover:text-blue-100"
+                                                className={`transition-all duration-300 ${isActive("/profile/main") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
                                             />
                                         </div>
                                         <div className="flex-1 relative z-10">
-                                            <span className="font-semibold">Đăng Xuất</span>
+                                            <span className="font-semibold">Thông Tin Cá Nhân</span>
                                         </div>
-                                    </button>
-                                </LogoutButton>
-                                <button
-                                    className="text-xs text-blue-300 hover:text-blue-100 hover:bg-blue-800/60 p-4 rounded-2xl transition-all duration-150 pointer-events-auto"
-                                    onClick={() => setCurrentPage('main')}
-                                >
-                                    QUAY LẠI
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </aside>
-
-                {/* Main Content */}
-                <div className="flex-1 pl-[16px] pt-6 pr-4 min-w-0 flex flex-col gap-10">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mt-6">
-                        DASHBOARD QUẢN LÝ
-                    </h1>
-
-                    {/* Thống kê tổng quan */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Package className="w-8 h-8 text-white" />
-                                    </div>
-                                </div>
-                                <div className="ml-5">
-                                    <Label>TỔNG SỐ ĐƠN HÀNG HÔM NAY</Label>
-                                    <p className="text-3xl font-bold text-blue-900">{overview?.totalOrders || 0}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <TrendingUp className="w-8 h-8 text-white" />
-                                    </div>
-                                </div>
-                                <div className="ml-5">
-                                    <Label>DOANH THU HÔM NAY</Label>
-                                    <p className="text-3xl font-bold text-blue-900">{(overview?.revenueToday || 0).toLocaleString('vi-VN')} VND</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                            <div className="flex items-center">
-                                <div className="flex-shrink-0">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <Package className="w-8 h-8 text-white" />
-                                    </div>
-                                </div>
-                                <div className="ml-5">
-                                    <Label>KHUYẾN MÃI ĐANG CHẠY</Label>
-                                    <p className="text-3xl font-bold text-blue-900">{overview?.activePromotions || 0}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Improved Filter Section */}
-                    <div className="relative">
-                        <ActionBtn color="blue" onClick={() => setFilterExpanded(!filterExpanded)}>
-                            <Calendar className="w-4 h-4" />
-                            <span className="font-medium">{getFilterLabel()}</span>
-                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${filterExpanded ? 'rotate-180' : ''}`} />
-                        </ActionBtn>
-
-                        {filterExpanded && (
-                            <div className="absolute left-0 mt-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-200 p-4 min-w-[320px] z-10">
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Filter className="w-4 h-4 text-blue-600" />
-                                        <h3 className="text-xl font-bold text-blue-900">BỘ LỌC THỜI GIAN</h3>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {[
-                                            { value: "today", label: "HÔM NAY" },
-                                            { value: "week", label: "TUẦN NÀY" },
-                                            { value: "month", label: "THÁNG NÀY" },
-                                            { value: "year", label: "NĂM NAY" },
-                                        ].map((option) => (
-                                            <ActionBtn
-                                                key={option.value}
-                                                color={range === option.value ? "blue" : "gray"}
-                                                onClick={() => setRange(option.value)}
-                                            >
-                                                {option.label}
-                                            </ActionBtn>
-                                        ))}
-                                    </div>
-
-                                    <div className="border-t border-blue-200 pt-3">
-                                        <ActionBtn
-                                            color={range === "range" ? "blue" : "gray"}
-                                            onClick={() => setRange("range")}
-                                        >
-                                            KHOẢNG NGÀY TÙY CHỌN
-                                        </ActionBtn>
-
-                                        {range === "range" && (
-                                            <div className="flex flex-col gap-2 mt-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Label>TỪ:</Label>
-                                                    <input
-                                                        type="date"
-                                                        value={fromDate}
-                                                        onChange={(e) => setFromDate(e.target.value)}
-                                                        className="flex-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Label>ĐẾN:</Label>
-                                                    <input
-                                                        type="date"
-                                                        value={toDate}
-                                                        onChange={(e) => setToDate(e.target.value)}
-                                                        className="flex-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
-                                                    />
-                                                </div>
-                                            </div>
+                                        {isActive("/profile/main") && (
+                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
                                         )}
-                                    </div>
+                                    </NavLink>
+                                    <LogoutButton to="/logout">
+                                        <button
+                                            className="group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01] pointer-events-auto"
+                                            onClick={handleLogout}
+                                        >
+                                            <div className="p-2.5 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
+                                                <LogOut
+                                                    size={22}
+                                                    className="transition-all duration-300 text-blue-300 group-hover:text-blue-100"
+                                                />
+                                            </div>
+                                            <div className="flex-1 relative z-10">
+                                                <span className="font-semibold">Đăng Xuất</span>
+                                            </div>
+                                        </button>
+                                    </LogoutButton>
+                                    <button
+                                        className="text-xs text-blue-300 hover:text-blue-100 hover:bg-blue-800/60 p-4 rounded-2xl transition-all duration-150 pointer-events-auto"
+                                        onClick={() => setCurrentPage('main')}
+                                    >
+                                        QUAY LẠI
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </aside>
 
-                                    <div className="flex gap-2 pt-3 border-t border-blue-200">
-                                        <ActionBtn
-                                            color="blue"
-                                            onClick={() => {
-                                                fetchDashboardData();
-                                                setFilterExpanded(false);
-                                            }}
-                                        >
-                                            ÁP DỤNG
-                                        </ActionBtn>
-                                        <ActionBtn
-                                            color="gray"
-                                            onClick={() => setFilterExpanded(false)}
-                                        >
-                                            ĐÓNG
-                                        </ActionBtn>
+                    {/* Main Content */}
+                    <div className="flex-1 pl-[16px] pt-6 pr-4 min-w-0 flex flex-col gap-10">
+                        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mt-6">
+                            DASHBOARD QUẢN LÝ
+                        </h1>
+
+                        {/* Thống kê tổng quan */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <Package className="w-8 h-8 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="ml-5">
+                                        <Label>TỔNG SỐ ĐƠN HÀNG HÔM NAY</Label>
+                                        <p className="text-3xl font-bold text-blue-900">{overview?.totalOrders || 0}</p>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Biểu đồ doanh thu */}
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
-                        <h4 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <TrendingUp className="w-6 h-6 text-blue-600" />
-                            BIỂU ĐỒ DOANH THU
-                        </h4>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={chartDataRevenue} margin={{ top: 20, right: 20, left: 20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="date" stroke="#374151" />
-                                <YAxis tickFormatter={(v) => v.toLocaleString('vi-VN')} stroke="#374151" />
-                                <Tooltip formatter={(v) => `${v.toLocaleString('vi-VN')} VND`} />
-                                <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Biểu đồ đơn hàng */}
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
-                        <h4 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
-                            <Package className="w-6 h-6 text-blue-600" />
-                            BIỂU ĐỒ SỐ ĐƠN HÀNG
-                        </h4>
-                        <ResponsiveContainer width="100%" height={350}>
-                            <LineChart data={chartDataOrders} margin={{ top: 20, right: 20, left: 20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="date" stroke="#374151" />
-                                <YAxis tickFormatter={(v) => v.toLocaleString('vi-VN')} stroke="#374151" />
-                                <Tooltip formatter={(v) => `${v.toLocaleString('vi-VN')} đơn`} />
-                                <Line type="monotone" dataKey="value" stroke="#10B981" strokeWidth={3} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Top 5 & Issue */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-100 overflow-hidden">
-                            <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-100 to-blue-50">
-                                <h4 className="text-xl font-bold text-blue-900 flex items-center gap-3">
-                                    <Users className="w-6 h-6 text-blue-600" />
-                                    TOP 5 NHÂN VIÊN CÓ NHIỀU ĐƠN HÀNG NHẤT
-                                </h4>
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <TrendingUp className="w-8 h-8 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="ml-5">
+                                        <Label>DOANH THU HÔM NAY</Label>
+                                        <p className="text-3xl font-bold text-blue-900">{(overview?.revenueToday || 0).toLocaleString('vi-VN')} VND</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="p-8">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">TÊN NHÂN VIÊN</th>
-                                        <th className="px-4 py-2 text-right font-bold text-blue-800 border-b border-blue-200 text-xs">SỐ ĐƠN</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {topOperators.map((op, idx) => (
-                                        <tr
-                                            key={idx}
-                                            className={`hover:bg-blue-50/50 border-b border-blue-200 transition-all duration-200 ${idx % 2 === 0 ? "bg-white/50" : "bg-blue-50/20"}`}
-                                        >
-                                            <td className="px-4 py-2 font-semibold text-blue-900 text-sm truncate">{op.operatorName}</td>
-                                            <td className="px-4 py-2 text-blue-700 text-sm text-right">{op.successOrders} đơn</td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100 hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                            <Package className="w-8 h-8 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="ml-5">
+                                        <Label>KHUYẾN MÃI ĐANG CHẠY</Label>
+                                        <p className="text-3xl font-bold text-blue-900">{overview?.activePromotions || 0}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-100 overflow-hidden">
-                            <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-100 to-blue-50">
-                                <h4 className="text-xl font-bold text-blue-900 flex items-center gap-3">
-                                    <XCircle className="w-6 h-6 text-red-600" />
-                                    VẤN ĐỀ GẦN ĐÂY
-                                </h4>
+                        {/* Improved Filter Section */}
+                        <div className="relative">
+                            <ActionBtn color="blue" onClick={() => setFilterExpanded(!filterExpanded)}>
+                                <Calendar className="w-4 h-4" />
+                                <span className="font-medium">{getFilterLabel()}</span>
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${filterExpanded ? 'rotate-180' : ''}`} />
+                            </ActionBtn>
+
+                            {filterExpanded && (
+                                <div className="absolute left-0 mt-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-200 p-4 min-w-[320px] z-10">
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Filter className="w-4 h-4 text-blue-600" />
+                                            <h3 className="text-xl font-bold text-blue-900">BỘ LỌC THỜI GIAN</h3>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                { value: "today", label: "HÔM NAY" },
+                                                { value: "week", label: "TUẦN NÀY" },
+                                                { value: "month", label: "THÁNG NÀY" },
+                                                { value: "year", label: "NĂM NAY" },
+                                            ].map((option) => (
+                                                <ActionBtn
+                                                    key={option.value}
+                                                    color={range === option.value ? "blue" : "gray"}
+                                                    onClick={() => setRange(option.value)}
+                                                >
+                                                    {option.label}
+                                                </ActionBtn>
+                                            ))}
+                                        </div>
+
+                                        <div className="border-t border-blue-200 pt-3">
+                                            <ActionBtn
+                                                color={range === "range" ? "blue" : "gray"}
+                                                onClick={() => setRange("range")}
+                                            >
+                                                KHOẢNG NGÀY TÙY CHỌN
+                                            </ActionBtn>
+
+                                            {range === "range" && (
+                                                <div className="flex flex-col gap-2 mt-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Label>TỪ:</Label>
+                                                        <input
+                                                            type="date"
+                                                            value={fromDate}
+                                                            onChange={(e) => setFromDate(e.target.value)}
+                                                            className="flex-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Label>ĐẾN:</Label>
+                                                        <input
+                                                            type="date"
+                                                            value={toDate}
+                                                            onChange={(e) => setToDate(e.target.value)}
+                                                            className="flex-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex gap-2 pt-3 border-t border-blue-200">
+                                            <ActionBtn
+                                                color="blue"
+                                                onClick={() => {
+                                                    fetchDashboardData();
+                                                    setFilterExpanded(false);
+                                                }}
+                                            >
+                                                ÁP DỤNG
+                                            </ActionBtn>
+                                            <ActionBtn
+                                                color="gray"
+                                                onClick={() => setFilterExpanded(false)}
+                                            >
+                                                ĐÓNG
+                                            </ActionBtn>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Biểu đồ doanh thu */}
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
+                            <h4 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                <TrendingUp className="w-6 h-6 text-blue-600" />
+                                BIỂU ĐỒ DOANH THU
+                            </h4>
+                            <ResponsiveContainer width="100%" height={350}>
+                                <LineChart data={chartDataRevenue} margin={{ top: 20, right: 20, left: 20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                    <XAxis dataKey="date" stroke="#374151" />
+                                    <YAxis tickFormatter={(v) => v.toLocaleString('vi-VN')} stroke="#374151" />
+                                    <Tooltip formatter={(v) => `${v.toLocaleString('vi-VN')} VND`} />
+                                    <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Biểu đồ đơn hàng */}
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-blue-100">
+                            <h4 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                                <Package className="w-6 h-6 text-blue-600" />
+                                BIỂU ĐỒ SỐ ĐƠN HÀNG
+                            </h4>
+                            <ResponsiveContainer width="100%" height={350}>
+                                <LineChart data={chartDataOrders} margin={{ top: 20, right: 20, left: 20, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                                    <XAxis dataKey="date" stroke="#374151" />
+                                    <YAxis tickFormatter={(v) => v.toLocaleString('vi-VN')} stroke="#374151" />
+                                    <Tooltip formatter={(v) => `${v.toLocaleString('vi-VN')} đơn`} />
+                                    <Line type="monotone" dataKey="value" stroke="#10B981" strokeWidth={3} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Top 5 & Issue */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-100 overflow-hidden">
+                                <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-100 to-blue-50">
+                                    <h4 className="text-xl font-bold text-blue-900 flex items-center gap-3">
+                                        <Users className="w-6 h-6 text-blue-600" />
+                                        TOP 5 NHÂN VIÊN CÓ NHIỀU ĐƠN HÀNG NHẤT
+                                    </h4>
+                                </div>
+                                <div className="p-8">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">TÊN NHÂN VIÊN</th>
+                                            <th className="px-4 py-2 text-right font-bold text-blue-800 border-b border-blue-200 text-xs">SỐ ĐƠN</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {topOperators.map((op, idx) => (
+                                            <tr
+                                                key={idx}
+                                                className={`hover:bg-blue-50/50 border-b border-blue-200 transition-all duration-200 ${idx % 2 === 0 ? "bg-white/50" : "bg-blue-50/20"}`}
+                                            >
+                                                <td className="px-4 py-2 font-semibold text-blue-900 text-sm truncate">{op.operatorName}</td>
+                                                <td className="px-4 py-2 text-blue-700 text-sm text-right">{op.successOrders} đơn</td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div className="p-8">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">MÔ TẢ</th>
-                                        <th className="px-4 py-2 text-right font-bold text-blue-800 border-b border-blue-200 text-xs">TRẠNG THÁI</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {recentIssues.map((i, idx) => (
-                                        <tr
-                                            key={idx}
-                                            className={`hover:bg-blue-50/50 border-b border-blue-200 transition-all duration-200 ${idx % 2 === 0 ? "bg-white/50" : "bg-blue-50/20"}`}
-                                        >
-                                            <td className="px-4 py-2 text-blue-700 text-sm truncate">{i.description}</td>
-                                            <td className="px-4 py-2 text-right">
+
+                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-100 overflow-hidden">
+                                <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-100 to-blue-50">
+                                    <h4 className="text-xl font-bold text-blue-900 flex items-center gap-3">
+                                        <XCircle className="w-6 h-6 text-red-600" />
+                                        VẤN ĐỀ GẦN ĐÂY
+                                    </h4>
+                                </div>
+                                <div className="p-8">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">MÔ TẢ</th>
+                                            <th className="px-4 py-2 text-right font-bold text-blue-800 border-b border-blue-200 text-xs">TRẠNG THÁI</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {recentIssues.map((i, idx) => (
+                                            <tr
+                                                key={idx}
+                                                className={`hover:bg-blue-50/50 border-b border-blue-200 transition-all duration-200 ${idx % 2 === 0 ? "bg-white/50" : "bg-blue-50/20"}`}
+                                            >
+                                                <td className="px-4 py-2 text-blue-700 text-sm truncate">{i.description}</td>
+                                                <td className="px-4 py-2 text-right">
                                             <span
                                                 className={`px-2 py-1 rounded-full text-xs font-bold shadow-sm ${i.status === "PENDING" ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-300" : i.status === "RESOLVED" ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300" : "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300"}`}
                                             >
                                                 {i.status === "PENDING" ? "ĐANG CHỜ" : i.status === "RESOLVED" ? "ĐÃ GIẢI QUYẾT" : "LỖI"}
                                             </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    </tbody>
-                                </table>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
             <div>
                 <Footer />

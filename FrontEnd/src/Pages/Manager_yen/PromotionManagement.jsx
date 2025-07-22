@@ -1,142 +1,179 @@
-
 "use client"
 
 import React, { useEffect, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import axios from "../../utils/axiosInstance.js"
-import Header from "../../Components/FormLogin_yen/Header";
+import Header from "../../Components/FormLogin_yen/Header"
 import Footer from "../../Components/FormLogin_yen/Footer.jsx"
 import ConfirmDialog from "../../Components/FormLogin_yen/ConfirmDialog.jsx"
 import PromotionCard from "./PromotionCard"
-
 import {
     Gift, Save, Trash2, TrendingUp,
     Clock, AlertCircle, X, Tag, ArrowLeft, LogOut, Truck, Search, Plus, Home, User, Zap
 } from "lucide-react"
 import Cookies from "js-cookie"
 
-// Component Menu bên trái
+// Ánh xạ trạng thái và loại giảm giá
+const statusMapToBackend = {
+    "Hoạt động": "ACTIVE",
+    "Hết hạn": "EXPIRED",
+    "Đang chờ": "PENDING",
+    "Đã hủy": "CANCELLED",
+    "Sắp bắt đầu": "UPCOMING"
+}
+
+const statusMapToFrontend = {
+    ACTIVE: "Hoạt động",
+    EXPIRED: "Hết hạn",
+    PENDING: "Đang chờ",
+    CANCELLED: "Đã hủy",
+    UPCOMING: "Sắp bắt đầu"
+}
+
+const discountTypeMapToBackend = {
+    "Phần trăm": "PERCENTAGE",
+    "Số tiền cố định": "AMOUNT"
+}
+
+const discountTypeMapToFrontend = {
+    PERCENTAGE: "Phần trăm",
+    AMOUNT: "Số tiền cố định"
+}
+
+// Hàm validate ký tự đặc biệt cho tìm kiếm
+const validateSearchKeyword = (keyword) => {
+    const regex = /^[a-zA-Z0-9\s-_()%]*$/;
+    return regex.test(keyword);
+}
+
+// Hàm validate discountValue dựa trên discountType
+const validateDiscountValue = (value, discountType) => {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue < 0) return false;
+    if (discountType === "Phần trăm" && numValue > 100) return false;
+    return true;
+}
+
+// Component LeftMenu (giữ nguyên)
 const LeftMenu = ({ onLogout }) => {
     const { pathname } = useLocation()
     const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`)
 
-return (
-    <aside className="w-72 pt-20 min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl border-r border-blue-700/30 backdrop-blur-sm">
-
-        <div className="mb-10 p-6 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-blue-300/5 to-transparent blur-2xl rounded-2xl"></div>
-            <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Hệ thống quản lý</h2>
+    return (
+        <aside className="w-72 pt-20 min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl border-r border-blue-700/30 backdrop-blur-sm">
+            <div className="mb-10 p-6 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-blue-300/5 to-transparent blur-2xl rounded-2xl"></div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div>
+                            <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Hệ thống quản lý</h2>
+                        </div>
                     </div>
+                    <div className="w-16 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-transparent rounded-full"></div>
                 </div>
-                <div className="w-16 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-transparent rounded-full"></div>
             </div>
-        </div>
-        <nav className="px-4 space-y-3">
-            <Link
-                to="/manager-dashboard"
-                className={`group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
-                    isActive("/manager-dashboard")
-                        ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]"
-                        : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
-                }`}
-            >
-                {isActive("/manager-dashboard") && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                )}
-                <div
-                    className={`p-2.5 rounded-xl transition-all duration-300 ${
-                        isActive("/manager-dashboard") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"
+            <nav className="px-4 space-y-3">
+                <Link
+                    to="/manager-dashboard"
+                    className={`group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+                        isActive("/manager-dashboard")
+                            ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]"
+                            : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
                     }`}
                 >
-                    <Home className={`w-5 h-5 transition-all duration-300 ${
-                        isActive("/manager-dashboard") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"
-                    }`} />
-                </div>
-                <div className="flex-1 relative z-10">
-                    <span className="font-semibold">Về trang chủ</span>
-                </div>
-                {isActive("/manager-dashboard") && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                )}
-            </Link>
-            <Link
-                to="/promotions"
-                className={`group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
-                    isActive("/promotions")
-                        ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]"
-                        : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
-                }`}
-            >
-                {isActive("/promotions") && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                )}
-                <div
-                    className={`p-2.5 rounded-xl transition-all duration-300 ${
-                        isActive("/promotions") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"
+                    {isActive("/manager-dashboard") && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                    )}
+                    <div
+                        className={`p-2.5 rounded-xl transition-all duration-300 ${
+                            isActive("/manager-dashboard") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"
+                        }`}
+                    >
+                        <Home className={`w-5 h-5 transition-all duration-300 ${
+                            isActive("/manager-dashboard") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"
+                        }`} />
+                    </div>
+                    <div className="flex-1 relative z-10">
+                        <span className="font-semibold">Về trang chủ</span>
+                    </div>
+                    {isActive("/manager-dashboard") && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                    )}
+                </Link>
+                <Link
+                    to="/promotions"
+                    className={`group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+                        isActive("/promotions")
+                            ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]"
+                            : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
                     }`}
                 >
-                    <Gift className={`w-5 h-5 transition-all duration-300 ${
-                        isActive("/promotions") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"
-                    }`} />
-                </div>
-                <div className="flex-1 relative z-10">
-                    <span className="font-semibold">Danh sách khuyến mãi</span>
-                </div>
-                {isActive("/promotions") && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                )}
-            </Link>
-            <Link
-                to="/stats"
-                className={`group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
-                    isActive("/stats")
-                        ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]"
-                        : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
-                }`}
-            >
-                {isActive("/stats") && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                )}
-                <div
-                    className={`p-2.5 rounded-xl transition-all duration-300 ${
-                        isActive("/stats") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"
+                    {isActive("/promotions") && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                    )}
+                    <div
+                        className={`p-2.5 rounded-xl transition-all duration-300 ${
+                            isActive("/promotions") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"
+                        }`}
+                    >
+                        <Gift className={`w-5 h-5 transition-all duration-300 ${
+                            isActive("/promotions") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"
+                        }`} />
+                    </div>
+                    <div className="flex-1 relative z-10">
+                        <span className="font-semibold">Danh sách khuyến mãi</span>
+                    </div>
+                    {isActive("/promotions") && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                    )}
+                </Link>
+                <Link
+                    to="/stats"
+                    className={`group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
+                        isActive("/stats")
+                            ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]"
+                            : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
                     }`}
                 >
-                    <TrendingUp className={`w-5 h-5 transition-all duration-300 ${
-                        isActive("/stats") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"
-                    }`} />
+                    {isActive("/stats") && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                    )}
+                    <div
+                        className={`p-2.5 rounded-xl transition-all duration-300 ${
+                            isActive("/stats") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"
+                        }`}
+                    >
+                        <TrendingUp className={`w-5 h-5 transition-all duration-300 ${
+                            isActive("/stats") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"
+                        }`} />
+                    </div>
+                    <div className="flex-1 relative z-10">
+                        <span className="font-semibold">Thống kê</span>
+                    </div>
+                    {isActive("/stats") && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                    )}
+                </Link>
+                <button
+                    onClick={onLogout}
+                    className="group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
+                >
+                    <div className="p-2.5 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
+                        <LogOut className="w-5 h-5 text-blue-300 group-hover:text-blue-100" />
+                    </div>
+                    <div className="flex-1 relative z-10">
+                        <span className="font-semibold">Đăng Xuất</span>
+                    </div>
+                </button>
+            </nav>
+            <div className="absolute bottom-8 left-6 right-6">
+                <div className="relative">
+                    <div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+                    <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent blur-sm"></div>
                 </div>
-                <div className="flex-1 relative z-10">
-                    <span className="font-semibold">Thống kê</span>
-                </div>
-                {isActive("/stats") && (
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                )}
-            </Link>
-            <button
-                onClick={onLogout}
-                className="group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
-            >
-                <div className="p-2.5 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
-                    <LogOut className="w-5 h-5 text-blue-300 group-hover:text-blue-100" />
-                </div>
-                <div className="flex-1 relative z-10">
-                    <span className="font-semibold">Đăng Xuất</span>
-                </div>
-            </button>
-        </nav>
-        <div className="absolute bottom-8 left-6 right-6">
-            <div className="relative">
-                <div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-                <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent blur-sm"></div>
             </div>
-
-        </div>
-    </aside>
-)
+        </aside>
+    )
 }
 
 const PromotionManager = () => {
@@ -152,12 +189,14 @@ const PromotionManager = () => {
         startDate: "",
         endDate: "",
         description: "",
-        status: "Active",
-        discountType: "PERCENTAGE",
+        status: "Hoạt động",
+        discountType: "Phần trăm",
         discountValue: ""
     })
     const [filtered, setFiltered] = useState(false)
     const [currentPage, setCurrentPage] = useState(1)
+    const [searchError, setSearchError] = useState("")
+    const [discountValueError, setDiscountValueError] = useState("")
     const itemsPerPage = 7
 
     useEffect(() => {
@@ -172,11 +211,19 @@ const PromotionManager = () => {
     const fetchAllPromotions = async () => {
         setLoading(true)
         try {
+            console.log("Auth Token:", Cookies.get("authToken"))
             const response = await axios.get("/api/promotions")
             const data = Array.isArray(response.data) ? response.data : (response.data.content || [])
-            console.log("Dữ liệu toàn bộ từ API:", data)
-            setPromotions(data)
-            setAllPromotions(data)
+            const transformedData = data.map(promo => ({
+                ...promo,
+                status: statusMapToFrontend[promo.status] || promo.status,
+                discountType: discountTypeMapToFrontend[promo.discountType] || promo.discountType
+            }))
+            // Sắp xếp theo tên (ABC)
+            transformedData.sort((a, b) => a.name.localeCompare(b.name))
+            console.log("Dữ liệu toàn bộ từ API (sau sắp xếp):", transformedData)
+            setPromotions(transformedData)
+            setAllPromotions(transformedData)
         } catch (error) {
             console.error("Lỗi tải dữ liệu toàn bộ:", error.response ? error.response.data : error.message)
             alert("❌ Không thể tải danh sách khuyến mãi. Vui lòng kiểm tra kết nối hoặc backend.")
@@ -188,24 +235,40 @@ const PromotionManager = () => {
     }
 
     const fetchPromotions = async () => {
+        if (keyword && !validateSearchKeyword(keyword)) {
+            setSearchError("Tên tìm kiếm chỉ được chứa chữ cái, số, khoảng trắng, và các ký tự: -, _, (, ), %")
+            return
+        }
+        setSearchError("")
         setLoading(true)
         try {
             console.log("Gửi request với params:", { keyword, status })
+            console.log("Auth Token:", Cookies.get("authToken"))
             const response = await axios.get("/api/promotions", {
-                params: { keyword: keyword.trim() || undefined, status: status.trim() || undefined }
+                params: {
+                    keyword: keyword.trim() || undefined,
+                    status: statusMapToBackend[status] || status.trim() || undefined
+                }
             })
             let data = Array.isArray(response.data) ? response.data : (response.data.content || [])
-            console.log("Dữ liệu từ server sau khi lọc:", data)
-
+            data = data.map(promo => ({
+                ...promo,
+                status: statusMapToFrontend[promo.status] || promo.status,
+                discountType: discountTypeMapToFrontend[promo.discountType] || promo.discountType
+            }))
+            // Sắp xếp theo tên (ABC)
+            data.sort((a, b) => a.name.localeCompare(b.name))
+            console.log("Dữ liệu từ server sau khi lọc (sau sắp xếp):", data)
             if (data.length === 0 && (keyword.trim() || status.trim())) {
                 console.log("Không có kết quả từ server, áp dụng lọc client-side")
                 data = allPromotions.filter(promo =>
                     (!keyword.trim() || promo.name.toLowerCase().includes(keyword.trim().toLowerCase())) &&
-                    (!status.trim() || promo.status === status.trim())
+                    (!status.trim() || promo.status === status)
                 )
+                // Sắp xếp client-side
+                data.sort((a, b) => a.name.localeCompare(b.name))
             }
-
-            console.log("Dữ liệu sau khi lọc (server hoặc client):", data)
+            console.log("Dữ liệu sau khi lọc (server hoặc client, sau sắp xếp):", data)
             setPromotions(data)
             setFiltered(!!keyword.trim() || !!status.trim())
         } catch (error) {
@@ -213,9 +276,11 @@ const PromotionManager = () => {
             alert(`❌ Lỗi khi lọc danh sách: ${error.response?.data?.message || error.message}. Sử dụng lọc client-side thay thế.`)
             const filteredData = allPromotions.filter(promo =>
                 (!keyword.trim() || promo.name.toLowerCase().includes(keyword.trim().toLowerCase())) &&
-                (!status.trim() || promo.status === status.trim())
+                (!status.trim() || promo.status === status)
             )
-            console.log("Dữ liệu lọc client-side:", filteredData)
+            // Sắp xếp client-side
+            filteredData.sort((a, b) => a.name.localeCompare(b.name))
+            console.log("Dữ liệu lọc client-side (sau sắp xếp):", filteredData)
             setPromotions(filteredData)
             setFiltered(!!keyword.trim() || !!status.trim())
         } finally {
@@ -227,6 +292,7 @@ const PromotionManager = () => {
         setLoading(true)
         setKeyword("")
         setStatus("")
+        setSearchError("")
         setFiltered(false)
         setCurrentPage(1)
         await fetchAllPromotions()
@@ -241,25 +307,38 @@ const PromotionManager = () => {
         const { promo, type, data } = dialog
         if (!promo) return
         try {
+            console.log("Auth Token:", Cookies.get("authToken"))
             let response
             if (type === "update") {
-                response = await axios.post("/api/promotions/update", {
+                if (!validateDiscountValue(data.discountValue, data.discountType)) {
+                    alert(data.discountType === "Phần trăm"
+                        ? "Giá trị giảm giá phải từ 0 đến 100 cho loại phần trăm!"
+                        : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!")
+                    return
+                }
+                const payload = {
                     id: data.id,
                     name: data.name,
                     description: data.description,
                     startDate: data.startDate,
                     endDate: data.endDate,
-                    status: data.status,
-                    discountType: data.discountType,
-                    discountValue: data.discountValue
-                })
+                    status: statusMapToBackend[data.status] || data.status,
+                    discountType: discountTypeMapToBackend[data.discountType] || data.discountType,
+                    discountValue: parseFloat(data.discountValue)
+                }
+                console.log("Payload for /api/promotions/update:", payload)
+                response = await axios.post("/api/promotions/update", payload)
             } else if (type === "cancel") {
-                response = await axios.post("/api/promotions/cancel", { id: promo })
+                const payload = { id: promo }
+                console.log("Payload for /api/promotions/cancel:", payload)
+                response = await axios.post("/api/promotions/cancel", payload)
             } else if (type === "update-description") {
-                response = await axios.post("/api/promotions/update-description", {
+                const payload = {
                     id: data.id,
                     description: data.description
-                })
+                }
+                console.log("Payload for /api/promotions/update-description:", payload)
+                response = await axios.post("/api/promotions/update-description", payload)
             }
             await fetchAllPromotions()
             alert("✅ Thao tác thành công")
@@ -283,8 +362,10 @@ const PromotionManager = () => {
                 alert("Ngày bắt đầu phải trước ngày kết thúc!")
                 return
             }
-            if (newPromotion.discountValue < 0) {
-                alert("Giá trị giảm giá không được âm!")
+            if (!validateDiscountValue(newPromotion.discountValue, newPromotion.discountType)) {
+                alert(newPromotion.discountType === "Phần trăm"
+                    ? "Giá trị giảm giá phải từ 0 đến 100 cho loại phần trăm!"
+                    : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!")
                 return
             }
             if (newPromotion.name.length > 100) {
@@ -295,15 +376,18 @@ const PromotionManager = () => {
                 alert("Mô tả không được vượt quá 200 ký tự!")
                 return
             }
-            const response = await axios.post("/api/promotions/add", {
+            const payload = {
                 name: newPromotion.name,
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
                 description: newPromotion.description,
-                status: newPromotion.status,
-                discountType: newPromotion.discountType,
-                discountValue: newPromotion.discountValue
-            })
+                status: statusMapToBackend[newPromotion.status] || newPromotion.status,
+                discountType: discountTypeMapToBackend[newPromotion.discountType] || newPromotion.discountType,
+                discountValue: parseFloat(newPromotion.discountValue)
+            }
+            console.log("Payload for /api/promotions/add:", payload)
+            console.log("Auth Token:", Cookies.get("authToken"))
+            const response = await axios.post("/api/promotions/add", payload)
             await fetchAllPromotions()
             setIsAddModalOpen(false)
             setNewPromotion({
@@ -311,13 +395,14 @@ const PromotionManager = () => {
                 startDate: "",
                 endDate: "",
                 description: "",
-                status: "Active",
-                discountType: "PERCENTAGE",
+                status: "Hoạt động",
+                discountType: "Phần trăm",
                 discountValue: ""
             })
+            setDiscountValueError("")
             alert("✅ Thêm khuyến mãi thành công")
         } catch (error) {
-            console.error("Lỗi thêm khuyến mãi:", error)
+            console.error("Lỗi thêm khuyến mãi:", error.response?.data || error.message)
             alert(`❌ Thao tác thất bại: ${error.response?.data?.message || error.message}`)
         }
     }
@@ -362,10 +447,22 @@ const PromotionManager = () => {
                                         type="text"
                                         placeholder="Tìm kiếm theo tên khuyến mãi..."
                                         value={keyword}
-                                        onChange={(e) => setKeyword(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 text-gray-800 shadow-sm placeholder-gray-400"
+                                        onChange={(e) => {
+                                            setKeyword(e.target.value)
+                                            if (e.target.value && !validateSearchKeyword(e.target.value)) {
+                                                setSearchError("Tên tìm kiếm chỉ được chứa chữ cái, số, khoảng trắng, và các ký tự: -, _, (, ), %")
+                                            } else {
+                                                setSearchError("")
+                                            }
+                                        }}
+                                        className={`w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 text-gray-800 shadow-sm placeholder-gray-400 ${
+                                            searchError ? "border-red-500" : ""
+                                        }`}
                                     />
                                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 w-5 h-5 hover:text-blue-600 transition-colors duration-200" />
+                                    {searchError && (
+                                        <p className="text-red-500 text-xs mt-1">{searchError}</p>
+                                    )}
                                 </div>
                                 <div className="w-full sm:w-48">
                                     <select
@@ -374,16 +471,19 @@ const PromotionManager = () => {
                                         className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all duration-300 text-gray-800 shadow-sm"
                                     >
                                         <option value="">Tất cả trạng thái</option>
-                                        <option value="Active">Active</option>
-                                        <option value="Expired">Expired</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Hoạt động">Hoạt động</option>
+                                        <option value="Hết hạn">Hết hạn</option>
+                                        <option value="Đang chờ">Đang chờ</option>
+                                        <option value="Đã hủy">Đã hủy</option>
                                         <option value="Sắp bắt đầu">Sắp bắt đầu</option>
                                     </select>
                                 </div>
                                 <button
                                     onClick={fetchPromotions}
-                                    className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-400 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2"
+                                    disabled={searchError}
+                                    className={`px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-400 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 ${
+                                        searchError ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
                                     title="Tìm kiếm khuyến mãi"
                                 >
                                     <Search className="w-4 h-4" /> Tìm
@@ -393,9 +493,9 @@ const PromotionManager = () => {
                                         <button
                                             onClick={resetFilter}
                                             className="px-4 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 focus:ring-2 focus:ring-gray-400 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2"
-                                            title="Xóa bộ lọc"
+                                            title="Hủy bộ lọc"
                                         >
-                                            <X className="w-4 h-4" /> Xóa bộ lọc
+                                            <X className="w-4 h-4" /> Hủy bộ lọc
                                         </button>
                                         <button
                                             onClick={resetFilter}
@@ -488,12 +588,12 @@ const PromotionManager = () => {
                     </main>
                 </div>
             </div>
-            <Footer/>
+            <Footer />
             <ConfirmDialog
                 open={dialog.open}
                 onClose={() => setDialog({ open: false, type: "", promo: null, data: null })}
                 onConfirm={handleConfirmed}
-                title={dialog.type === "cancel" ? "Xác nhận hủy" : dialog.type === "update-description" ? "Xác nhận cập nhật mô tả" : "Xác nhận cập nhật"}
+                title={dialog.type === "cancel" ? "Xác nhận hủy khuyến mãi" : dialog.type === "update-description" ? "Xác nhận cập nhật mô tả" : "Xác nhận cập nhật"}
                 message={
                     dialog.type === "cancel"
                         ? "Bạn có chắc chắn muốn hủy khuyến mãi này không?"
@@ -501,7 +601,7 @@ const PromotionManager = () => {
                             ? "Bạn có chắc muốn cập nhật mô tả này không?"
                             : "Bạn có chắc chắn muốn cập nhật khuyến mãi này không?"
                 }
-                confirmLabel={dialog.type === "cancel" ? "Xóa" : "Xác nhận"}
+                confirmLabel={dialog.type === "cancel" ? "Xác nhận" : undefined}
                 confirmColor="from-blue-600 to-blue-700"
             />
             {isAddModalOpen && (
@@ -566,10 +666,10 @@ const PromotionManager = () => {
                                     onChange={(e) => setNewPromotion({ ...newPromotion, status: e.target.value })}
                                     className="mt-1 px-5 py-3 bg-white/80 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all duration-300 text-gray-800 shadow-sm"
                                 >
-                                    <option value="Active">Active</option>
-                                    <option value="Expired">Expired</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Hoạt động">Hoạt động</option>
+                                    <option value="Hết hạn">Hết hạn</option>
+                                    <option value="Đang chờ">Đang chờ</option>
+                                    <option value="Đã hủy">Đã hủy</option>
                                     <option value="Sắp bắt đầu">Sắp bắt đầu</option>
                                 </select>
                             </div>
@@ -577,36 +677,68 @@ const PromotionManager = () => {
                                 <label className="block text-sm font-medium text-blue-700">Loại giảm giá</label>
                                 <select
                                     value={newPromotion.discountType}
-                                    onChange={(e) => setNewPromotion({ ...newPromotion, discountType: e.target.value })}
+                                    onChange={(e) => {
+                                        setNewPromotion({ ...newPromotion, discountType: e.target.value, discountValue: "" })
+                                        setDiscountValueError("")
+                                    }}
                                     className="mt-1 px-5 py-3 bg-white/80 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all duration-300 text-gray-800 shadow-sm"
                                 >
                                     <option value="">Chọn loại</option>
-                                    <option value="PERCENTAGE">Phần trăm</option>
-                                    <option value="AMOUNT">Số tiền cố định</option>
+                                    <option value="Phần trăm">Phần trăm</option>
+                                    <option value="Số tiền cố định">Số tiền cố định</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-blue-700">Giá trị giảm giá</label>
-                                <input
-                                    type="number"
-                                    value={newPromotion.discountValue}
-                                    onChange={(e) => setNewPromotion({ ...newPromotion, discountValue: e.target.value })}
-                                    className="mt-1 px-5 py-3 bg-white/80 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all duration-300 text-gray-800 shadow-sm"
-                                    min="0"
-                                    placeholder="Ví dụ: 10 hoặc 50000"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={newPromotion.discountValue}
+                                        onChange={(e) => {
+                                            const value = e.target.value
+                                            setNewPromotion({ ...newPromotion, discountValue: value })
+                                            if (value && !validateDiscountValue(value, newPromotion.discountType)) {
+                                                setDiscountValueError(
+                                                    newPromotion.discountType === "Phần trăm"
+                                                        ? "Giá trị giảm giá phải từ 0 đến 100!"
+                                                        : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!"
+                                                )
+                                            } else {
+                                                setDiscountValueError("")
+                                            }
+                                        }}
+                                        className={`mt-1 px-5 py-3 bg-white/80 border-2 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all duration-300 text-gray-800 shadow-sm pr-12 ${
+                                            discountValueError ? "border-red-500" : "border-blue-200"
+                                        }`}
+                                        min="0"
+                                        step={newPromotion.discountType === "Phần trăm" ? "0.1" : "1000"}
+                                        placeholder={newPromotion.discountType === "Phần trăm" ? "Ví dụ: 10" : "Ví dụ: 50000"}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                        {newPromotion.discountType === "Phần trăm" ? "%" : "VND"}
+                                    </span>
+                                </div>
+                                {discountValueError && (
+                                    <p className="text-red-500 text-xs mt-1">{discountValueError}</p>
+                                )}
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-4">
                             <button
-                                onClick={() => setIsAddModalOpen(false)}
+                                onClick={() => {
+                                    setIsAddModalOpen(false)
+                                    setDiscountValueError("")
+                                }}
                                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-md hover:shadow-lg"
                             >
-                                Hủy
+                                Thoát
                             </button>
                             <button
                                 onClick={handleAddPromotion}
-                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-md hover:shadow-lg"
+                                disabled={discountValueError}
+                                className={`px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 transition-all duration-300 shadow-md hover:shadow-lg ${
+                                    discountValueError ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
                             >
                                 Thêm
                             </button>
