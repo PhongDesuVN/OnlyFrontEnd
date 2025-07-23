@@ -253,7 +253,7 @@ const Dashboard = () => {
                                     />
                                 </div>
                                 <div className="flex-1 relative z-10">
-                                    <span className="font-semibold">Dashboard Quản Lý</span>
+                                    <span className="font-semibold">Quản lí tổng quan</span>
                                 </div>
                                 {isActive("/manager-dashboard") && (
                                     <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div> // Giảm w-1.5 h-12 xuống w-1 h-8
