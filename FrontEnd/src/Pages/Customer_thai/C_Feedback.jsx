@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, ThumbsDown, MessageCircle, User, Calendar, Truck, Package, Users, TrendingUp, Award, Eye, Heart, Plus, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiCall } from '../../utils/api';
 import {
     getTopStorages,
@@ -33,12 +33,7 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
 
     const handleLike = async () => {
         try {
-            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                }
-            });
+            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, { auth: true });
 
             if (response.ok) {
                 const updatedFeedback = await response.json();
@@ -55,12 +50,7 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
 
     const handleDislike = async () => {
         try {
-            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                }
-            });
+            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, { auth: true });
 
             if (response.ok) {
                 const updatedFeedback = await response.json();
@@ -218,73 +208,22 @@ const ServiceCard = ({ service, type, onClick }) => {
     );
 };
 
-const CreateFeedbackModal = ({ isOpen, onClose, service, type, onFeedbackCreated }) => {
-    const [rating, setRating] = useState(5);
-    const [content, setContent] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!content.trim()) {
-            alert('Vui lòng nhập nội dung đánh giá');
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const endpoint = type === 'storage'
-                ? `/api/customer/feedback/storage/${service.storageId}`
-                : `/api/customer/feedback/transport/${service.transportId}`;
-
-            const response = await apiCall(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    content: content.trim(),
-                    type: type === 'storage' ? 'STORAGE' : 'TRANSPORTATION',
-                    star: rating
-                })
-            });
-
-            if (response.ok) {
-                alert('Đánh giá đã được gửi thành công!');
-                setContent('');
-                setRating(5);
-                onClose();
-                if (onFeedbackCreated) {
-                    onFeedbackCreated();
-                }
-            } else {
-                const errorData = await response.json();
-                alert(`Lỗi: ${errorData.message || 'Không thể gửi đánh giá'}`);
-            }
-        } catch (error) {
-            console.error('Error creating feedback:', error);
-            alert('Có lỗi xảy ra khi gửi đánh giá');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
+const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCreated }) => {
+    const navigate = useNavigate();
     if (!isOpen || !service) return null;
-
     const getTypeIcon = (type) => {
         return type === 'storage' ? <Package className="w-6 h-6 text-green-500" /> : <Truck className="w-6 h-6 text-orange-500" />;
     };
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center space-x-3">
                             {getTypeIcon(type)}
                             <div>
                                 <h3 className="text-xl font-bold text-gray-800">
-                                    Tạo đánh giá cho {type === 'storage' ? service.storageUnitName : service.transportUnitName}
+                                    {type === 'storage' ? service.storageUnitName : service.transportUnitName}
                                 </h3>
                                 <p className="text-gray-600">{service.address || 'Địa chỉ không có sẵn'}</p>
                             </div>
@@ -296,109 +235,6 @@ const CreateFeedbackModal = ({ isOpen, onClose, service, type, onFeedbackCreated
                             <X className="w-6 h-6" />
                         </button>
                     </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Đánh giá sao
-                            </label>
-                            <div className="flex items-center space-x-2">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                        key={star}
-                                        type="button"
-                                        onClick={() => setRating(star)}
-                                        className="focus:outline-none"
-                                    >
-                                        <Star
-                                            className={`w-8 h-8 transition-colors ${star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                                }`}
-                                        />
-                                    </button>
-                                ))}
-                                <span className="ml-2 text-sm text-gray-600">({rating}/5)</span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Nội dung đánh giá
-                            </label>
-                            <textarea
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                rows="4"
-                                placeholder="Chia sẻ trải nghiệm của bạn về dịch vụ này..."
-                                required
-                            />
-                        </div>
-
-                        <div className="flex justify-end space-x-3">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                        <span>Đang gửi...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Plus className="w-4 h-4" />
-                                        <span>Gửi đánh giá</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCreated }) => {
-    const [showCreateFeedback, setShowCreateFeedback] = useState(false);
-
-    if (!isOpen || !service) return null;
-
-    const getTypeIcon = (type) => {
-        return type === 'storage' ? <Package className="w-6 h-6 text-green-500" /> : <Truck className="w-6 h-6 text-orange-500" />;
-    };
-
-    return (
-        <>
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                    <div className="p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center space-x-3">
-                                {getTypeIcon(type)}
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-800">
-                                        {type === 'storage' ? service.storageUnitName : service.transportUnitName}
-                                    </h3>
-                                    <p className="text-gray-600">{service.address || 'Địa chỉ không có sẵn'}</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={onClose}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-
                         <div className="mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="bg-blue-50 p-4 rounded-lg">
@@ -416,18 +252,10 @@ const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCr
                                 </div>
                             </div>
                         </div>
-
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-lg font-semibold text-gray-800">Tất cả đánh giá</h4>
-                            <button
-                                onClick={() => setShowCreateFeedback(true)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span>Tạo đánh giá</span>
-                            </button>
+                        {/* Đã xóa nút Tạo đánh giá */}
                         </div>
-
                         <div className="space-y-4">
                             {feedbacks && feedbacks.length > 0 ? (
                                 feedbacks.map((feedback) => (
@@ -448,20 +276,6 @@ const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCr
                     </div>
                 </div>
             </div>
-
-            <CreateFeedbackModal
-                isOpen={showCreateFeedback}
-                onClose={() => setShowCreateFeedback(false)}
-                service={service}
-                type={type}
-                onFeedbackCreated={() => {
-                    setShowCreateFeedback(false);
-                    if (onFeedbackCreated) {
-                        onFeedbackCreated();
-                    }
-                }}
-            />
-        </>
     );
 };
 

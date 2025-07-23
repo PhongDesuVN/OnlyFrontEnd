@@ -26,6 +26,7 @@ import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
 import PromotionStatisticsDashboard from '../Pages/Manager_yen/PromotionStatisticsDashboard.jsx';
+import StaffReportPage from '../Pages/Manager_yen/StaffReportPage.jsx'
 
 // --- Transport Unit Pages ---
 import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.jsx';
@@ -36,6 +37,7 @@ import CustomerLogin from "../Pages/Customer_thai/C_Login.jsx";
 import C_Register from "../Pages/Customer_thai/C_Register.jsx";
 import C_HomePage from "../Pages/Customer_thai/C_HomePage.jsx";
 import C_Dashboard from "../Pages/Customer_thai/C_Dashboard.jsx";
+import C_BookingDetail from "../Pages/Customer_thai/C_BookingDetail.jsx";
 
 import PaymentManagement from "../Pages/Receipts/PaymentManagement";
 import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.jsx";
@@ -80,7 +82,8 @@ export default function AppRoutes() {
                 <Route path="/managerstaff" element={<StaffManagement />} />
                 <Route path="/promotions" element={<PromotionManagement />} />
                 <Route path="/staffperformance" element={<StaffPerformance />} />
-                <Route path="//stats" element={<PromotionStatisticsDashboard/>} />
+                <Route path="/stats" element={<PromotionStatisticsDashboard/>} />
+            <Route path="/report" element={<StaffReportPage/>} />
 
             {/* Transport Unit */}
             <Route path="/transport-units" element={<TransportLayout/>}>
@@ -96,6 +99,7 @@ export default function AppRoutes() {
             <Route element={<AppLayout />}>
                 <Route path="/c_homepage" element={<C_HomePage />} />
                 <Route path="/c_dashboard" element={<C_Dashboard />} />
+                <Route path="/customer/booking/:bookingId" element={<C_BookingDetail />} />
             </Route>
 
 
