@@ -212,7 +212,7 @@ const Staff = () => {
             submenu: [
                 { name: "Hiệu suất bán hàng", icon: TrendingUp, path: "/dashboard", hasLink: true },
             ],
-        }
+        },
         {
             name: "Quản Lý Lịch Làm Việc",
             icon: Calendar,
