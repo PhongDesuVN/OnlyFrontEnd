@@ -6,18 +6,14 @@ export default function Sidebar() {
     const isActive = (path) => pathname === path || pathname.startsWith(`${path}/`)
 
     return (
-        <aside className="w-72 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white fixed h-full shadow-2xl border-r border-blue-700/30 backdrop-blur-sm">
+        <aside  className="w-72 pt-10 min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white shadow-2xl border-r border-blue-700/30 backdrop-blur-sm">
             {/* Enhanced Header with better visual hierarchy */}
             <div className="mb-10 p-6 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-blue-300/5 to-transparent blur-2xl rounded-2xl"></div>
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <Truck className="w-7 h-7 text-white" />
-                        </div>
                         <div>
-                            <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Vận Chuyển Nhà</h2>
-                            <p className="text-blue-300 text-sm font-medium">Hệ thống quản lý</p>
+                            <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Hệ thống quản lý</h2>
                         </div>
                     </div>
                     <div className="w-16 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-transparent rounded-full"></div>
@@ -136,16 +132,6 @@ export default function Sidebar() {
                 </Link>
             </nav>
 
-            {/* Enhanced decorative bottom element */}
-            <div className="absolute bottom-8 left-6 right-6">
-                <div className="relative">
-                    <div className="h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-                    <div className="absolute inset-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent blur-sm"></div>
-                </div>
-                <div className="mt-4 text-center">
-                    <p className="text-blue-400 text-xs font-medium">© 2025 Made By TrungTran</p>
-                </div>
-            </div>
         </aside>
     )
 }

@@ -31,6 +31,9 @@ import { NavLink } from "react-router-dom";
     Plus,
     ChevronDown,
     ChevronRight,
+    Calendar,
+    Clock,
+    UserCheck,
 } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import Cookies from "js-cookie"
@@ -210,12 +213,21 @@ const Staff = () => {
                 { name: "Hiệu suất bán hàng", icon: TrendingUp, path: "/dashboard", hasLink: true },
             ],
         },
+        {
+            name: "Quản Lý Lịch Làm Việc",
+            icon: Calendar,
+            hasLink: false,
+            hasSubmenu: true,
+            submenu: [
+                { name: "Lịch Làm Việc", icon: Calendar, path: "/schedule/calendar", hasLink: true },
+                { name: "Yêu Cầu Nghỉ Phép", icon: UserCheck, path: "/schedule/timeoff", hasLink: true },
+            ],
+        },
         { name: 'Quản Lý Biên Lai', icon: Receipt, path: '/receipts', hasLink: true },
         { name: 'Quản Lý Đơn Vị Lưu Trữ', icon: Package, hasLink: true, path: '/storage-units' },
         { name: "Quản Lý Đơn Vị Vận Chuyển", icon: Truck, hasLink: false },
         { name: "Quản Lý Đơn Hàng", icon: ShoppingCart, path: "/manageorder", hasLink: true },
         { name: "Quản Lý Khách Hàng", icon: Users, path: "/manageuser", hasLink: true },
-        { name: "Quản Lý Doanh Thu", icon: TrendingUp, path: "/managerevenue", hasLink: true },
         { name: "Hỗ Trợ Khách Hàng", icon: Headphones, hasLink: false },
         { name: "Báo Cáo", icon: TrendingUp, hasLink: false },
         { name: "Cài Đặt", icon: Settings, hasLink: false },
