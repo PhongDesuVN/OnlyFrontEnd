@@ -54,7 +54,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
             className="w-64 bg-gradient-to-b from-blue-900 to-purple-600 text-white p-6 h-screen shadow-2xl fixed z-30"
         >
             <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
-                <Users className="mr-2" /> Quản Lý User
+                <Users className="mr-2" /> Quản Lý Khách Hàng
             </h1>
             <nav>
                 {['overview', 'list', 'search', 'add', 'settings'].map(page => (
@@ -87,7 +87,7 @@ const UserOverview = ({ users }) => (
         transition={{ duration: 0.5 }}
     >
         <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <BarChart className="mr-2" /> Tổng Quan User
+            <BarChart className="mr-2" /> Tổng Quan Khách Hàng
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -1005,4 +1005,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard; 
+export default Dashboard;

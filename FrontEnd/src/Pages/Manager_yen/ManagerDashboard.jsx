@@ -8,7 +8,13 @@ import Header from "../../Components/FormLogin_yen/Header";
 import Footer from "../../Components/FormLogin_yen/Footer";
 import {
     Users, Package, TrendingUp, MapPin, ChevronDown, Calendar, Filter, XCircle,
-    Truck, LayoutDashboard, Settings, User, Circle, LogOut
+    Truck, LayoutDashboard, Settings, User, Circle, LogOut,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    DollarSign
+
+
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
 import {
@@ -44,6 +50,7 @@ const Dashboard = () => {
         overview: {},
         recentIssues: [],
         topOperators: [],
+        chartData: []
     });
     const [chartDataRevenue, setChartDataRevenue] = useState([]);
     const [chartDataOrders, setChartDataOrders] = useState([]);

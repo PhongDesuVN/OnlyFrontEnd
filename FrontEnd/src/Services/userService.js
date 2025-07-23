@@ -1,6 +1,4 @@
 // Service để xử lý các API calls liên quan đến user management
-import axiosInstance from "../utils/axiosInstance.js";
-
 const API_BASE_URL = 'http://localhost:8080/api/users';
 
 class UserService {
@@ -8,14 +6,14 @@ class UserService {
     async getAllUsers(searchParams = {}, token = null) {
         try {
             const queryString = new URLSearchParams();
-            
+
             // Thêm các query parameters nếu có
             if (searchParams.fullname) queryString.append('fullname', searchParams.fullname);
             if (searchParams.email) queryString.append('email', searchParams.email);
             if (searchParams.phone) queryString.append('phone', searchParams.phone);
             if (searchParams.address) queryString.append('address', searchParams.address);
 
-            const url = queryString.toString() 
+            const url = queryString.toString()
                 ? `${API_BASE_URL}?${queryString.toString()}`
                 : API_BASE_URL;
 
@@ -192,17 +190,30 @@ class UserService {
 
     // Lấy profile user
     async getProfile(token = null) {
-        const response = await axiosInstance.get(`${API_BASE_URL}/profile`);
-        return response;
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE_URL}/profile`, {
+            method: 'GET',
+            headers,
+        });
     }
     //api get all staff
     async getAllStaff(token = null) {
-        const response = await axiosInstance.get(`${API_BASE_URL}/staff`);
-        console.log('Getting all staff for user token:', response);
-        return response;
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE_URL}/staff`, {
+            method: 'GET',
+            headers,
+        });
+        const data = await response.json();
+        return data;
     }
 }
 
 // Export instance của service
 const userService = new UserService();
-export default userService; 
+export default userService;
