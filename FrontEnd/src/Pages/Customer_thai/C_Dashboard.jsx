@@ -266,7 +266,7 @@ const C_Dashboard = () => {
         }
 
         try {
-            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { method: 'DELETE', auth: true });
+            const response = await apiCall(`/api/customer/bookings/${bookingId}/cancel`, { method: 'PATCH', auth: true });
 
             if (response.ok) {
                 alert('Hủy đơn hàng thành công!');
