@@ -66,6 +66,8 @@ const Header = ({ onLogout }) => {
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState("performance");
     const [selectedYear, setSelectedYear] = useState("2024");
+    const [startMonth, setStartMonth] = useState("1");
+    const [endMonth, setEndMonth] = useState("12");
     const [selectedUnit, setSelectedUnit] = useState("Tất cả");
     const [selectedPeriod, setSelectedPeriod] = useState("month");
     const [selectedMetric, setSelectedMetric] = useState("revenue");
@@ -78,6 +80,8 @@ const Dashboard = () => {
     // Debounce các tham số
     const [debouncedYear] = useDebounce(selectedYear, 500);
     const [debouncedUnit] = useDebounce(selectedUnit, 500);
+    const [debouncedStartMonth] = useDebounce(startMonth, 500);
+    const [debouncedEndMonth] = useDebounce(endMonth, 500);
 
     // Lấy username từ cookies
     const username = Cookies.get("username") || "Staff User";
@@ -115,6 +119,7 @@ const Dashboard = () => {
 
     // Gọi API khi component mount hoặc khi bộ lọc thay đổi
     useEffect(() => {
+        console.log('useEffect chạy lại với:', debouncedYear, debouncedStartMonth, debouncedEndMonth, debouncedUnit, selectedPeriod, selectedMetric);
         const token = Cookies.get("authToken");
         if (!token) {
             navigate("/login", { replace: true });
@@ -138,7 +143,7 @@ const Dashboard = () => {
                 setRecentActivities(Array.isArray(activitiesResponse) ? activitiesResponse : []);
 
                 // Gọi API lấy doanh thu hàng tháng
-                const revenueResponse = await DashBoardApi.getMonthlyRevenue(debouncedYear, debouncedUnit);
+                const revenueResponse = await DashBoardApi.getMonthlyRevenue(debouncedYear, debouncedStartMonth, debouncedEndMonth, debouncedUnit);
                 setMonthlyRevenue(revenueResponse || []);
 
                 // Gọi API lấy dữ liệu hiệu suất
@@ -180,7 +185,7 @@ const Dashboard = () => {
         };
 
         fetchDashboardData();
-    }, [navigate, debouncedYear, debouncedUnit, selectedPeriod, selectedMetric]);
+    }, [navigate, debouncedYear, debouncedStartMonth, debouncedEndMonth, debouncedUnit, selectedPeriod, selectedMetric]);
 
     // Reset về trang 1 khi detailData thay đổi
     useEffect(() => {
@@ -260,6 +265,74 @@ const Dashboard = () => {
             <Header onLogout={handleLogout} />
             <div className="flex-1 p-8 pt-24">
                 <div className="max-w-7xl mx-auto space-y-8">
+                    {/* Filter chọn năm và đơn vị */}
+                    <div className="flex gap-4 justify-end mb-4">
+                        <label className="flex items-center gap-2 text-gray-700 font-medium">
+                            Năm:
+                            <select
+                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                value={selectedYear}
+                                onChange={e => {
+                                    setSelectedYear(e.target.value);
+                                    console.log('Chọn năm:', e.target.value);
+                                }}
+                            >
+                                <option value="2022">2022</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                            </select>
+                        </label>
+                        <label className="flex items-center gap-2 text-gray-700 font-medium">
+                            Từ tháng:
+                            <select
+                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                value={startMonth}
+                                onChange={e => {
+                                    setStartMonth(e.target.value);
+                                    // Nếu endMonth < startMonth thì cập nhật endMonth luôn
+                                    if (parseInt(e.target.value) > parseInt(endMonth)) {
+                                        setEndMonth(e.target.value);
+                                    }
+                                    console.log('Chọn từ tháng:', e.target.value);
+                                }}
+                            >
+                                {[...Array(12)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="flex items-center gap-2 text-gray-700 font-medium">
+                            Đến tháng:
+                            <select
+                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                value={endMonth}
+                                onChange={e => {
+                                    setEndMonth(e.target.value);
+                                    console.log('Chọn đến tháng:', e.target.value);
+                                }}
+                            >
+                                {[...Array(12)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1} disabled={parseInt(startMonth) > i + 1}>{i + 1}</option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="flex items-center gap-2 text-gray-700 font-medium">
+                            Đơn vị:
+                            <select
+                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                value={selectedUnit}
+                                onChange={e => {
+                                    setSelectedUnit(e.target.value);
+                                    console.log('Chọn đơn vị:', e.target.value);
+                                }}
+                            >
+                                <option value="Tất cả">Tất cả</option>
+                                <option value="Chuyển Nhà 24H">Chuyển Nhà 24H</option>
+                                <option value="DV Chuyển Nhà SG">DV Chuyển Nhà SG</option>
+                                <option value="Chuyển Nhà Minh Anh">Chuyển Nhà Minh Anh</option>
+                            </select>
+                        </label>
+                    </div>
                     {/* Hiển thị thông báo lỗi */}
                     {error && (
                         <div className="bg-red-100 text-red-600 p-4 rounded-lg text-center">
