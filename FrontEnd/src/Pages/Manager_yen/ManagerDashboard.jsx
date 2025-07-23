@@ -10,7 +10,6 @@ import {
     Users, Package, TrendingUp, MapPin, ChevronDown, Calendar, Filter, XCircle,
     Truck, LayoutDashboard, Settings, User, Circle, LogOut
 } from "lucide-react";
-import { Settings, User, Circle } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
 import {
     XAxis, YAxis, CartesianGrid, Tooltip,
