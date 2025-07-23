@@ -9,6 +9,20 @@ import { BarChart, List, Plus, Search, Eye, Edit, ArrowLeft } from "lucide-react
 import "react-toastify/dist/ReactToastify.css";
 import Pagination from "../../Components/HungStorage/Pagination";
 import PaymentSidebar from "./PaymentSidebar";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+import { format, subDays, parseISO } from "date-fns";
+import { vi } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = "/api/payments";
 
@@ -198,7 +212,62 @@ const PaymentDetail = React.memo(({ payment, onBack }) => (
   </div>
 ));
 
+// DailyPaymentChart component
+const DailyPaymentChart = React.memo(({ payments }) => {
+  const chartData = useMemo(() => {
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const date = subDays(new Date(), 29 - i);
+      return format(date, "yyyy-MM-dd");
+    });
+    const dailyCounts = last30Days.map((date) => {
+      const count = payments.filter((p) => {
+        if (!p.paidDate) return false;
+        // paidDate có thể là yyyy-MM-dd hoặc yyyy-MM-ddTHH:mm:ss
+        const paidDate = p.paidDate.slice(0, 10);
+        return paidDate === date;
+      }).length;
+      return count;
+    });
+    return {
+      labels: last30Days.map((date) => format(parseISO(date), "dd/MM", { locale: vi })),
+      datasets: [
+        {
+          label: "Số thanh toán được tạo",
+          data: dailyCounts,
+          borderColor: "rgb(59, 130, 246)",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    };
+  }, [payments]);
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: "top" },
+      title: {
+        display: true,
+        text: "Số lượng thanh toán được tạo mỗi ngày (30 ngày gần nhất)",
+        font: { size: 16, weight: "bold" },
+      },
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+    },
+  };
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 mt-8">
+      <div style={{ height: "400px" }}>
+        <Line data={chartData} options={options} />
+      </div>
+    </div>
+  );
+});
+
 export default function PaymentManagement() {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState("overview");
   const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -475,6 +544,7 @@ export default function PaymentManagement() {
         <BarChart className="mr-2" /> Tổng Quan Thanh Toán
       </h2>
       <StatsCards stats={stats} />
+      <DailyPaymentChart payments={payments} />
     </motion.div>
   );
 
@@ -539,10 +609,16 @@ export default function PaymentManagement() {
     <div className="min-h-screen bg-gray-50 flex">
       <PaymentSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
       <div className="flex-1 p-8 overflow-auto">
+        <button
+          className="mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
+          onClick={() => navigate(-1)}
+        >
+          ← Quay lại
+        </button>
         <AnimatePresence mode="wait">
           {currentPage === "overview" && <>{Overview}</>}
           {currentPage === "list" && <>{PaymentList}</>}
-
+          {currentPage === "detail" && <>{Detail}</>}
         </AnimatePresence>
       </div>
     </div>

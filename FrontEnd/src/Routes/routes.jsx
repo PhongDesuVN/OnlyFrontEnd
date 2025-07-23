@@ -26,6 +26,7 @@ import ManagerDashboard from '../Pages/Manager_yen/ManagerDashboard.jsx';
 import StaffManagement from '../Pages/Manager_yen/StaffManagement.jsx';
 import PromotionManagement from '../Pages/Manager_yen/PromotionManagement.jsx';
 import PromotionStatisticsDashboard from '../Pages/Manager_yen/PromotionStatisticsDashboard.jsx';
+import StaffReportPage from '../Pages/Manager_yen/StaffReportPage.jsx'
 
 // --- Transport Unit Pages ---
 import TransportLayout from '../Pages/TransportUnit_TrungTran/TransportLayout.jsx';
@@ -43,12 +44,14 @@ import StorageUnitManagement from "../Pages/HungStorage/StorageUnitManagement.js
 import StaffPerformance from "../Pages/Manager_yen/StaffPerformance.jsx";
 import PendingStaffManagement from '../Pages/PendingStaffManagement/PendingStaffManagement.jsx';
 
+import StorageApproval from '../Pages/StorageApproval/StorageApproval.jsx';
+import StorageApprovalOverview from '../Pages/StorageApproval/StorageApprovalOverview.jsx';
+
 // --- Schedule Management Pages ---
 import ScheduleCalendar from '../Pages/ScheduleManagement/ScheduleCalendar.jsx';
 import ShiftManagement from '../Pages/ScheduleManagement/ShiftManagement.jsx';
 import TimeOffRequests from '../Pages/ScheduleManagement/TimeOffRequests.jsx';
 import ScheduleRouteProtection from '../Components/ScheduleRouteProtection.jsx';
-
 export default function AppRoutes() {
     return (
         <Routes>
@@ -79,7 +82,8 @@ export default function AppRoutes() {
                 <Route path="/managerstaff" element={<StaffManagement />} />
                 <Route path="/promotions" element={<PromotionManagement />} />
                 <Route path="/staffperformance" element={<StaffPerformance />} />
-                <Route path="//stats" element={<PromotionStatisticsDashboard/>} />
+                <Route path="/stats" element={<PromotionStatisticsDashboard/>} />
+            <Route path="/report" element={<StaffReportPage/>} />
 
             {/* Transport Unit */}
             <Route path="/transport-units" element={<TransportLayout/>}>
@@ -98,11 +102,10 @@ export default function AppRoutes() {
                 <Route path="/customer/booking/:bookingId" element={<C_BookingDetail />} />
             </Route>
 
-            {/* Schedule Management - Protected Routes */}
-            <Route path="/schedule" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar/></ScheduleRouteProtection>}/>
-            <Route path="/schedule/calendar" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar/></ScheduleRouteProtection>}/>
-            <Route path="/schedule/shifts" element={<ScheduleRouteProtection requiredRole="MANAGER"><ShiftManagement/></ScheduleRouteProtection>}/>
-            <Route path="/schedule/timeoff" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><TimeOffRequests/></ScheduleRouteProtection>}/>
+
+
+
+
 
             {/* Fallback route */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -110,6 +113,8 @@ export default function AppRoutes() {
             <Route path="/storage-units" element={<StorageUnitManagement />} />
             <Route path="/staffperformance" element={<StaffPerformance />} />
             <Route path="/manager/pending-staff" element={<PendingStaffManagement />} />
+            <Route path="/manager/pending-storage-units" element={<StorageApproval />} />
+            <Route path="/storage-approval/overview" element={<StorageApprovalOverview />} />
 
         </Routes>
     );

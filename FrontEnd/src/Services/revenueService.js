@@ -1,5 +1,5 @@
 // Service để xử lý các API calls liên quan đến revenue management
-const API_BASE_URL = 'http://localhost:8083/api/revenues';
+const API_BASE_URL = 'http://localhost:8080/api/revenues';
 
 class RevenueService {
     // Lấy tất cả revenues

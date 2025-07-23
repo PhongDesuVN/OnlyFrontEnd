@@ -21,7 +21,7 @@ const Sidebar = ({ currentPage, onPageChange }) => {
         <Warehouse className="mr-2" /> Quản Lý Kho
       </h1>
       <nav>
-        {["overview", "view", "add", "search"].map((page) => (
+        {["overview", "view", "add"].map((page) => (
           <motion.button
             key={page}
             whileHover={{ scale: 1.05 }}
@@ -34,7 +34,6 @@ const Sidebar = ({ currentPage, onPageChange }) => {
             {page === "overview" && <BarChart className="mr-2" size={20} />}
             {page === "view" && <List className="mr-2" size={20} />}
             {page === "add" && <Plus className="mr-2" size={20} />}
-            {page === "search" && <Search className="mr-2" size={20} />}
             {pageLabels[page]}
           </motion.button>
         ))}
