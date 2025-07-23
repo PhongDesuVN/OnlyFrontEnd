@@ -207,10 +207,10 @@ export default function PromotionStatisticsDashboard() {
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
             <Header />
-            <div className="flex flex-1 min-h-[calc(100vh-64px)]">
+            <div className="flex flex-1 pt-5 min-h-[calc(100vh-64px)]">
 
             <LeftMenu onLogout={handleLogout} />
-               <div className="flex-1 pl-[80px]  pt-6 pr-4 min-w-0 flex flex-col gap-6">
+               <div className="flex-1 pl-[50px]  pt-6 pr-4 min-w-0 flex flex-col gap-6 pb-10 ">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent">
                     Thống Kê Khuyến Mãi
                 </h1>
@@ -219,47 +219,7 @@ export default function PromotionStatisticsDashboard() {
                         {error}
                     </div>
                 )}
-                <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-3 border border-blue-100">
-                    <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-2">Lọc Dữ Liệu</h2>
-                    <div className="flex flex-wrap gap-2 items-end">
-                        <div className="min-w-[100px]">
-                            <label className="block text-xs font-medium text-blue-700">Chọn Khoảng</label>
-                            <select
-                                value={rangeType}
-                                onChange={(e) => setRangeType(e.target.value)}
-                                className="mt-1 w-full px-2 py-1.5 bg-white/80 border border-blue-200 rounded-md focus:ring-1 focus:ring-blue-100 focus:border-blue-400 text-gray-800 text-xs"
-                            >
-                                <option value="day">Theo Ngày</option>
-                                <option value="month">Theo Tháng</option>
-                                <option value="year">Theo Năm</option>
-                            </select>
-                        </div>
-                        <div className="min-w-[100px]">
-                            <label className="block text-xs font-medium text-blue-700">Từ Ngày</label>
-                            <input
-                                type="date"
-                                value={from}
-                                onChange={(e) => setFrom(e.target.value)}
-                                className="mt-1 w-full px-2 py-1.5 bg-white/80 border border-blue-200 rounded-md focus:ring-1 focus:ring-blue-100 focus:border-blue-400 text-gray-800 text-xs"
-                            />
-                        </div>
-                        <div className="min-w-[100px]">
-                            <label className="block text-xs font-medium text-blue-700">Đến Ngày</label>
-                            <input
-                                type="date"
-                                value={to}
-                                onChange={(e) => setTo(e.target.value)}
-                                className="mt-1 w-full px-2 py-1.5 bg-white/80 border border-blue-200 rounded-md focus:ring-1 focus:ring-blue-100 focus:border-blue-400 text-gray-800 text-xs"
-                            />
-                        </div>
-                        <button
-                            onClick={handleFilterSubmit}
-                            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md hover:from-blue-700 hover:to-blue-800 focus:ring-1 focus:ring-blue-500 text-xs shadow-sm hover:shadow-md"
-                        >
-                            Lọc Dữ Liệu
-                        </button>
-                    </div>
-                </div>
+
                 {overview && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <Card title="Tổng khuyến mãi" value={overview.totalPromotions} />
@@ -267,9 +227,50 @@ export default function PromotionStatisticsDashboard() {
                         <Card title="Sắp diễn ra" value={overview.upcomingPromotions} color="blue" />
                         <Card title="Đã kết thúc" value={overview.expiredPromotions} color="red" />
                         <Card title="Booking áp dụng KM" value={overview.totalPromotionBookings} />
-                        <Card title="Doanh thu từ KM" value={(overview.totalPromotionRevenue / 1000).toLocaleString() + " nghìn VNĐ"} />
+                        <Card title="Doanh thu từ KM" value={(overview.totalPromotionRevenue / 1000).toLocaleString() + " VNĐ"} />
                     </div>
                 )}
+                   <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-3 border border-blue-100">
+                       <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-2">Lọc Dữ Liệu</h2>
+                       <div className="flex flex-wrap gap-2 items-end">
+                           <div className="min-w-[100px]">
+                               <label className="block text-xs font-medium text-blue-700">Chọn Khoảng</label>
+                               <select
+                                   value={rangeType}
+                                   onChange={(e) => setRangeType(e.target.value)}
+                                   className="mt-1 w-full px-2 py-1.5 bg-white/80 border border-blue-200 rounded-md focus:ring-1 focus:ring-blue-100 focus:border-blue-400 text-gray-800 text-xs"
+                               >
+                                   <option value="day">Theo Ngày</option>
+                                   <option value="month">Theo Tháng</option>
+                                   <option value="year">Theo Năm</option>
+                               </select>
+                           </div>
+                           <div className="min-w-[100px]">
+                               <label className="block text-xs font-medium text-blue-700">Từ Ngày</label>
+                               <input
+                                   type="date"
+                                   value={from}
+                                   onChange={(e) => setFrom(e.target.value)}
+                                   className="mt-1 w-full px-2 py-1.5 bg-white/80 border border-blue-200 rounded-md focus:ring-1 focus:ring-blue-100 focus:border-blue-400 text-gray-800 text-xs"
+                               />
+                           </div>
+                           <div className="min-w-[100px]">
+                               <label className="block text-xs font-medium text-blue-700">Đến Ngày</label>
+                               <input
+                                   type="date"
+                                   value={to}
+                                   onChange={(e) => setTo(e.target.value)}
+                                   className="mt-1 w-full px-2 py-1.5 bg-white/80 border border-blue-200 rounded-md focus:ring-1 focus:ring-blue-100 focus:border-blue-400 text-gray-800 text-xs"
+                               />
+                           </div>
+                           <button
+                               onClick={handleFilterSubmit}
+                               className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md hover:from-blue-700 hover:to-blue-800 focus:ring-1 focus:ring-blue-500 text-xs shadow-sm hover:shadow-md"
+                           >
+                               Lọc Dữ Liệu
+                           </button>
+                       </div>
+                   </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <ChartCard title="Doanh Thu Từ Khuyến Mãi">
                         <ResponsiveContainer width="100%" height={300}>
@@ -277,7 +278,7 @@ export default function PromotionStatisticsDashboard() {
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                                 <XAxis dataKey="date" stroke="#4b5e82" />
                                 <YAxis stroke="#4b5e82" />
-                                <Tooltip formatter={(value) => `${value} nghìn VNĐ`} />
+                                <Tooltip formatter={(value) => `${value} VNĐ`} />
                                 <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
                             </LineChart>
                         </ResponsiveContainer>

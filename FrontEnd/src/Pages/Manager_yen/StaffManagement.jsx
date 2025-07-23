@@ -16,7 +16,6 @@ const validateField = (field, value) => {
     switch (field) {
         case "searchTerm":
             if (value.length > 100) return "Tìm kiếm không được vượt quá 100 ký tự";
-            if (!/^[a-zA-Z0-9\s\-_]*$/.test(value)) return "Tìm kiếm chỉ chứa chữ cái, số, dấu cách, dấu gạch ngang, dấu gạch dưới";
             return "";
         case "username":
             if (!value) return "Tên đăng nhập không được để trống";
@@ -639,8 +638,8 @@ export default function StaffManagement() {
                     onOverview={() => navigate("/staffperformance")}
                     onLogout={handleLogout}
                 />
-                <main className="flex-1 pt-20 pb-16 px-6">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-8">
+                <main className="flex-1 pt-20 pb-16 px-10 ">
+                    <h1 className="text-4xl pt-5 font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-8">
                         Quản Lý Nhân Viên
                     </h1>
                     <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-blue-200 mb-8">
