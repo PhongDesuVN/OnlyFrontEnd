@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Save, Trash2 } from "lucide-react"
+import { Save, Ban } from "lucide-react"
 
 // Hàm validate discountValue dựa trên discountType
 const validateDiscountValue = (value, discountType) => {
@@ -69,7 +69,7 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                         onClick={() => onCancel(promo.id)}
                         className="px-3 py-1 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 shadow-md hover:shadow-lg transition-all duration-300"
                     >
-                        <Trash2 className="w-5 h-5" />
+                        <Ban className="w-5 h-5" />
                     </button>
                 </div>
             </div>
