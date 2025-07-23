@@ -1,4 +1,6 @@
 // Service để xử lý các API calls liên quan đến user management
+import axiosInstance from "../utils/axiosInstance.js";
+
 const API_BASE_URL = 'http://localhost:8080/api/users';
 
 class UserService {
@@ -201,16 +203,9 @@ class UserService {
     }
     //api get all staff
     async getAllStaff(token = null) {
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const response = await fetch(`${API_BASE_URL}/staff`, {
-            method: 'GET',
-            headers,
-        });
-        const data = await response.json();
-        return data;
+        const response = await axiosInstance.get(`${API_BASE_URL}/staff`);
+        console.log('Getting all staff for user token:', response);
+        return response;
     }
 }
 
