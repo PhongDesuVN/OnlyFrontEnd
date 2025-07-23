@@ -922,7 +922,7 @@ const C_Dashboard = () => {
         <RequireAuth allowedRoles={["CUSTOMER"]}>
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-b border-gray-200">
+                <header className="bg-purple-100 shadow-sm border-b border-gray-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center py-4">
                             <div className="flex items-center space-x-4">
@@ -956,7 +956,7 @@ const C_Dashboard = () => {
 
                 <div className="flex">
                     {/* Sidebar */}
-                    <aside className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
+                    <aside className="w-64 bg-blue-50 shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
                         <nav className="p-4 space-y-2">
                             <button
                                 onClick={() => setActiveComponent('dashboard')}

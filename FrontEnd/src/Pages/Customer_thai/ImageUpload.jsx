@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Cookies from 'js-cookie';
+import { apiCall } from '../../utils/api';
 
 const ImageUpload = ({ onFurnitureDetected, room }) => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -35,22 +36,11 @@ const ImageUpload = ({ onFurnitureDetected, room }) => {
         formData.append('image', selectedFile);
         
         try {
-            const token = Cookies.get('authToken') || localStorage.getItem('authToken');
-            if (!token) {
-                setError('Không tìm thấy token xác thực');
-                setLoading(false);
-                return;
-            }
-            
-            const headers = {
-                'Authorization': `Bearer ${token}`
-            };
-            
-            const response = await fetch('http://localhost:8080/api/customer/all-dimensions', {
+            // Không cần lấy token và headers thủ công nữa
+            const response = await apiCall('/api/customer/all-dimensions', {
                 method: 'POST',
-                headers,
                 body: formData,
-                credentials: 'include',
+                auth: true
             });
             
             if (!response.ok) {
