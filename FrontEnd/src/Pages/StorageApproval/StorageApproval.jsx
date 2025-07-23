@@ -3,10 +3,66 @@ import axiosInstance from "../../utils/axiosInstance";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import SidebarStorageApproval from "./SidebarStorageApproval";
-import { Warehouse } from "lucide-react";
+import { Warehouse, X} from "lucide-react";
 
 const TABS = { PENDING: "pending", HISTORY: "history" };
 const PAGE_SIZE = 6;
+
+function DetailsModal({ unit, onClose }) {
+  if (!unit) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-2xl w-full relative transform transition-all animate-fade-in-down">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition"
+        >
+          <X size={24} />
+        </button>
+        <h2 className="text-2xl font-bold text-blue-800 mb-6 border-b pb-3">
+          Chi tiết yêu cầu duyệt kho
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+          <div>
+            <p className="text-sm font-semibold text-gray-600">Tên kho:</p>
+            <p className="text-lg text-gray-900">{unit.storageUnitName}</p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-600">Người gửi yêu cầu:</p>
+            <p className="text-lg text-gray-900">{unit.senderEmail}</p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-600">Địa chỉ:</p>
+            <p className="text-lg text-gray-900">{unit.address || "Chưa có thông tin"}</p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-600">Số điện thoại:</p>
+            <p className="text-lg text-gray-900">{unit.phone || "Chưa có thông tin"}</p>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-600">Số lượng ô chứa:</p>
+            <p className="text-lg text-gray-900">{unit.slotCount || 0}</p>
+          </div>
+          <div className="md:col-span-2">
+            <p className="text-sm font-semibold text-gray-600 mb-2">Ảnh minh họa:</p>
+            {unit.imageUrl ? (
+              <img
+                src={unit.image}
+                alt={unit.storageUnitName}
+                className="w-full h-48 object-cover rounded-md border"
+              />
+            ) : (
+              <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-md border">
+                <p className="text-gray-500">Không có ảnh</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Spinner() {
   return (
@@ -31,6 +87,10 @@ export default function StorageUnitApprovalManager({ storageUnitId }) {
   const [historyPage, setHistoryPage] = useState(0);
   const [historyTotalPages, setHistoryTotalPages] = useState(1);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Add missing state for modal and selected unit at the top of the component
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState(null);
 
   const token = Cookies.get("authToken");
 
@@ -87,26 +147,52 @@ export default function StorageUnitApprovalManager({ storageUnitId }) {
   };
 
   // API: POST approve/reject
-  const handleAction = async (approvalId, newStatus) => {
-    try {
-      if (newStatus === "APPROVED") {
-        await axiosInstance.post(
-          `/api/storage-unit-approvals/${approvalId}/approve`,
-          null,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else if (newStatus === "REJECTED") {
-        await axiosInstance.post(
-          `/api/storage-unit-approvals/${approvalId}/reject`,
-          null,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      }
-      fetchPendingUnits(0);
+  const handleAction = async (approvalId, newStatus, note = null) => {
+      try {
+          const requestBody = {
+              status: newStatus === "APPROVED" ? "APPROVED" : "REJECTED",
+              managerNote: note || ""
+          };
+          if (newStatus === "APPROVED") {
+              await axiosInstance.post(
+                  `/api/storage-unit-approvals/${approvalId}/approve`,
+                  requestBody,
+                  { headers: { Authorization: `Bearer ${token}` } }
+              );
+          } else if (newStatus === "REJECTED") {
+              await axiosInstance.post(
+                  `/api/storage-unit-approvals/${approvalId}/reject`,
+                  requestBody,
+                  { headers: { Authorization: `Bearer ${token}` } }
+              );
+          }
+          fetchPendingUnits(0);
+          setIsModalOpen(false);
+
     } catch {
       alert("Có lỗi xảy ra khi xử lý duyệt kho!");
     }
   };
+  const handleRejectClick = (approvalId) => {
+    const reason = window.prompt("Vui lòng nhập lý do từ chối:");
+    // Nếu người dùng nhấn Cancel, reason sẽ là null
+    if (reason !== null) {
+      handleAction(approvalId, "REJECTED", reason);
+    }
+  };
+  const handleApproveClick = (approvalId) => {
+    const reason = window.prompt("Bạn có muốn thêm ghi chú cho lần duyệt này không? (Có thể bỏ trống)");
+    // Nếu người dùng nhấn Cancel, reason sẽ là null. Chúng ta vẫn tiếp tục nếu họ nhấn OK (kể cả khi không nhập gì).
+    if (reason !== null) {
+      handleAction(approvalId, "APPROVED", reason);
+    }
+  };
+
+//   Hàm để mở modal
+    const handleViewDetails = (unit) => {
+      setSelectedUnit(unit);
+      setIsModalOpen(true);
+    };
 
   const statusToVietnamese = (status) => {
     switch (status) {
@@ -203,16 +289,22 @@ export default function StorageUnitApprovalManager({ storageUnitId }) {
                             <td className="py-3 px-5">{unit.senderEmail}</td>
                             <td className="py-3 px-5">{statusToVietnamese(unit.status)}</td>
                             <td className="py-3 px-5">{unit.managerNote || "-"}</td>
-                            <td className="py-3 px-5">
+                            <td className="py-3 px-5 flex items-center justify-start gap-2">
+                              <button
+                                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-lg font-semibold shadow-sm transition"
+                                onClick={() => handleViewDetails(unit)}
+                              >
+                                Xem
+                              </button>
                               <button
                                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-lg font-semibold mr-2 shadow-sm transition"
-                                onClick={() => handleAction(unit.approvalId, "APPROVED")}
+                                onClick={() => handleApproveClick(unit.approvalId)}
                               >
                                 Duyệt
                               </button>
                               <button
                                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg font-semibold shadow-sm transition"
-                                onClick={() => handleAction(unit.approvalId, "REJECTED")}
+                                onClick={() => handleRejectClick(unit.approvalId)}
                               >
                                 Từ chối
                               </button>
@@ -325,6 +417,10 @@ export default function StorageUnitApprovalManager({ storageUnitId }) {
             </>
           )}
         </div>
+        {/* Render modal nếu isModalOpen là true */}
+        {isModalOpen && (
+          <DetailsModal unit={selectedUnit} onClose={() => setIsModalOpen(false)} />
+        )}
       </div>
     </div>
   );
