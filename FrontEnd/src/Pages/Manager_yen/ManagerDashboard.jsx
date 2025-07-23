@@ -163,52 +163,66 @@ const Dashboard = () => {
                 <Header />
                 <div className="flex flex-1 pt-24 px-6 gap-6">
                     {/* Sidebar */}
-                    <div className="w-80 min-w-[260px] max-w-xs px-6 py-8 flex flex-col gap-6 bg-white rounded-2xl shadow-lg">
+                    <div
+                        className="w-80 min-w-[260px] max-w-xs px-6 py-8 flex flex-col gap-6 bg-white rounded-2xl shadow-lg">
                         <h3 className="text-xl font-semibold text-gray-800 mb-2">Hành động nhanh</h3>
-                        <button onClick={() => navigate("/managerstaff")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-blue-600 rounded-lg shadow hover:opacity-90">
-                            <Users className="w-5 h-5" /> Quản lý nhân viên
+                        <button onClick={() => navigate("/managerstaff")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-blue-600 rounded-lg shadow hover:opacity-90">
+                            <Users className="w-5 h-5"/> Quản lý nhân viên
                         </button>
-                        <button onClick={() => navigate("/promotions")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-green-600 rounded-lg shadow hover:opacity-90">
-                            <Package className="w-5 h-5" /> Quản lý khuyến mãi
+                        <button onClick={() => navigate("/promotions")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-green-600 rounded-lg shadow hover:opacity-90">
+                            <Package className="w-5 h-5"/> Quản lý khuyến mãi
                         </button>
-                        <button className="flex items-center gap-3 w-full px-4 py-3 text-white bg-purple-600 rounded-lg shadow hover:opacity-90">
-                            <TrendingUp className="w-5 h-5" /> Báo cáo hiệu suất
+                        <button
+                            className="flex items-center gap-3 w-full px-4 py-3 text-white bg-purple-600 rounded-lg shadow hover:opacity-90">
+                            <TrendingUp className="w-5 h-5"/> Báo cáo hiệu suất
                         </button>
-                        <button onClick={() => navigate("/transport-units/overview")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-orange-600 rounded-lg shadow hover:opacity-90">
-                            <MapPin className="w-5 h-5" /> Quản lý vận chuyển
+                        <button onClick={() => navigate("/transport-units/overview")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-orange-600 rounded-lg shadow hover:opacity-90">
+                            <MapPin className="w-5 h-5"/> Quản lý vận chuyển
                         </button>
-                        <button onClick={() => navigate("/manager/pending-staff")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
-                            <Users className="w-5 h-5" /> Duyệt nhân viên mới
+                        <button onClick={() => navigate("/manager/pending-staff")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
+                            <Users className="w-5 h-5"/> Duyệt nhân viên mới
                         </button>
-                        <button onClick={() => navigate("/manager/pending-storage-units")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-teal-600 rounded-lg shadow hover:opacity-90">
-                            <Users className="w-5 h-5" /> Duyệt kho mới
+                        <button onClick={() => navigate("/manager/pending-storage-units")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-teal-600 rounded-lg shadow hover:opacity-90">
+                            <Users className="w-5 h-5"/> Duyệt kho mới
                         </button>
-                        <button onClick={() => navigate("/managerevenue")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
-                            <DollarSign className="w-5 h-5" /> Quản lý doanh thu
+                        <button onClick={() => navigate("/managerevenue")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-pink-600 rounded-lg shadow hover:opacity-90">
+                            <DollarSign className="w-5 h-5"/> Quản lý doanh thu
                         </button>
-                        <button onClick={() => navigate("/schedule/calendar")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-purple-600 rounded-lg shadow hover:opacity-90">
-                            <Calendar className="w-5 h-5" /> Lịch làm việc
+                        <button onClick={() => navigate("/schedule/calendar")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-purple-600 rounded-lg shadow hover:opacity-90">
+                            <Calendar className="w-5 h-5"/> Lịch làm việc
                         </button>
-                        <button onClick={() => navigate("/schedule/shifts")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-indigo-600 rounded-lg shadow hover:opacity-90">
-                            <Settings className="w-5 h-5" /> Quản lý ca làm
+                        <button onClick={() => navigate("/schedule/shifts")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-indigo-600 rounded-lg shadow hover:opacity-90">
+                            <Settings className="w-5 h-5"/> Quản lý ca làm
                         </button>
-                        <button onClick={() => navigate("/schedule/timeoff")} className="flex items-center gap-3 w-full px-4 py-3 text-white bg-teal-600 rounded-lg shadow hover:opacity-90">
-                            <User className="w-5 h-5" /> Yêu cầu nghỉ phép
+                        <button onClick={() => navigate("/schedule/timeoff")}
+                                className="flex items-center gap-3 w-full px-4 py-3 text-white bg-teal-600 rounded-lg shadow hover:opacity-90">
+                            <User className="w-5 h-5"/> Yêu cầu nghỉ phép
                         </button>
                         {/* User Profile */}
                         <div className="p-2 border-t border-blue-200">
-                            <div className="userinfo-card bg-blue-100 rounded-lg p-3 flex flex-col gap-2 border border-gray-200">
+                            <div
+                                className="userinfo-card bg-blue-100 rounded-lg p-3 flex flex-col gap-2 border border-gray-200">
                                 {currentPage === 'main' ? (
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-                                                <User className="w-4 h-4 text-white" />
+                                            <div
+                                                className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                                                <User className="w-4 h-4 text-white"/>
                                             </div>
                                             <div className="text-sm">
                                                 <p className="font-medium text-gray-800">{username || "Tài khoản"}</p>
                                                 <div className="flex items-center gap-1">
                                                     <p className="text-xs text-gray-500">Nhân viên</p>
-                                                    <Circle className="w-2 h-2 text-green-500" /> {/* Trạng thái online */}
+                                                    <Circle
+                                                        className="w-2 h-2 text-green-500"/> {/* Trạng thái online */}
                                                 </div>
                                             </div>
                                         </div>
@@ -217,26 +231,28 @@ const Dashboard = () => {
                                             onClick={() => setCurrentPage('settings')}
                                             aria-label="Cài đặt"
                                         >
-                                            <Settings className="w-4 h-4 text-gray-400" />
+                                            <Settings className="w-4 h-4 text-gray-400"/>
                                         </button>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-2">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-                                                <User className="w-4 h-4 text-white" />
+                                            <div
+                                                className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                                                <User className="w-4 h-4 text-white"/>
                                             </div>
                                             <div className="text-sm">
                                                 <p className="font-medium text-gray-800">{username || "Tài khoản"}</p>
                                                 <div className="flex items-center gap-1">
                                                     <p className="text-xs text-gray-500">Nhân viên</p>
-                                                    <Circle className="w-2 h-2 text-green-500" /> {/* Trạng thái online */}
+                                                    <Circle
+                                                        className="w-2 h-2 text-green-500"/> {/* Trạng thái online */}
                                                 </div>
                                             </div>
                                         </div>
                                         <NavLink
                                             to="/profile/main"
-                                            className={({ isActive }) =>
+                                            className={({isActive}) =>
                                                 `block px-3 py-1.5 rounded text-sm font-medium transition ${
                                                     isActive ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                                                 }`
@@ -245,7 +261,10 @@ const Dashboard = () => {
                                             Thông tin cá nhân
                                         </NavLink>
                                         <LogoutButton to="/logout">
-                                            <button className=" w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">Đăng xuất</button>
+                                            <button
+                                                className=" w-full px-4 py-2 rounded-lg bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition">Đăng
+                                                xuất
+                                            </button>
                                         </LogoutButton>
                                         <button
                                             className="text-xs text-gray-400 hover:underline mt-1 text-center"
