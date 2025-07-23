@@ -704,7 +704,7 @@ const StorageStatusChart = React.memo(({ storages }) => {
     const statusColors = {
       ACTIVE: "#10B981",
       INACTIVE: "#EF4444",
-      UNKNOWN: "#6B7280",
+      REJECTED: "#6B7280",
     };
 
     const labels = Object.keys(statusCounts);
@@ -907,7 +907,7 @@ const StatsCards = React.memo(({ stats }) => (
     {[
       { label: "Tổng số kho", value: stats.total, color: "blue" },
       { label: "Kho đang hoạt động", value: stats.active, color: "green" },
-      { label: "Kho có sẵn", value: stats.available, color: "yellow" },
+      { label: "Bị từ chối", value: stats.rejected, color: "yellow" },
       { label: "Kho ngừng hoạt động", value: stats.inactive, color: "red" },
     ].map((item, idx) => (
       <motion.div
@@ -1249,9 +1249,9 @@ export default function StorageUnitManagement() {
   const stats = useMemo(() => {
     const total = allStorages.length;
     const active = allStorages.filter((r) => r.status === "ACTIVE").length;
-    const available = allStorages.filter((r) => r.status === "AVAILABLE").length;
+    const rejected = allStorages.filter((r) => r.status === "REJECTED").length;
     const inactive = allStorages.filter((r) => r.status === "INACTIVE").length;
-    return { total, active, available, inactive };
+    return { total, active, rejected, inactive };
   }, [allStorages]);
 
   const searchProps = useMemo(
