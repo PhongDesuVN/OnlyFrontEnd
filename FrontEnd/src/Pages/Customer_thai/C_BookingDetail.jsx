@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
     ArrowLeft, 
     Package, 
@@ -30,6 +30,7 @@ import RequireAuth from '../../Components/RequireAuth';
 const C_BookingDetail = ({ booking: bookingProp }) => {
     const { bookingId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [booking, setBooking] = useState(bookingProp || null);
     const [customerInfo, setCustomerInfo] = useState(null);
     const [loading, setLoading] = useState(!bookingProp);
@@ -85,7 +86,7 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
         }
 
         try {
-            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { auth: true });
+            const response = await apiCall(`/api/customer/bookings/${bookingId}/cancel`, { method: 'PATCH', auth: true });
 
             if (response.ok) {
                 alert('Hủy đơn hàng thành công!');
@@ -202,6 +203,14 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
     // Log state feedbacks ngay trước return
     console.log('Render feedbacks:', feedbacks, Array.isArray(feedbacks), feedbacks.length);
 
+    const handleBack = () => {
+        if (location.state?.fromOrderHistory) {
+            navigate('/c_dashboard', { state: { activeTab: 'orderHistory' } });
+        } else {
+            navigate(-1);
+        }
+    };
+
     if (loading) {
         return (
             <RequireAuth allowedRoles={["CUSTOMER"]}>
@@ -264,7 +273,7 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
                         <div className="flex items-center justify-between py-4">
                             <div className="flex items-center space-x-4">
                                 <button
-                                    onClick={() => navigate('/c_dashboard')}
+                                    onClick={handleBack}
                                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -626,7 +635,15 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
                     </div>
                 </div>
             </div>
-
+            {booking && (
+                <FeedbackModal
+                    isOpen={feedbackModalOpen}
+                    onClose={closeFeedbackModal}
+                    bookingId={booking.bookingId}
+                    storageId={booking.storageId}
+                    transportId={booking.transportId}
+                />
+            )}
         </RequireAuth>
     );
 };

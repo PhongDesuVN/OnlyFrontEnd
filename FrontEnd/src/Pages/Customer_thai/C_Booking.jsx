@@ -22,7 +22,9 @@ const C_Booking = ({ isLoggedIn }) => {
         total: 0,
         distance: 0,
         totalVolume: 0,
-        vehicleType: null
+        vehicleType: null,
+        pickupCoords: null,
+        deliveryCoords: null
     });
     const [loading, setLoading] = useState(false);
     const [transportUnits, setTransportUnits] = useState([]);
@@ -158,7 +160,8 @@ const C_Booking = ({ isLoggedIn }) => {
         }
     };
 
-    const calculateTotal = async (pickupLocation, deliveryLocation, furniture, selectedTransport, homeType, homeOptions) => {
+    // SỬA: Chỉ tính toán khi đã có tọa độ từ gợi ý
+    const calculateTotal = async (pickupCoords, deliveryCoords, furniture, selectedTransport, homeType, homeOptions) => {
         try {
             let totalVolume = 0;
             if (furniture && furniture.length > 0) {
@@ -168,19 +171,13 @@ const C_Booking = ({ isLoggedIn }) => {
             let distance = 0;
             let geocodingError = null;
 
-            if (pickupLocation && deliveryLocation) {
-                const pickupCoords = await geocodeAddress(pickupLocation);
-                const deliveryCoords = await geocodeAddress(deliveryLocation);
-
-                if (!pickupCoords) {
-                    geocodingError = `Không tìm thấy địa chỉ pickup: "${pickupLocation}". Vui lòng nhập địa chỉ chi tiết hơn.`;
-                } else if (!deliveryCoords) {
-                    geocodingError = `Không tìm thấy địa chỉ delivery: "${deliveryLocation}". Vui lòng nhập địa chỉ chi tiết hơn.`;
-                } else {
-                    distance = await calculateDistance(pickupCoords, deliveryCoords);
-                    if (!distance || distance <= 0) {
-                        geocodingError = 'Không thể tính được khoảng cách giữa hai địa chỉ.';
-                    }
+            // SỬA: Nếu chưa có tọa độ, báo lỗi
+            if (!pickupCoords || !deliveryCoords) {
+                geocodingError = 'Vui lòng chọn địa chỉ từ gợi ý.';
+            } else {
+                distance = await calculateDistance(pickupCoords, deliveryCoords);
+                if (!distance || distance <= 0) {
+                    geocodingError = 'Không thể tính được khoảng cách giữa hai địa chỉ.';
                 }
             }
 
@@ -194,7 +191,7 @@ const C_Booking = ({ isLoggedIn }) => {
             }
 
             // Tổng tiền cơ bản
-            let total = distance * vehicleQuantity * 10;
+            let total = distance * vehicleQuantity * 1000;
 
             // New logic for home type fees
             if (homeType === 'Nhà thường') {
@@ -245,8 +242,9 @@ const C_Booking = ({ isLoggedIn }) => {
         }
     };
 
+    // SỬA: updateTotal chỉ chạy khi đã có cả hai tọa độ
     const updateTotal = async () => {
-        if (bookingData.pickupLocation && bookingData.deliveryLocation && bookingData.transportId) {
+        if (bookingData.pickupCoords && bookingData.deliveryCoords && bookingData.transportId) {
             setLoadingDistance(true);
             setDistanceError(null);
             try {
@@ -259,8 +257,8 @@ const C_Booking = ({ isLoggedIn }) => {
                     floorNumber
                 };
                 const { total, distance, totalVolume, geocodingError, vehicleQuantity: vq } = await calculateTotal(
-                    bookingData.pickupLocation,
-                    bookingData.deliveryLocation,
+                    bookingData.pickupCoords,
+                    bookingData.deliveryCoords,
                     selectedFurniture,
                     selectedTransport,
                     bookingData.homeType,
@@ -293,8 +291,9 @@ const C_Booking = ({ isLoggedIn }) => {
         }
     };
 
+    // SỬA: useEffect chỉ chạy updateTotal khi đã có cả hai tọa độ
     useEffect(() => {
-        const canCalculate = bookingData.pickupLocation && bookingData.deliveryLocation && bookingData.transportId && bookingData.homeType;
+        const canCalculate = bookingData.pickupCoords && bookingData.deliveryCoords && bookingData.transportId && bookingData.homeType;
         if (canCalculate) {
             setLoadingDistance(true);
             setDistanceError(null);
@@ -302,8 +301,8 @@ const C_Booking = ({ isLoggedIn }) => {
             return () => clearTimeout(timeoutId);
         }
     }, [
-        bookingData.pickupLocation,
-        bookingData.deliveryLocation,
+        bookingData.pickupCoords,
+        bookingData.deliveryCoords,
         bookingData.transportId,
         bookingData.homeType,
         bookingData.promotionId,
@@ -316,7 +315,7 @@ const C_Booking = ({ isLoggedIn }) => {
     ]);
 
     useEffect(() => {
-        if (bookingData.homeType && bookingData.pickupLocation && bookingData.deliveryLocation && bookingData.transportId) {
+        if (bookingData.homeType && bookingData.pickupCoords && bookingData.deliveryCoords && bookingData.transportId) {
             updateTotal();
         }
         // eslint-disable-next-line
@@ -387,69 +386,80 @@ const C_Booking = ({ isLoggedIn }) => {
         return null;
     };
 
-    const calculateDistance = async (pickup, delivery) => {
+    // SỬA: calculateDistance chỉ nhận vào tọa độ
+    const calculateDistance = async (pickupCoords, deliveryCoords) => {
+        if (!pickupCoords || !deliveryCoords) return 0;
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
-
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
             const response = await fetch(
-                `http://router.project-osrm.org/route/v1/driving/${pickup.lon},${pickup.lat};${delivery.lon},${delivery.lat}?overview=false`,
-                {
-                    signal: controller.signal
-                }
+                `https://router.project-osrm.org/route/v1/driving/${pickupCoords.lon},${pickupCoords.lat};${deliveryCoords.lon},${deliveryCoords.lat}?overview=false`,
+                { signal: controller.signal }
             );
-
             clearTimeout(timeoutId);
             const data = await response.json();
-
             if (data && data.routes && data.routes.length > 0) {
-                return data.routes[0].distance / 1000;
+                return data.routes[0].distance / 1000; // km
+            } else {
+                return 0;
             }
-            return 0;
         } catch (error) {
-            console.error('Lỗi tính quãng đường:', error);
+            console.error('Lỗi tính khoảng cách:', error);
             return 0;
         }
     };
 
     const suggestionsCache = useRef(new Map());
 
-    const searchAddressSuggestions = async (query) => {
-        if (!query || query.length < 3) return [];
-
-        const cacheKey = query.trim().toLowerCase();
-        if (suggestionsCache.current.has(cacheKey)) {
-            return suggestionsCache.current.get(cacheKey);
+    const searchAddressSuggestions = async (query, setError) => {
+        if (!query || query.trim().length < 3) {
+            setError('Vui lòng nhập ít nhất 3 ký tự để tìm kiếm địa chỉ.');
+            return [];
         }
 
-        const maxRetries = 2;
+        // Chuẩn hóa khóa cache
+        const normalizeCacheKey = (query) => {
+            return query.trim().toLowerCase().replace(/[\s]+/g, ' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        };
+
+        const cacheKey = normalizeCacheKey(query);
+        if (suggestionsCache.current.has(cacheKey)) {
+            const cached = suggestionsCache.current.get(cacheKey);
+            // KHÔNG hiển thị lỗi nếu không có gợi ý
+            // if (cached.length === 0) {
+            //     setError(`Không tìm thấy địa chỉ "${query}". Vui lòng nhập địa chỉ chi tiết hơn (ví dụ: số 123, đường Trần Duy Hưng, Cầu Giấy, Hà Nội).`);
+            // }
+            return cached;
+        }
+
+        const maxRetries = 3;
         let lastError;
 
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
+                // Giảm thời gian chờ ban đầu để tăng tốc độ phản hồi
                 if (attempt > 0) {
                     await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
                 } else {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
 
                 const response = await fetch(
                     `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1&countrycodes=vn&email=huynguyenthai2112@gmail.com`,
-                    {
-                        signal: controller.signal
-                    }
+                    { signal: controller.signal }
                 );
 
                 clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`Lỗi HTTP: ${response.status}`);
                 }
 
                 const data = await response.json();
+                // KHÔNG lọc importance, lấy hết các gợi ý trả về
                 const suggestions = data.map(item => ({
                     display_name: item.display_name,
                     lat: item.lat,
@@ -457,13 +467,22 @@ const C_Booking = ({ isLoggedIn }) => {
                 }));
 
                 suggestionsCache.current.set(cacheKey, suggestions);
+                // KHÔNG hiển thị lỗi nếu không có gợi ý
+                // if (suggestions.length === 0) {
+                //     setError(`Không tìm thấy địa chỉ "${query}". Vui lòng nhập địa chỉ chi tiết hơn (ví dụ: số 123, đường Trần Duy Hưng, Cầu Giấy, Hà Nội).`);
+                // } else {
+                //     setError(null);
+                // }
+                setError(null);
                 return suggestions;
             } catch (error) {
                 lastError = error;
-                console.error(`Lỗi tìm kiếm địa chỉ (attempt ${attempt + 1}):`, error);
-
+                console.error(`Lỗi tìm kiếm địa chỉ "${query}" (thử ${attempt + 1}):`, error);
                 if (attempt === maxRetries) {
                     suggestionsCache.current.set(cacheKey, []);
+                    // KHÔNG hiển thị lỗi nếu không có gợi ý
+                    // setError(`Không tìm thấy địa chỉ "${query}". Vui lòng nhập địa chỉ chi tiết hơn (ví dụ: số 123, đường Trần Duy Hưng, Cầu Giấy, Hà Nội).`);
+                    setError(null);
                     return [];
                 }
             }
@@ -482,28 +501,23 @@ const C_Booking = ({ isLoggedIn }) => {
         setPickupSuggestions([]);
         setShowPickupSuggestions(false);
     };
-
     const handlePickupLocationKeyDown = async (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             if (bookingData.pickupLocation.length >= 3) {
                 try {
-                    const suggestions = await searchAddressSuggestions(bookingData.pickupLocation);
+                    const suggestions = await searchAddressSuggestions(bookingData.pickupLocation, setDistanceError);
                     setPickupSuggestions(suggestions);
-                    setShowPickupSuggestions(true);
-
-                    if (suggestions.length === 0) {
-                        alert('Không tìm thấy địa chỉ. Vui lòng nhập địa chỉ chi tiết hơn (ví dụ: "số 10 Trần Duy Hưng, Cầu Giấy, Hà Nội")');
-                    }
+                    setShowPickupSuggestions(suggestions.length > 0);
                 } catch (error) {
                     if (error.name === 'AbortError') {
-                        alert('Kết nối bị timeout. Vui lòng kiểm tra mạng và thử lại sau.');
+                        setDistanceError('Kết nối bị timeout. Vui lòng kiểm tra mạng và thử lại sau.');
                     } else {
-                        alert('Có lỗi khi tìm kiếm địa chỉ. Vui lòng thử lại sau.');
+                        setDistanceError('Có lỗi khi tìm kiếm địa chỉ. Vui lòng thử lại sau.');
                     }
                 }
             } else {
-                alert('Vui lòng nhập ít nhất 3 ký tự để tìm kiếm địa chỉ.');
+                setDistanceError('Vui lòng nhập ít nhất 3 ký tự để tìm kiếm địa chỉ.');
             }
         }
     };
@@ -520,34 +534,38 @@ const C_Booking = ({ isLoggedIn }) => {
             e.preventDefault();
             if (bookingData.deliveryLocation.length >= 3) {
                 try {
-                    const suggestions = await searchAddressSuggestions(bookingData.deliveryLocation);
+                    const suggestions = await searchAddressSuggestions(bookingData.deliveryLocation, setDistanceError);
                     setDeliverySuggestions(suggestions);
-                    setShowDeliverySuggestions(true);
-
-                    if (suggestions.length === 0) {
-                        alert('Không tìm thấy địa chỉ. Vui lòng nhập địa chỉ chi tiết hơn (ví dụ: "số 10 Trần Duy Hưng, Cầu Giấy, Hà Nội")');
-                    }
+                    setShowDeliverySuggestions(suggestions.length > 0);
                 } catch (error) {
                     if (error.name === 'AbortError') {
-                        alert('Kết nối bị timeout. Vui lòng kiểm tra mạng và thử lại sau.');
+                        setDistanceError('Kết nối bị timeout. Vui lòng kiểm tra mạng và thử lại sau.');
                     } else {
-                        alert('Có lỗi khi tìm kiếm địa chỉ. Vui lòng thử lại sau.');
+                        setDistanceError('Có lỗi khi tìm kiếm địa chỉ. Vui lòng thử lại sau.');
                     }
                 }
             } else {
-                alert('Vui lòng nhập ít nhất 3 ký tự để tìm kiếm địa chỉ.');
+                setDistanceError('Vui lòng nhập ít nhất 3 ký tự để tìm kiếm địa chỉ.');
             }
         }
     };
 
     const handlePickupSuggestionSelect = (suggestion) => {
-        setBookingData(prev => ({ ...prev, pickupLocation: suggestion.display_name }));
+        setBookingData(prev => ({
+            ...prev,
+            pickupLocation: suggestion.display_name,
+            pickupCoords: { lat: parseFloat(suggestion.lat), lon: parseFloat(suggestion.lon) }
+        }));
         setShowPickupSuggestions(false);
         setPickupSuggestions([]);
     };
-
+    
     const handleDeliverySuggestionSelect = (suggestion) => {
-        setBookingData(prev => ({ ...prev, deliveryLocation: suggestion.display_name }));
+        setBookingData(prev => ({
+            ...prev,
+            deliveryLocation: suggestion.display_name,
+            deliveryCoords: { lat: parseFloat(suggestion.lat), lon: parseFloat(suggestion.lon) }
+        }));
         setShowDeliverySuggestions(false);
         setDeliverySuggestions([]);
     };
@@ -597,28 +615,25 @@ const C_Booking = ({ isLoggedIn }) => {
         setBookingData(prev => ({ ...prev, slotIndex }));
     };
 
+    // SỬA: updateMap chỉ dùng tọa độ đã chọn
     useEffect(() => {
         const updateMap = async () => {
-            if (bookingData.pickupLocation && bookingData.deliveryLocation) {
-                const pickup = await geocodeAddress(bookingData.pickupLocation);
-                const delivery = await geocodeAddress(bookingData.deliveryLocation);
+            if (bookingData.pickupCoords && bookingData.deliveryCoords) {
                 let route = [];
-                if (pickup && delivery) {
-                    try {
-                        const res = await fetch(`http://router.project-osrm.org/route/v1/driving/${pickup.lon},${pickup.lat};${delivery.lon},${delivery.lat}?overview=full&geometries=geojson`);
-                        const data = await res.json();
-                        if (data && data.routes && data.routes[0]) {
-                            route = data.routes[0].geometry.coordinates.map(([lon, lat]) => [lat, lon]);
-                        }
-                    } catch (e) { route = []; }
-                }
-                setMapData({ pickupCoords: pickup, deliveryCoords: delivery, route });
+                try {
+                    const res = await fetch(`http://router.project-osrm.org/route/v1/driving/${bookingData.pickupCoords.lon},${bookingData.pickupCoords.lat};${bookingData.deliveryCoords.lon},${bookingData.deliveryCoords.lat}?overview=full&geometries=geojson`);
+                    const data = await res.json();
+                    if (data && data.routes && data.routes[0]) {
+                        route = data.routes[0].geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+                    }
+                } catch (e) { route = []; }
+                setMapData({ pickupCoords: bookingData.pickupCoords, deliveryCoords: bookingData.deliveryCoords, route });
             } else {
                 setMapData({ pickupCoords: null, deliveryCoords: null, route: [] });
             }
         };
         updateMap();
-    }, [bookingData.pickupLocation, bookingData.deliveryLocation]);
+    }, [bookingData.pickupCoords, bookingData.deliveryCoords]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -816,17 +831,18 @@ const C_Booking = ({ isLoggedIn }) => {
                                     <div className="text-gray-800"><strong>Trạng thái:</strong> {selectedOption.status}</div>
                                     <div className="text-gray-800"><strong>Số slot:</strong> {selectedOption.slotCount || 'N/A'}</div>
                                 </div>
-                                {selectedOption.imageStorageUnit || selectedOption.image ? (
-                                    <div className="flex-shrink-0 w-32 h-32 flex items-center justify-center">
-                                        <img src={selectedOption.imageStorageUnit || selectedOption.image} alt="Ảnh kho" className="object-cover w-32 h-32 rounded shadow border bg-white" />
+                                <div className="flex flex-col items-center justify-center gap-3 min-w-[120px]">
+                                    <div className="w-24 h-24 flex items-center justify-center mb-2">
+                                        {selectedOption.imageStorageUnit || selectedOption.image ? (
+                                            <img src={selectedOption.imageStorageUnit || selectedOption.image} alt="Ảnh kho" className="object-cover w-24 h-24 rounded-lg shadow border bg-white" />
+                                        ) : (
+                                            <div className="w-24 h-24 bg-gray-100 rounded-lg border flex items-center justify-center text-gray-400">No Image</div>
+                                        )}
                                     </div>
-                                ) : null}
-
-                                <div className="mt-3">
                                     <button
                                         type="button"
                                         onClick={() => setShowSlotSelector(true)}
-                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full"
                                     >
                                         Chọn vị trí cất giữ
                                     </button>
@@ -1356,33 +1372,37 @@ const C_Booking = ({ isLoggedIn }) => {
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-3">
-                                    {slotStatus.slots.map((slot) => (
-                                        <button
-                                            key={slot.slotIndex}
-                                            onClick={() => !slot.booked && handleSlotSelect(slot.slotIndex)}
-                                            disabled={slot.booked}
-                                            className={`
-                                                p-4 rounded-lg border-2 transition-all duration-200 text-center
-                                                ${slot.booked
-                                                ? 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed'
-                                                : selectedSlot === slot.slotIndex
-                                                    ? 'bg-blue-100 border-blue-500 text-blue-700'
-                                                    : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
-                                            }
-                                            `}
-                                        >
-                                            <div className="font-semibold">Slot {slot.slotIndex}</div>
-                                            {slot.booked ? (
-                                                <div className="text-xs mt-1">
-                                                    Đã có người đặt
-                                                </div>
-                                            ) : (
-                                                <div className="text-xs mt-1">
-                                                    Trống
-                                                </div>
-                                            )}
-                                        </button>
-                                    ))}
+                                    {slotStatus.slots.map((slot, idx) => {
+                                        // FE tự gán slotIndex cho slot trống
+                                        const displayIndex = slot.slotIndex != null ? slot.slotIndex : idx + 1;
+                                        return (
+                                            <button
+                                                key={displayIndex}
+                                                onClick={() => !slot.booked && handleSlotSelect(displayIndex)}
+                                                disabled={slot.booked}
+                                                className={`
+                                                    p-4 rounded-lg border-2 transition-all duration-200 text-center
+                                                    ${slot.booked
+                                                    ? 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed'
+                                                    : selectedSlot === displayIndex
+                                                        ? 'bg-blue-100 border-blue-500 text-blue-700'
+                                                        : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                                                }
+                                                `}
+                                            >
+                                                <div className="font-semibold">Slot {displayIndex}</div>
+                                                {slot.booked ? (
+                                                    <div className="text-xs mt-1">
+                                                        Đã có người đặt
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs mt-1">
+                                                        Trống
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
 
                                 {selectedSlot && (

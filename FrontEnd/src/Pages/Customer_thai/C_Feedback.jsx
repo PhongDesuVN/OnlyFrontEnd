@@ -29,21 +29,21 @@ const RatingStars = ({ rating, size = "w-4 h-4" }) => {
 };
 
 const FeedbackCard = ({ feedback, onLike, onDislike }) => {
-    const [isLiked, setIsLiked] = useState(false);
-    const [isDisliked, setIsDisliked] = useState(false);
+    const [isLiked, setIsLiked] = useState(!!feedback.isLikedByCurrentUser);
+    const [isDisliked, setIsDisliked] = useState(!!feedback.isDislikedByCurrentUser);
     const [likeCount, setLikeCount] = useState(feedback.likes || 0);
     const [dislikeCount, setDislikeCount] = useState(feedback.dislikes || 0);
 
     const handleLike = async () => {
+        if (isLiked) return; // Đã like thì không làm gì
         try {
-            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, { auth: true });
-
+            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, { method: 'PATCH', auth: true });
             if (response.ok) {
                 const updatedFeedback = await response.json();
                 setLikeCount(updatedFeedback.likes);
                 setDislikeCount(updatedFeedback.dislikes);
-                setIsLiked(!isLiked);
-                if (isDisliked) setIsDisliked(false);
+                setIsLiked(true);
+                setIsDisliked(false);
                 if (onLike) onLike(updatedFeedback);
             }
         } catch (error) {
@@ -52,15 +52,15 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
     };
 
     const handleDislike = async () => {
+        if (isDisliked) return; // Đã dislike thì không làm gì
         try {
-            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, { auth: true });
-
+            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, { method: 'PATCH', auth: true });
             if (response.ok) {
                 const updatedFeedback = await response.json();
                 setLikeCount(updatedFeedback.likes);
                 setDislikeCount(updatedFeedback.dislikes);
-                setIsDisliked(!isDisliked);
-                if (isLiked) setIsLiked(false);
+                setIsDisliked(true);
+                setIsLiked(false);
                 if (onDislike) onDislike(updatedFeedback);
             }
         } catch (error) {
@@ -96,24 +96,25 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={handleLike}
-                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${isLiked
-                            ? 'bg-blue-100 text-blue-600'
-                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50'
-                            }`}
+                        disabled={feedback.isLike}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${feedback.isLike
+                            ? 'bg-blue-100 text-blue-600 cursor-not-allowed opacity-60'
+                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50'}
+                        `}
                     >
-                        <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                        <span className="text-sm">{likeCount}</span>
+                        <ThumbsUp className={`w-4 h-4 ${feedback.isLike ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
+                        <span className="text-sm">{feedback.likes}</span>
                     </button>
-
                     <button
                         onClick={handleDislike}
-                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${isDisliked
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-gray-100 text-gray-600 hover:bg-red-50'
-                            }`}
+                        disabled={feedback.isDislike}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${feedback.isDislike
+                            ? 'bg-red-100 text-red-600 cursor-not-allowed opacity-60'
+                            : 'bg-gray-100 text-gray-600 hover:bg-red-50'}
+                        `}
                     >
-                        <ThumbsDown className={`w-4 h-4 ${isDisliked ? 'fill-current' : ''}`} />
-                        <span className="text-sm">{dislikeCount}</span>
+                        <ThumbsDown className={`w-4 h-4 ${feedback.isDislike ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
+                        <span className="text-sm">{feedback.dislikes}</span>
                     </button>
                 </div>
 
