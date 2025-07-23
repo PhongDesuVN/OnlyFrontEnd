@@ -192,14 +192,8 @@ class UserService {
 
     // Lấy profile user
     async getProfile(token = null) {
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const response = await fetch(`${API_BASE_URL}/profile`, {
-            method: 'GET',
-            headers,
-        });
+        const response = await axiosInstance.get(`${API_BASE_URL}/profile`);
+        return response;
     }
     //api get all staff
     async getAllStaff(token = null) {
