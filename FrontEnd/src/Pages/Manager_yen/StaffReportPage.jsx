@@ -53,17 +53,6 @@ const LeftMenu = ({ onBackToHome, onOverview, onApproveNewStaff, onProfile, onLo
                     </div>
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
                 </button>
-                <button
-                    onClick={onApproveNewStaff}
-                    className="group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
-                >
-                    <div className="p-2.5 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
-                        <Users className="w-5 h-5 text-blue-300 group-hover:text-blue-100" />
-                    </div>
-                    <div className="flex-1 relative z-10">
-                        <span className="font-semibold">Duyệt nhân viên mới</span>
-                    </div>
-                </button>
                 <div className="mt-6 pt-4 border-t border-blue-700/30">
                     <div className="p-2">
                         <div className="relative">

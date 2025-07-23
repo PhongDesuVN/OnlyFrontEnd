@@ -215,13 +215,13 @@ export default function StaffPerformance() {
                     onLogout={handleLogout}
                 />
                 <main className="flex-1 ml-72 pt-20 pb-16 px-6">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-8">
+                    <h1 className="text-4xl pt-10 font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-8">
                         Tổng Quan Hiệu Suất Nhân Viên
                     </h1>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                         <MetricCard icon={Users} label="Tổng nhân viên" value={data?.totalStaffs || 0} />
-                        <MetricCard icon={Crown} label="Top theo Booking" value={data?.topBookingStaffs?.length || 0} />
-                        <MetricCard icon={MessageSquare} label="Top theo Phản hồi" value={data?.topFeedbackStaffs?.length || 0} />
+                        <MetricCard icon={Crown} label="Top theo số đơn hàng" value={data?.topBookingStaffs?.length || 0} />
+                        <MetricCard icon={MessageSquare} label="Top theo phản hồi" value={data?.topFeedbackStaffs?.length || 0} />
                         <MetricCard icon={BarChart2} label="Thống kê theo tháng" value={`${data?.monthlyCreatedStats ? Object.keys(data.monthlyCreatedStats).length : 0} tháng`} />
                     </div>
                     <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-blue-200 p-6 mb-8">
@@ -237,7 +237,7 @@ export default function StaffPerformance() {
                         </ResponsiveContainer>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <TopListCard title="Top 5 Nhân viên theo số lượng Booking" icon={Crown} list={data?.topBookingStaffs || []} type="totalBookings" />
+                        <TopListCard title="Top 5 Nhân viên theo số lượng đơn hàng" icon={Crown} list={data?.topBookingStaffs || []} type="totalBookings" />
                         <TopListCard title="Top 5 Nhân viên được phản hồi nhiều" icon={MessageSquare} list={data?.topFeedbackStaffs || []} type="totalFeedbacks" />
                     </div>
                 </main>
