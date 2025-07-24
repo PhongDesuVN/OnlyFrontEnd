@@ -62,7 +62,7 @@ const C_Login = () => {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <Header />
+            <Header backgroundClass="bg-gray-900 text-white" />
 
             <div
                 className="absolute inset-0 bg-cover bg-center z-[-1]"
