@@ -745,7 +745,9 @@ const C_Booking = ({ isLoggedIn }) => {
             }
 
             const result = await response.json();
-            alert('Đặt xe thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.');
+            alert('Đặt xe thành công! Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất.' +
+                ' Xin vui lòng vào lịch sử đơn hàng để thanh toán chúng tôi vô cùng xin lỗi vì sự bất tiện này' +
+                ' Chúng tôi sẽ cập nhật trong thời gian sớm nhất. Xin cảm ơn quý khách ');
 
             setBookingData({
                 pickupLocation: '',

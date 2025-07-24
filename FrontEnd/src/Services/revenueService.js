@@ -1,25 +1,12 @@
-// Service để xử lý các API calls liên quan đến revenue management
-const API_BASE_URL = 'http://localhost:8080/api/revenues';
+import axiosInstance from '../utils/axiosInstance.js';
 
+// Service để xử lý các API calls liên quan đến revenue management
 class RevenueService {
     // Lấy tất cả revenues
-    async getAllRevenues(token = null) {
+    async getAllRevenues() {
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(API_BASE_URL, {
-                method: 'GET',
-                headers,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data;
+            const response = await axiosInstance.get('/api/revenues');
+            return response.data;
         } catch (error) {
             console.error('Error fetching revenues:', error);
             throw error;
@@ -27,24 +14,15 @@ class RevenueService {
     }
 
     // Lấy revenues theo date range
-    async getRevenuesByDateRange(startDate, endDate, token = null) {
+    async getRevenuesByDateRange(startDate, endDate) {
         try {
-            const url = `${API_BASE_URL}/date-range?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers,
+            const response = await axiosInstance.get('/api/revenues/date-range', {
+                params: {
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                },
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data;
+            return response.data;
         } catch (error) {
             console.error('Error fetching revenues by date range:', error);
             throw error;
@@ -52,23 +30,10 @@ class RevenueService {
     }
 
     // Lấy revenues theo beneficiary
-    async getRevenuesByBeneficiary(beneficiaryId, token = null) {
+    async getRevenuesByBeneficiary(beneficiaryId) {
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${API_BASE_URL}/beneficiary/${beneficiaryId}`, {
-                method: 'GET',
-                headers,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data;
+            const response = await axiosInstance.get(`/api/revenues/beneficiary/${beneficiaryId}`);
+            return response.data;
         } catch (error) {
             console.error('Error fetching revenues by beneficiary:', error);
             throw error;
@@ -76,23 +41,10 @@ class RevenueService {
     }
 
     // Lấy revenues theo source type
-    async getRevenuesBySourceType(sourceType, token = null) {
+    async getRevenuesBySourceType(sourceType) {
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${API_BASE_URL}/source-type/${sourceType}`, {
-                method: 'GET',
-                headers,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data;
+            const response = await axiosInstance.get(`/api/revenues/source-type/${sourceType}`);
+            return response.data;
         } catch (error) {
             console.error('Error fetching revenues by source type:', error);
             throw error;
@@ -100,23 +52,10 @@ class RevenueService {
     }
 
     // Lấy revenues theo booking
-    async getRevenuesByBooking(bookingId, token = null) {
+    async getRevenuesByBooking(bookingId) {
         try {
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${API_BASE_URL}/booking/${bookingId}`, {
-                method: 'GET',
-                headers,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data;
+            const response = await axiosInstance.get(`/api/revenues/booking/${bookingId}`);
+            return response.data;
         } catch (error) {
             console.error('Error fetching revenues by booking:', error);
             throw error;
@@ -124,24 +63,15 @@ class RevenueService {
     }
 
     // Lấy tổng revenue theo date range
-    async getTotalRevenue(startDate, endDate, token = null) {
+    async getTotalRevenue(startDate, endDate) {
         try {
-            const url = `${API_BASE_URL}/total?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers,
+            const response = await axiosInstance.get('/api/revenues/total', {
+                params: {
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                },
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            return data;
+            return response.data;
         } catch (error) {
             console.error('Error fetching total revenue:', error);
             throw error;
@@ -149,30 +79,33 @@ class RevenueService {
     }
 
     // Export to Excel
-    async exportToExcel(startDate, endDate, token = null) {
+    async exportToExcel(startDate, endDate) {
         try {
-            let url = `${API_BASE_URL}/export/excel`;
+            const params = {};
             if (startDate && endDate) {
-                url += `?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
+                params.startDate = startDate.toISOString();
+                params.endDate = endDate.toISOString();
             }
-            const headers = {
-                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Type': 'application/json'
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers
+            const response = await axiosInstance.get('/api/revenues/export/excel', {
+                params,
+                responseType: 'blob',
             });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const blob = await response.blob();
-            return blob;
+            return response.data;
         } catch (error) {
             console.error('Error exporting to Excel:', error);
+            throw error;
+        }
+    }
+
+    // Lấy danh sách doanh thu có phân trang/filter
+    async getPagedRevenues(params) {
+        try {
+            const response = await axiosInstance.get('/api/revenues/filtered', {
+                params,
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching paged revenues:', error);
             throw error;
         }
     }
@@ -180,4 +113,39 @@ class RevenueService {
 
 // Export instance của service
 const revenueService = new RevenueService();
+
+// Lấy danh sách doanh thu có phân trang/filter
+export const getPagedRevenues = async (params) => {
+    try {
+        const response = await axiosInstance.get('/api/revenues/filtered', {
+            params,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching paged revenues:', error);
+        throw error;
+    }
+};
+
+// Xuất excel với filter
+export const exportExcelV2 = async (params) => {
+    try {
+        const response = await axiosInstance.get('/api/revenues/export/excel', {
+            params,
+            responseType: 'blob',
+        });
+        // Tải file về
+        const url_download = window.URL.createObjectURL(response.data);
+        const link = document.createElement('a');
+        link.href = url_download;
+        link.setAttribute('download', 'revenue_report.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    } catch (error) {
+        console.error('Error exporting to Excel:', error);
+        throw error;
+    }
+};
+
 export default revenueService; 
