@@ -224,7 +224,6 @@ const Staff = () => {
             ],
         },
         { name: 'Quản Lý Biên Lai', icon: Receipt, path: '/receipts', hasLink: true },
-        { name: 'Quản Lý Đơn Vị Lưu Trữ', icon: Package, hasLink: true, path: '/storage-units' },
         { name: "Quản Lý Đơn Vị Vận Chuyển", icon: Truck, hasLink: false },
         { name: "Quản Lý Đơn Hàng", icon: ShoppingCart, path: "/manageorder", hasLink: true },
         { name: "Quản Lý Khách Hàng", icon: Users, path: "/manageuser", hasLink: true },

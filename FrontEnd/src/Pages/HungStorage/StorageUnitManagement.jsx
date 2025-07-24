@@ -44,11 +44,11 @@ import { format, subDays, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import axiosInstance from '../../utils/axiosInstance';
 import SlotGrid from "../../Components/HungStorage/SlotGrid";
-import Sidebar from "../../Components/HungStorage/Sidebar";
 import { LoadingSpinner, ErrorMessage } from "../../Components/HungStorage/LoadingError";
-import Footer from "../../Components/HungStorage/Footer";
-import Pagination from "../../Components/HungStorage/Pagination";
 import RequireAuth from '../../Components/RequireAuth';
+import Sidebar from "../../Components/HungStorage/Sidebar";
+import Header from '../../Components/FormLogin_yen/Header.jsx';
+import Footer from '../../Components/FormLogin_yen/Footer.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
@@ -277,28 +277,6 @@ const FilterBar = React.memo(({ filters, onFiltersChange, onClearFilters, result
     </div>
   );
 });
-
-// Component Header
-const Header = React.memo(() => (
-  <header className="fixed w-full top-0 bg-white shadow-lg z-10">
-    <div className="container mx-auto px-4 py-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Warehouse className="w-8 h-8 text-blue-600" />
-          <h1 className="text-xl font-bold text-gray-800">Quản Lý Kho Lưu Trữ</h1>
-        </div>
-        <div className="flex space-x-3">
-          <Link
-            to="/"
-            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-          >
-            Trang Chủ
-          </Link>
-        </div>
-      </div>
-    </div>
-  </header>
-));
 
 // Component SearchBar
 const SearchBar = React.memo(({ value, onChange, onClear, resultCount }) => (
@@ -894,7 +872,39 @@ const StorageTable = React.memo(
             </table>
           </div>
 
-          {showPagination && paginationProps && <Pagination {...paginationProps} />}
+          {showPagination && paginationProps && (
+            <div className="w-full flex justify-center items-center gap-3 py-6">
+              <button
+                onClick={() => handlePageChange(Math.max(1, paginationProps.currentPage - 1))}
+                disabled={paginationProps.currentPage === 1}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${paginationProps.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                title="Trang trước"
+              >
+                Trước
+              </button>
+              {Array.from({ length: paginationProps.totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${paginationProps.currentPage === page ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                  title={`Trang ${page}`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(Math.min(paginationProps.totalPages, paginationProps.currentPage + 1))}
+                disabled={paginationProps.currentPage === paginationProps.totalPages}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${paginationProps.currentPage === paginationProps.totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                title="Trang sau"
+              >
+                Sau
+              </button>
+              <span className="text-sm text-gray-600 font-medium ml-2">
+                Trang {paginationProps.currentPage} / {paginationProps.totalPages}
+              </span>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -1287,6 +1297,7 @@ export default function StorageUnitManagement() {
     [stats, loading, allStorages, error, fetchInitialData]
   );
 
+
   const ViewStorages = useMemo(() => {
     const result = getFilteredAndPaginatedData;
 
@@ -1321,7 +1332,6 @@ export default function StorageUnitManagement() {
           onDelete={handleDeleteClick}
           onView={handleView}
           showActions={true}
-          showPagination={true}
           paginationProps={paginationProps}
           showFilters={true}
           filterProps={filterProps}
@@ -1396,37 +1406,13 @@ export default function StorageUnitManagement() {
     [filteredStorages, searchProps, loading, error, fetchInitialData]
   );
 
-  if (error && allStorages.length === 0) {
-    return (
-      <RequireAuth>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center p-10">
-            <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <button
-              onClick={fetchInitialData}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Thử lại
-            </button>
-          </div>
-        </div>
-      </RequireAuth>
-    );
-  }
-
-  return (
-    <RequireAuth>
-      <div className="min-h-screen bg-gray-50 flex">
+  // Memoize Sidebar for performance
+  const MemoSidebar = useMemo(() => (
         <Sidebar currentPage={currentPage} onPageChange={handlePageChangeMain} className="h-screen" />
-        <div className="flex-1 min-h-screen p-8 overflow-auto">
-          <button
-            className="mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
-            onClick={() => navigate(-1)}
-          >
-            ← Quay lại
-          </button>
+  ), [currentPage, handlePageChangeMain]);
+
+  // Memoize main content for performance
+  const MemoMainContent = useMemo(() => (
           <AnimatePresence mode="wait">
             {currentPage === "overview" && (
               <motion.div
@@ -1560,7 +1546,75 @@ export default function StorageUnitManagement() {
               </motion.div>
             )}
           </AnimatePresence>
+  ), [currentPage, OverviewStorages, ViewStorages, AddStorage, EditStorage, SearchStorages, viewingStorage]);
+
+  if (error && allStorages.length === 0) {
+    return (
+      <RequireAuth>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center p-10">
+            <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={fetchInitialData}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Thử lại
+            </button>
         </div>
+        </div>
+      </RequireAuth>
+    );
+  }
+
+  return (
+    <RequireAuth>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex flex-1">
+          <div className="w-64 fixed h-full z-20">
+            {MemoSidebar}
+          </div>
+          <main className="flex-1 ml-64 pt-20 pb-16 px-6">
+            {MemoMainContent}
+            {/* Pagination - Manager_Yen style for 'view' page only */}
+            {currentPage === 'view' && pagination.totalPages > 1 && (
+              <div className="w-full flex justify-center items-center gap-3 py-6">
+                <button
+                  onClick={() => handlePageChange(Math.max(1, pagination.currentPage - 1))}
+                  disabled={pagination.currentPage === 1}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pagination.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                  title="Trang trước"
+                >
+                  Trước
+                </button>
+                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pagination.currentPage === page ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    title={`Trang ${page}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pagination.currentPage === pagination.totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                  title="Trang sau"
+                >
+                  Sau
+                </button>
+                <span className="text-sm text-gray-600 font-medium ml-2">
+                  Trang {pagination.currentPage} / {pagination.totalPages}
+                </span>
+              </div>
+            )}
+          </main>
+        </div>
+        <Footer />
       </div>
 
       <AnimatePresence>
@@ -1602,8 +1656,6 @@ export default function StorageUnitManagement() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <Footer />
     </RequireAuth>
   );
 }
