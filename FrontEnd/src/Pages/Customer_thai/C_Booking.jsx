@@ -5,7 +5,6 @@ import L from 'leaflet';
 import FurnitureSelector from './FurnitureSelector.jsx';
 import { Home, Users } from 'lucide-react';
 import { apiCall } from '../../utils/api';
-import RequireAuth from '../auth/RequireAuth';
 const C_Booking = ({ isLoggedIn }) => {
     const [selectedService, setSelectedService] = useState(null);
     const [bookingData, setBookingData] = useState({
