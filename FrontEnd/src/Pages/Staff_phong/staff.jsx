@@ -56,7 +56,6 @@ const Staff = () => {
         newReceipts: 0,
         pendingOrders: 0,
         newCustomers: 0,
-
     });
     const [activities, setActivities] = useState([]);
     const username = Cookies.get("username") || "Staff User";
@@ -78,7 +77,6 @@ const Staff = () => {
                     newReceipts: statsData.newReceipts || 0,
                     pendingOrders: statsData.pendingOrders || 0,
                     newCustomers: statsData.newCustomers || 0,
-
                 });
 
                 const activitiesData = await DashBoardApi.getRecentActivities();
@@ -198,9 +196,6 @@ const Staff = () => {
         { name: "Quản Lý Đơn Hàng", icon: ShoppingCart, path: "/manageorder", hasLink: true },
         { name: "Quản Lý Khách Hàng", icon: Users, path: "/manageuser", hasLink: true },
         { name: "Quản Lý Doanh Thu", icon: TrendingUp, path: "/managerevenue", hasLink: true },
-        { name: "Hỗ Trợ Khách Hàng", icon: Headphones, hasLink: false },
-        { name: "Báo Cáo", icon: TrendingUp, hasLink: false },
-        { name: "Cài Đặt", icon: Settings, hasLink: false },
     ];
 
     // ==================== RENDER ====================
@@ -209,32 +204,32 @@ const Staff = () => {
             <div className="flex h-screen bg-gradient-to-br from-slate-50 to-blue-50">
                 {/* ==================== SIDEBAR ==================== */}
                 <aside
-                    className={`${sidebarCollapsed ? "w-20" : "w-72"} bg-white shadow-2xl transition-all duration-300 ease-in-out border-r border-gray-200`}
+                    className={`${sidebarCollapsed ? "w-20" : "w-72"} bg-gradient-to-b from-[#0d47a1] to-[#1976d2] text-white shadow-2xl transition-all duration-300 ease-in-out border-r border-gray-200`}
                 >
                     <div className="h-full flex flex-col">
                         <div className="p-6 border-b border-gray-100">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
                                     <div>
-                                        <Truck className="w-8 h-8 text-blue-600" />
+                                        <Truck className="w-8 h-8 text-white" />
                                     </div>
                                     {!sidebarCollapsed && (
                                         <div>
-                                            <h2 className="text-1.5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                            <h2 className="text-1.5xl font-bold text-white">
                                                 Vận Chuyển Nhà
                                             </h2>
-                                            <p className="text-1xl text-gray-500">Staff Management</p>
+                                            <p className="text-1xl text-blue-100">Staff Management</p>
                                         </div>
                                     )}
                                 </div>
                                 <button
                                     onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                    className="p-2 rounded-lg hover:bg-blue-900 transition-colors"
                                 >
                                     {sidebarCollapsed ? (
-                                        <ArrowRight className="w-4 h-4 text-gray-600" />
+                                        <ArrowRight className="w-4 h-4 text-white" />
                                     ) : (
-                                        <ArrowLeft className="w-4 h-4 text-gray-600" />
+                                        <ArrowLeft className="w-4 h-4 text-white" />
                                     )}
                                 </button>
                             </div>
@@ -251,12 +246,12 @@ const Staff = () => {
                                                     <div
                                                         onClick={() => !sidebarCollapsed && setDashboardExpanded(!dashboardExpanded)}
                                                         className={`group flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer hover:shadow-md ${item.active
-                                                            ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                                                            : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                                                            ? "bg-blue-900 text-white shadow-lg"
+                                                            : "text-white hover:bg-blue-800 hover:text-blue-100"
                                                             }`}
                                                     >
                                                         <div className="flex items-center">
-                                                            <IconComponent className="w-5 h-5 mr-4" />
+                                                            <IconComponent className="w-5 h-5 mr-4 text-white" />
                                                             {!sidebarCollapsed && (
                                                                 <span className="font-medium group-hover:translate-x-1 transition-transform">
                                                                     {item.name}
@@ -267,9 +262,9 @@ const Staff = () => {
                                                             <div className="flex items-center space-x-2">
                                                                 {item.active && <span className="w-2 h-2 bg-white rounded-full"></span>}
                                                                 {dashboardExpanded ? (
-                                                                    <ChevronDown className="w-4 h-4" />
+                                                                    <ChevronDown className="w-4 h-4 text-white" />
                                                                 ) : (
-                                                                    <ChevronRight className="w-4 h-4" />
+                                                                    <ChevronRight className="w-4 h-4 text-white" />
                                                                 )}
                                                             </div>
                                                         )}
@@ -283,9 +278,9 @@ const Staff = () => {
                                                                     <Link
                                                                         key={subIndex}
                                                                         to={subItem.path}
-                                                                        className="group flex items-center px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:shadow-sm"
+                                                                        className="group flex items-center px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer text-white hover:bg-blue-800 hover:text-blue-100 hover:shadow-sm"
                                                                     >
-                                                                        <SubIconComponent className="w-4 h-4 mr-3" />
+                                                                        <SubIconComponent className="w-4 h-4 mr-3 text-white" />
                                                                         <span className="font-medium text-sm group-hover:translate-x-1 transition-transform">
                                                                             {subItem.name}
                                                                         </span>
@@ -293,9 +288,9 @@ const Staff = () => {
                                                                 ) : (
                                                                     <div
                                                                         key={subIndex}
-                                                                        className="group flex items-center px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer text-gray-600 hover:bg-blue-50 hover:text-blue-600 hover:shadow-sm"
+                                                                        className="group flex items-center px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer text-white hover:bg-blue-800 hover:text-blue-100 hover:shadow-sm"
                                                                     >
-                                                                        <SubIconComponent className="w-4 h-4 mr-3" />
+                                                                        <SubIconComponent className="w-4 h-4 mr-3 text-white" />
                                                                         <span className="font-medium text-sm group-hover:translate-x-1 transition-transform">
                                                                             {subItem.name}
                                                                         </span>
@@ -309,11 +304,11 @@ const Staff = () => {
                                                 <Link
                                                     to={item.path}
                                                     className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 hover:shadow-md ${item.active
-                                                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                                                        : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                                                        ? "bg-blue-900 text-white shadow-lg"
+                                                        : "text-white hover:bg-blue-800 hover:text-blue-100"
                                                         }`}
                                                 >
-                                                    <IconComponent className="w-5 h-5 mr-4" />
+                                                    <IconComponent className="w-5 h-5 mr-4 text-white" />
                                                     {!sidebarCollapsed && (
                                                         <span className="font-medium group-hover:translate-x-1 transition-transform">
                                                             {item.name}
@@ -323,24 +318,7 @@ const Staff = () => {
                                                         <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
                                                     )}
                                                 </Link>
-                                            ) : (
-                                                <div
-                                                    className={`group flex items-center px-4 py-3 rounded-xl transition-all duration-200 cursor-pointer hover:shadow-md ${item.active
-                                                        ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg"
-                                                        : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
-                                                        }`}
-                                                >
-                                                    <IconComponent className="w-5 h-5 mr-4" />
-                                                    {!sidebarCollapsed && (
-                                                        <span className="font-medium group-hover:translate-x-1 transition-transform">
-                                                            {item.name}
-                                                        </span>
-                                                    )}
-                                                    {item.active && !sidebarCollapsed && (
-                                                        <span className="ml-auto w-2 h-2 bg-white rounded-full"></span>
-                                                    )}
-                                                </div>
-                                            )}
+                                            ) : null}
                                         </li>
                                     );
                                 })}
@@ -412,12 +390,12 @@ const Staff = () => {
                 </aside>
 
                 <main className="flex-1 flex flex-col overflow-hidden">
-                    <header className="bg-white shadow-sm border-b border-gray-200 px-8 py-6">
+                    <header className="bg-[#0d47a1] shadow-sm border-b border-blue-900 px-8 py-6">
                         <div className="flex justify-between items-center">
                             <div>
-                                <h1 className="text-3xl font-bold text-gray-900 mb-2">Thông Tin Nhân Viên</h1>
+                                <h1 className="text-3xl font-bold text-white mb-2">Thông Tin Nhân Viên</h1>
                                 <nav className="flex items-center space-x-2 text-sm">
-                                    <Link to="/" className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
+                                    <Link to="/" className="text-blue-200 hover:text-white font-medium transition-colors">
                                         Trang Chủ
                                     </Link>
                                 </nav>
@@ -425,8 +403,8 @@ const Staff = () => {
 
                             <div className="flex items-center space-x-6">
                                 <div className="text-right">
-                                    <p className="text-sm text-gray-500">Ngày hôm nay</p>
-                                    <p className="font-semibold text-gray-800">
+                                    <p className="text-sm text-blue-100">Ngày hôm nay</p>
+                                    <p className="font-semibold text-white">
                                         {new Date().toLocaleDateString("vi-VN", {
                                             weekday: "long",
                                             year: "numeric",
@@ -435,8 +413,8 @@ const Staff = () => {
                                         })}
                                     </p>
                                 </div>
-                                <div className="w-px h-8 bg-gray-300"></div>
-                                <button className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                                <div className="w-px h-8 bg-blue-200"></div>
+                                <button className="p-2 rounded-lg bg-blue-800 text-white hover:bg-blue-700 transition-colors">
                                     <Bell className="w-5 h-5" />
                                 </button>
                             </div>
@@ -470,7 +448,7 @@ const Staff = () => {
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                             <div className="xl:col-span-2">
                                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                                    <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8">
+                                    <div className="bg-gradient-to-r from-[#0d47a1] via-[#1976d2] to-[#42a5f5] text-white p-8">
                                         <div className="flex items-center">
                                             <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mr-6 backdrop-blur-sm">
                                                 <Briefcase className="w-8 h-8 text-white" />
@@ -589,7 +567,6 @@ const Staff = () => {
                                             { label: "Đơn Hoàn Tất", value: stats.newReceipts, color: "blue", icon: Receipt },
                                             { label: "Đơn Hàng Chờ", value: stats.pendingOrders, color: "amber", icon: ShoppingCart },
                                             { label: "Khách Hàng Mới", value: stats.newCustomers, color: "emerald", icon: UserPlus },
-
                                         ].map((stat, index) => {
                                             const IconComponent = stat.icon;
                                             return (

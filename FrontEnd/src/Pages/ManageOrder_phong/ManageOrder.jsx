@@ -4,25 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Package, CreditCard, Search, List, BarChart,
     Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle,
-    Plus, Edit2, Trash2, Save, X
+    Plus, Edit2, Trash2, Save, X, ArrowLeft
 } from 'lucide-react';
 import ManageOrderApi from '../../utils/ManageOrder_phongApi.js';
 
 // Header
 const Header = () => {
     return (
-        <header className="fixed w-full top-0 bg-white shadow-lg">
+        <header className="fixed w-full top-0 bg-[#0d47a1] shadow-lg z-50">
             <div className="container mx-auto px-4 py-4">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                        <Truck className="w-8 h-8 text-blue-600" />
-                        <h1 className="text-xl font-bold text-black">Vận Chuyển Nhà</h1>
+                        <Truck className="w-8 h-8 text-white" />
+                        <h1 className="text-xl font-bold text-white">Vận Chuyển Nhà</h1>
                     </div>
                     <nav className="hidden md:flex space-x-8">
                     </nav>
                     <div className="flex space-x-3">
-                        <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                            <Link to="/" className="text-black hover:text-blue-600 transition-colors">Trang Chủ</Link>
+                        <button className="px-4 py-2 border border-white text-white rounded-lg hover:bg-blue-700 hover:text-white transition-all">
+                            <Link to="/" className="text-white hover:text-blue-200 transition-colors">Trang Chủ</Link>
                         </button>
                     </div>
                 </div>
@@ -37,6 +37,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
         overview: 'Tổng Quan',
         view: 'Danh Sách',
         search: 'Tìm Kiếm',
+        back: 'Quay Lại'
     };
 
     return (
@@ -44,28 +45,37 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             transition={{ duration: 0.5 }}
-            className="w-64 bg-gradient-to-b from-blue-900 to-purple-600 text-white p-6 h-screen shadow-2xl"
+            className="w-64 bg-gradient-to-b from-[#0d47a1] to-[#1976d2] text-white p-6 min-h-screen flex flex-col justify-between shadow-2xl"
         >
-            <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
-                <Package className="mr-2" /> Quản Lý Đơn Hàng
-            </h1>
-            <nav>
-                {['overview', 'view', 'search'].map(page => (
-                    <motion.button
-                        key={page}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${currentPage === page ? 'bg-blue-500 shadow-lg' : 'hover:bg-blue-600'
-                            }`}
-                        onClick={() => setCurrentPage(page)}
-                    >
-                        {page === 'overview' && <BarChart className="mr-2" size={20} />}
-                        {page === 'view' && <List className="mr-2" size={20} />}
-                        {page === 'search' && <Search className="mr-2" size={20} />}
-                        {pageLabels[page]}
-                    </motion.button>
-                ))}
-            </nav>
+            <div>
+                <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
+                    <Package className="mr-2" /> Quản Lý Đơn Hàng
+                </h1>
+                <nav>
+                    {['back', 'overview', 'view', 'search'].map(page => (
+                        <motion.button
+                            key={page}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${currentPage === page ? 'bg-blue-300 text-blue-900 shadow-lg' : 'hover:bg-blue-500 hover:text-white'} `}
+                            onClick={() => {
+                                if (page === 'back') {
+                                    window.history.back();
+                                } else {
+                                    setCurrentPage(page);
+                                }
+                            }}
+                        >
+                            {page === 'overview' && <BarChart className="mr-2" size={20} />}
+                            {page === 'view' && <List className="mr-2" size={20} />}
+                            {page === 'search' && <Search className="mr-2" size={20} />}
+                            {page === 'back' && <ArrowLeft className="mr-2" size={20} />}
+                            {pageLabels[page]}
+                        </motion.button>
+                    ))}
+                </nav>
+            </div>
+            <div className="mt-auto"></div> {/* Đẩy nội dung lên trên, chừa khoảng trống dưới cùng */}
         </motion.div>
     );
 };
@@ -1055,7 +1065,7 @@ const Dashboard = () => {
     }, [currentPage]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             <style jsx>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: translateY(30px); }
@@ -1066,7 +1076,7 @@ const Dashboard = () => {
                 .animate-fade-in-delay-2 { animation: fade-in 1s ease-out 0.6s both; }
             `}</style>
             <Header />
-            <div className="flex pt-20">
+            <div className="flex flex-1 pt-20">
                 <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
                 <div className="flex-1 p-8 overflow-auto">
                     {loading && <p className="text-center text-gray-600">Đang tải...</p>}

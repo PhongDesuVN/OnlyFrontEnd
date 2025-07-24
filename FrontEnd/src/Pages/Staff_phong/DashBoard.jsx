@@ -39,16 +39,16 @@ import { saveAs } from "file-saver";
 // Header Component
 const Header = ({ onLogout }) => {
     return (
-        <header className="fixed w-full top-0 bg-white shadow-lg z-50">
+        <header className="fixed w-full top-0 bg-[#0d47a1] shadow-lg z-50">
             <div className="container mx-auto px-4 py-4">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                        <Truck className="w-8 h-8 text-blue-600" />
-                        <h1 className="text-xl font-bold text-black">Vận Chuyển Nhà</h1>
+                        <Truck className="w-8 h-8 text-white" />
+                        <h1 className="text-xl font-bold text-white">Vận Chuyển Nhà</h1>
                     </div>
                     <div className="flex space-x-3">
-                        <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                            <Link to="/" className="text-black hover:text-blue-600 transition-colors">Trang Chủ</Link>
+                        <button className="px-4 py-2 border border-white text-white rounded-lg hover:bg-blue-700 hover:text-white transition-all">
+                            <Link to="/" className="text-white hover:text-blue-200 transition-colors">Trang Chủ</Link>
                         </button>
                         <button
                             className="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
@@ -119,7 +119,7 @@ const Dashboard = () => {
 
     // Gọi API khi component mount hoặc khi bộ lọc thay đổi
     useEffect(() => {
-        console.log('useEffect chạy lại với:', debouncedYear, debouncedStartMonth, debouncedEndMonth, debouncedUnit, selectedPeriod, selectedMetric);
+        console.log('useEffect chạy lại với:', debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth, selectedPeriod, selectedMetric);
         const token = Cookies.get("authToken");
         if (!token) {
             navigate("/login", { replace: true });
@@ -128,9 +128,7 @@ const Dashboard = () => {
 
         const fetchDashboardData = async () => {
             try {
-                setError(null); // Reset lỗi trước khi gọi API
-
-                // Gọi API lấy thống kê tổng quan
+                setError(null);
                 const statsResponse = await DashBoardApi.getDashboardStats();
                 setDashboardStats({
                     newReceipts: statsResponse.newReceipts || 0,
@@ -138,24 +136,19 @@ const Dashboard = () => {
                     newCustomers: statsResponse.newCustomers || 0,
                 });
 
-                // Gọi API lấy hoạt động gần đây
                 const activitiesResponse = await DashBoardApi.getRecentActivities();
                 setRecentActivities(Array.isArray(activitiesResponse) ? activitiesResponse : []);
 
-                // Gọi API lấy doanh thu hàng tháng
-                const revenueResponse = await DashBoardApi.getMonthlyRevenue(debouncedYear, debouncedStartMonth, debouncedEndMonth, debouncedUnit);
+                const revenueResponse = await DashBoardApi.getMonthlyRevenue(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
                 setMonthlyRevenue(revenueResponse || []);
 
-                // Gọi API lấy dữ liệu hiệu suất
-                const performanceResponse = await DashBoardApi.getPerformanceData(debouncedYear, debouncedUnit);
+                const performanceResponse = await DashBoardApi.getPerformanceData(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
                 setPerformanceData(performanceResponse || []);
 
-                // Gọi API lấy dữ liệu chi tiết
-                const detailResponse = await DashBoardApi.getDetailData(debouncedYear, debouncedUnit);
+                const detailResponse = await DashBoardApi.getDetailData(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
                 setDetailData(detailResponse || []);
 
-                // Gọi API lấy dữ liệu tổng quan vận chuyển
-                const transportResponse = await DashBoardApi.getTransportData(debouncedYear, debouncedUnit);
+                const transportResponse = await DashBoardApi.getTransportData(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
                 setTransportData({
                     totalShipments: transportResponse.totalShipments || 0,
                     revenue: transportResponse.revenue || "0 đ",
@@ -167,15 +160,12 @@ const Dashboard = () => {
                     volumeGrowth: transportResponse.volumeGrowth || 0,
                 });
 
-                // Gọi API lấy xếp hạng cá nhân
                 const rankingResponse = await DashBoardApi.getRankingData(selectedPeriod, selectedMetric);
                 setRankingData(rankingResponse || []);
 
-                // Gọi API lấy xếp hạng đội nhóm
                 const teamRankingResponse = await DashBoardApi.getTeamRanking(selectedPeriod, selectedMetric);
                 setTeamRanking(teamRankingResponse || []);
 
-                // Gọi API lấy thành tích
                 const achievementsResponse = await DashBoardApi.getAchievements();
                 setAchievements(Array.isArray(achievementsResponse) ? achievementsResponse : []);
             } catch (error) {
@@ -185,8 +175,7 @@ const Dashboard = () => {
         };
 
         fetchDashboardData();
-    }, [navigate, debouncedYear, debouncedStartMonth, debouncedEndMonth, debouncedUnit, selectedPeriod, selectedMetric]);
-
+    }, [navigate, debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth, selectedPeriod, selectedMetric]);
     // Reset về trang 1 khi detailData thay đổi
     useEffect(() => {
         setCurrentPage(1);
@@ -265,6 +254,15 @@ const Dashboard = () => {
             <Header onLogout={handleLogout} />
             <div className="flex-1 p-8 pt-24">
                 <div className="max-w-7xl mx-auto space-y-8">
+                    {/* Nút Quay lại */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center px-5 py-3 mb-6 bg-blue-100 text-blue-700 rounded-lg shadow hover:bg-blue-200 transition-colors"
+                        style={{ fontWeight: 600, fontSize: '1.1rem', outline: 'none', border: 'none' }}
+                    >
+                        <span style={{ fontSize: '1.2rem', marginRight: '0.5rem' }}>←</span> Quay lại
+                    </button>
+                    {/* Kết thúc nút Quay lại */}
                     {/* Filter chọn năm và đơn vị */}
                     <div className="flex gap-4 justify-end mb-4">
                         <label className="flex items-center gap-2 text-gray-700 font-medium">
