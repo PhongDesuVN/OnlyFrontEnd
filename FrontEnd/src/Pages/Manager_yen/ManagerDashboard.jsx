@@ -61,6 +61,7 @@ const Dashboard = () => {
     const [range, setRange] = useState("month");
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
+    const [isScheduleMenuOpen, setIsScheduleMenuOpen] = useState(false);
 
     const navigate = useNavigate();
     const username = Cookies.get("username");
@@ -404,78 +405,105 @@ const Dashboard = () => {
                                     <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
                                 )}
                             </NavLink>
-                            <NavLink
-                                to="/schedule/calendar"
-                                className={({ isActive }) =>
-                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                                }
-                            >
-                                {isActive("/schedule/calendar") && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                                )}
-                                <div
-                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/calendar") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    className={`group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01] w-full`}
+                                    onClick={() => setIsScheduleMenuOpen((prev) => !prev)}
                                 >
-                                    <Users
-                                        size={18}
-                                        className={`transition-all duration-300 ${isActive("/schedule/calendar") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                    />
-                                </div>
-                                <div className="flex-1 relative z-10">
-                                    <span className="font-semibold">Lịch Làm Việc</span>
-                                </div>
-                                {isActive("/schedule/calendar") && (
-                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                    <div className="p-2 rounded-lg transition-all duration-300 group-hover:bg-blue-700/50">
+                                        <Users size={18} className="text-blue-300 group-hover:text-blue-100" />
+                                    </div>
+                                    <div className="flex-1 relative z-10">
+                                        <span className="font-semibold">Quản Lý Lịch Làm Việc</span>
+                                    </div>
+                                    <svg
+                                        className={`w-4 h-4 ml-2 transition-transform duration-300 ${isScheduleMenuOpen ? "rotate-90" : ""}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                                {isScheduleMenuOpen && (
+                                    <div className="ml-8 mt-1 flex flex-col gap-1">
+                                        <NavLink
+                                            to="/schedule/calendar"
+                                            className={({ isActive }) =>
+                                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                            }
+                                        >
+                                            {isActive("/schedule/calendar") && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                            )}
+                                            <div
+                                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/calendar") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                            >
+                                                <Users
+                                                    size={18}
+                                                    className={`transition-all duration-300 ${isActive("/schedule/calendar") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                                />
+                                            </div>
+                                            <div className="flex-1 relative z-10">
+                                                <span className="font-semibold">Lịch Làm Việc</span>
+                                            </div>
+                                            {isActive("/schedule/calendar") && (
+                                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                            )}
+                                        </NavLink>
+                                        <NavLink
+                                            to="/schedule/shifts"
+                                            className={({ isActive }) =>
+                                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                            }
+                                        >
+                                            {isActive("/schedule/shifts") && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                            )}
+                                            <div
+                                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/shifts") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                            >
+                                                <Users
+                                                    size={18}
+                                                    className={`transition-all duration-300 ${isActive("/schedule/shifts") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                                />
+                                            </div>
+                                            <div className="flex-1 relative z-10">
+                                                <span className="font-semibold">Quản Lý Ca Làm</span>
+                                            </div>
+                                            {isActive("/schedule/shifts") && (
+                                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                            )}
+                                        </NavLink>
+                                        <NavLink
+                                            to="/schedule/timeoff"
+                                            className={({ isActive }) =>
+                                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                            }
+                                        >
+                                            {isActive("/schedule/timeoff") && (
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                            )}
+                                            <div
+                                                className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/timeoff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                            >
+                                                <Users
+                                                    size={18}
+                                                    className={`transition-all duration-300 ${isActive("/schedule/timeoff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                                />
+                                            </div>
+                                            <div className="flex-1 relative z-10">
+                                                <span className="font-semibold">Yêu cầu nghỉ phép</span>
+                                            </div>
+                                            {isActive("/schedule/timeoff") && (
+                                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                            )}
+                                        </NavLink>
+                                    </div>
                                 )}
-                            </NavLink>
-                            <NavLink
-                                to="/schedule/shifts"
-                                className={({ isActive }) =>
-                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                                }
-                            >
-                                {isActive("/schedule/shifts") && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                                )}
-                                <div
-                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/shifts") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                                >
-                                    <Users
-                                        size={18}
-                                        className={`transition-all duration-300 ${isActive("/schedule/shifts") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                    />
-                                </div>
-                                <div className="flex-1 relative z-10">
-                                    <span className="font-semibold">Quản Lý Ca Làm</span>
-                                </div>
-                                {isActive("/schedule/shifts") && (
-                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                                )}
-                            </NavLink>
-                            <NavLink
-                                to="/schedule/timeoff"
-                                className={({ isActive }) =>
-                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
-                                }
-                            >
-                                {isActive("/schedule/timeoff") && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
-                                )}
-                                <div
-                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/schedule/timeoff") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
-                                >
-                                    <Users
-                                        size={18}
-                                        className={`transition-all duration-300 ${isActive("/schedule/timeoff") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
-                                    />
-                                </div>
-                                <div className="flex-1 relative z-10">
-                                    <span className="font-semibold">Yêu cầu nghỉ phép</span>
-                                </div>
-                                {isActive("/schedule/timeoff") && (
-                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
-                                )}
-                            </NavLink>
+                            </div>
                         </nav>
 
                         {/* User Profile Section */}
