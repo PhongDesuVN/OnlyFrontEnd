@@ -8,7 +8,7 @@ import Header from "../../Components/FormLogin_yen/Header";
 import Footer from "../../Components/FormLogin_yen/Footer";
 import {
     Users, Package, TrendingUp, MapPin, ChevronDown, Calendar, Filter, XCircle,
-    Truck, LayoutDashboard, Settings, User, Circle, LogOut
+    Truck, LayoutDashboard, Settings, User, Circle, LogOut, BarChart3
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
 import {
@@ -442,6 +442,30 @@ const Dashboard = () => {
                                 </div>
 
                                 {isActive("/managerevenue") && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
+                                )}
+                            </NavLink>
+                            <NavLink
+                                to="/receipts"
+                                className={({ isActive }) =>
+                                    `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                                }
+                            >
+                                {isActive("/receipts") && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -skew-x-12 animate-pulse"></div>
+                                )}
+                                <div
+                                    className={`p-2 rounded-lg transition-all duration-300 ${isActive("/receipts") ? "bg-blue-500/40 shadow-lg" : "group-hover:bg-blue-700/50"}`}
+                                >
+                                    <BarChart3
+                                        size={18}
+                                        className={`transition-all duration-300 ${isActive("/receipts") ? "text-blue-100" : "text-blue-300 group-hover:text-blue-100"}`}
+                                    />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Quản Lý Biên Lai</span>
+                                </div>
+                                {isActive("/receipts") && (
                                     <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
                                 )}
                             </NavLink>
