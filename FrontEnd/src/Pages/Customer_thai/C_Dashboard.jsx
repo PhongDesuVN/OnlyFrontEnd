@@ -111,6 +111,7 @@ const C_Dashboard = () => {
     const [isCustomer, setIsCustomer] = useState(false);
     const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
     const [selectedBookingForFeedback, setSelectedBookingForFeedback] = useState(null);
+    const [bookingIdSortAsc, setBookingIdSortAsc] = useState(false);
 
     // Pagination state for order history
     const [orderPage, setOrderPage] = useState(1);
@@ -500,7 +501,7 @@ const C_Dashboard = () => {
 
     // Hàm lọc dữ liệu
     const getFilteredOrderHistory = () => {
-        return orderHistory.filter(order => {
+        let filtered = orderHistory.filter(order => {
             // Lọc theo ngày tạo
             let passDate = true;
             if (filter.from) {
@@ -518,6 +519,9 @@ const C_Dashboard = () => {
             let passStatus = filter.statuses.includes(order.status);
             return passDate && passStatus;
         });
+        // Sắp xếp theo bookingId
+        filtered = filtered.sort((a, b) => bookingIdSortAsc ? a.bookingId - b.bookingId : b.bookingId - a.bookingId);
+        return filtered;
     };
 
     const handleFilterChange = (e) => {
@@ -658,7 +662,21 @@ const C_Dashboard = () => {
         <div className="space-y-6">
             {/* Filter Section */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Lọc đơn hàng</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-4">
+                    Lọc đơn hàng
+                    <button
+                        onClick={() => setBookingIdSortAsc((asc) => !asc)}
+                        className="ml-2 px-2 py-1 border border-gray-300 rounded hover:bg-gray-100 flex items-center gap-1"
+                        title={bookingIdSortAsc ? 'Sắp xếp bookingId tăng dần' : 'Sắp xếp bookingId giảm dần'}
+                    >
+                        <span className="text-gray-700 text-sm">Mã đơn</span>
+                        {bookingIdSortAsc ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" /></svg>
+                        )}
+                    </button>
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Từ ngày</label>
