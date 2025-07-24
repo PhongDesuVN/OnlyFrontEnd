@@ -270,24 +270,6 @@ const Dashboard = () => {
         setTimeout(() => setPressedButton(null), 150)
     }
 
-    const handleLogout = async () => {
-        try {
-            const token = Cookies.get("authToken")
-            if (token) {
-                await fetch("http://localhost:8083/api/auth/logout", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                    },
-                    credentials: "include",
-                })
-            }
-        } catch (e) { }
-        Cookies.remove("authToken")
-        Cookies.remove("userRole")
-        Cookies.remove("username")
-        navigate("/login")
-    }
 
     return (
         <div className="flex flex-col min-h-screen">

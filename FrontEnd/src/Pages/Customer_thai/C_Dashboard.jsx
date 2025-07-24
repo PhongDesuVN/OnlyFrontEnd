@@ -279,23 +279,7 @@ const C_Dashboard = () => {
         }
         return null;
     };
-    useEffect(() => {
-        const loadQrUrls = async () => {
-            const incompletedOrders = orderHistory.filter(o => o.paymentStatus === "INCOMPLETED");
-            const urls = {};
-            for (const order of incompletedOrders) {
-                const qr = await fetchQrUrl(order.bookingId);
-                if (qr) {
-                    urls[order.bookingId] = qr;
-                }
-            }
-            setQrUrls(urls);
-        };
 
-        if (orderHistory.length > 0) {
-            loadQrUrls();
-        }
-    }, [orderHistory]);
 
     useEffect(() => {
         const prevStatuses = prevOrderStatusRef.current;
@@ -308,7 +292,8 @@ const C_Dashboard = () => {
 
             if (prevStatus === 'INCOMPLETED' && newStatus === 'COMPLETED') {
                 //  Hiển thị thông báo khi chuyển từ INCOMPLETED → COMPLETED
-                alert(`🎉 Thanh toán thành công cho đơn hàng #${order.bookingId}`);
+                toast.success(`🎉 Thanh toán thành công cho đơn hàng #${order.bookingId}`);
+                setQrUrls(prev => ({ ...prev, [order.bookingId]: null }));
             }
         });
 
@@ -539,6 +524,56 @@ const C_Dashboard = () => {
             }));
         }
     };
+    const paymentNotifiedRef = useRef({});
+    const handleGetQr = async (bookingId) => {
+        const qr = await fetchQrUrl(bookingId);
+        if (qr) {
+            setQrUrls(prev => ({ ...prev, [bookingId]: qr }));
+            if (paymentNotifiedRef.current[bookingId] === undefined) {
+                paymentNotifiedRef.current[bookingId] = false;
+            }
+
+            const interval = setInterval(async () => {
+                try {
+                    const bookings = await getAllBookingsOfCustomer();
+                    const updatedBooking = bookings.find(b => b.bookingId === bookingId);
+
+                    if (
+                        updatedBooking &&
+                        updatedBooking.paymentStatus === 'COMPLETED' &&
+                        !paymentNotifiedRef.current[bookingId]
+                    ) {
+
+                        paymentNotifiedRef.current[bookingId] = true;
+
+                        // Hiển thị toast
+                        toast.success(`🎉 Thanh toán thành công cho đơn hàng #${bookingId}`);
+
+                        // Dừng polling
+                        clearInterval(interval);
+
+                        // Cập nhật UI
+                        prevOrderStatusRef.current[bookingId] = 'INCOMPLETED';
+                        setOrderHistory([...bookings]);
+                        setForceUpdate(f => f + 1);
+                        setQrUrls(prev => ({ ...prev, [bookingId]: null }));
+                    }
+
+                } catch (error) {
+                    console.error('Lỗi khi kiểm tra trạng thái thanh toán:', error);
+                }
+            }, 3000);
+
+            // Dự phòng: dừng polling sau 100s
+            setTimeout(() => clearInterval(interval), 100000);
+        } else {
+            toast.error(`Không thể lấy mã QR cho đơn hàng #${bookingId}`);
+        }
+    };
+
+
+
+
 
     const renderDashboard = () => (
         <div className="space-y-6">
@@ -705,7 +740,7 @@ const C_Dashboard = () => {
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center space-x-4">
                                     <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                                        <Package className="w-6 h-6 text-blue-600" />
+                                        <Package className="w-6 h-6 text-blue-600"/>
                                     </div>
                                     <div>
                                         <h4 className="font-semibold text-gray-800">Đơn hàng #{order.bookingId}</h4>
@@ -715,7 +750,8 @@ const C_Dashboard = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                                    <span
+                                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
                                         {getStatusText(order.status)}
                                     </span>
                                     <span className="text-lg font-bold text-gray-800">
@@ -731,8 +767,9 @@ const C_Dashboard = () => {
                                 const diffDays = diffMs / (1000 * 60 * 60 * 24);
                                 if (diffDays <= 2) {
                                     return (
-                                        <div className="mb-2 p-2 bg-yellow-100 text-yellow-800 rounded flex items-center">
-                                            <AlertCircle className="w-5 h-5 mr-2" />
+                                        <div
+                                            className="mb-2 p-2 bg-yellow-100 text-yellow-800 rounded flex items-center">
+                                            <AlertCircle className="w-5 h-5 mr-2"/>
                                             <span>Đơn hàng này chưa được thanh toán. Nếu không thanh toán trong 2 ngày kể từ khi tạo, đơn sẽ tự động bị hủy.</span>
                                         </div>
                                     );
@@ -752,18 +789,27 @@ const C_Dashboard = () => {
                             </div>
 
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                    {order.paymentStatus === "INCOMPLETED" && qrUrls[order.bookingId] && (
-                                        <div className="mt-2">
-                                            <p className="text-sm text-gray-600">Mã QR thanh toán</p>
-                                            <img
-                                                src={qrUrls[order.bookingId]}
-                                                alt="QR Thanh toán"
-                                                className="w-40 h-40 object-contain border rounded-xl shadow"
-                                            />
-                                        </div>
+                                <div className="flex items-center space-x-4 flex-wrap gap-3">
+                                    {/* QR và nút Thanh toán */}
+                                    {order.paymentStatus === "INCOMPLETED" && (
+                                        <>
+                                            <button
+                                                onClick={() => handleGetQr(order.bookingId)}
+                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                            >
+                                                Thanh toán
+                                            </button>
+                                            {qrUrls[order.bookingId] && (
+                                                <img
+                                                    src={qrUrls[order.bookingId]}
+                                                    alt="QR Thanh toán"
+                                                    className="w-40 h-40 object-contain border rounded-xl shadow mt-2"
+                                                />
+                                            )}
+                                        </>
                                     )}
 
+                                    {/* Nút đánh giá */}
                                     {order.status === 'COMPLETED' && !order.rating && (
                                         <button
                                             onClick={() => openFeedbackModal(order)}
@@ -772,6 +818,8 @@ const C_Dashboard = () => {
                                             Đánh giá
                                         </button>
                                     )}
+
+                                    {/* Nút hủy đơn */}
                                     {order.status === 'PENDING' && (
                                         <button
                                             onClick={() => deleteBooking(order.bookingId)}
@@ -780,27 +828,35 @@ const C_Dashboard = () => {
                                             Hủy đơn
                                         </button>
                                     )}
+
+                                    {/* Nút xem chi tiết */}
                                     <button
-                                        onClick={() => navigate(`/customer/booking/${order.bookingId}`, { state: { fromOrderHistory: true } })}
+                                        onClick={() =>
+                                            navigate(`/customer/booking/${order.bookingId}`, {
+                                                state: {fromOrderHistory: true},
+                                            })
+                                        }
                                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                     >
                                         Xem
                                     </button>
                                 </div>
+
                                 <div className="text-sm text-gray-600">
                                     {order.rating && (
                                         <div className="flex items-center space-x-1">
-                                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                            <Star className="w-4 h-4 text-yellow-400 fill-current"/>
                                             <span>{order.rating}/5</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
+
                         </div>
                     ))
                 ) : (
                     <div className="text-center py-12">
-                        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
                         <p className="text-gray-500">Chưa có đơn hàng nào</p>
                     </div>
                 )}
@@ -815,7 +871,7 @@ const C_Dashboard = () => {
                     >
                         Trước
                     </button>
-                    {Array.from({ length: getOrderTotalPages(orderHistory) }, (_, i) => (
+                    {Array.from({length: getOrderTotalPages(orderHistory)}, (_, i) => (
                         <button
                             key={i}
                             className={`px-3 py-1 rounded-lg border ${orderPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
@@ -977,7 +1033,7 @@ const C_Dashboard = () => {
             case 'dashboard':
                 return renderDashboard();
             case 'orderHistory':
-                return renderOrderHistory();
+                return <div key={forceUpdate}>{renderOrderHistory()}</div>;
             case 'editInfo':
                 return renderEditPersonalInfo();
             case 'complaints':
