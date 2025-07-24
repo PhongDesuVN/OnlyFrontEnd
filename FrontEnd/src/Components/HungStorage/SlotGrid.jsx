@@ -315,9 +315,15 @@ export default function SlotGrid({ storageId }) {
         isOpen={detailModalOpen}
         onRequestClose={() => setDetailModalOpen(false)}
         className="modal p-6 bg-white rounded shadow-lg"
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
       >
         {currentDetail && (
-          <>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.25, type: "spring" }}
+          >
             <h4 className="text-xl mb-4">
               Booking #{currentDetail.bookingId}
             </h4>
@@ -368,7 +374,7 @@ export default function SlotGrid({ storageId }) {
                 Đóng
               </button>
             </div>
-          </>
+          </motion.div>
         )}
       </Modal>
 
@@ -379,196 +385,203 @@ export default function SlotGrid({ storageId }) {
         className="modal bg-white rounded-lg shadow-xl p-4 max-w-md w-full mx-auto mt-24 border border-gray-200 flex flex-col"
         overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
       >
-        <h4 className="text-lg font-semibold mb-3 text-center">
-          Booking slot #{slotToBook}
-        </h4>
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-y-auto max-h-[60vh] space-y-3 pr-1">
-          {/* CustomerId */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Mã khách hàng</label>
-            <select
-              value={formData.customerId}
-              onChange={e =>
-                setFormData(f => ({ ...f, customerId: e.target.value }))
-              }
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.customerId ? "border-red-500" : ""
-                }`}
-            >
-              <option value="">Chọn khách hàng</option>
-              {initIds.customerIds.map(id => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-            {errors.customerId && (
-              <p className="text-red-500 text-xs mt-1">{errors.customerId}</p>
-            )}
-          </div>
-          {/* OperatorStaffId */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Mã nhân viên vận hành</label>
-            <select
-              value={formData.operatorStaffId}
-              onChange={e =>
-                setFormData(f => ({ ...f, operatorStaffId: e.target.value }))
-              }
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.operatorStaffId ? "border-red-500" : ""
-                }`}
-            >
-              <option value="">Chọn nhân viên vận hành</option>
-              {initIds.operatorStaffIds.map(id => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-            {errors.operatorStaffId && (
-              <p className="text-red-500 text-xs mt-1">{errors.operatorStaffId}</p>
-            )}
-          </div>
-          {/* TransportUnitId */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Mã đơn vị vận chuyển</label>
-            <select
-              value={formData.transportUnitId}
-              onChange={e =>
-                setFormData(f => ({ ...f, transportUnitId: e.target.value }))
-              }
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.transportUnitId ? "border-red-500" : ""
-                }`}
-            >
-              <option value="">Chọn đơn vị vận chuyển</option>
-              {initIds.transportUnitIds.map(id => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-            {errors.transportUnitId && (
-              <p className="text-red-500 text-xs mt-1">{errors.transportUnitId}</p>
-            )}
-          </div>
-          {/* Delivery Date */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Ngày giao</label>
-            <input
-              type="datetime-local"
-              value={formData.deliveryDate}
-              onChange={e =>
-                setFormData(f => ({ ...f, deliveryDate: e.target.value }))
-              }
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryDate ? "border-red-500" : ""
-                }`}
-            />
-            {errors.deliveryDate && (
-              <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
-            )}
-          </div>
-          {/* Note */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Ghi chú</label>
-            <textarea
-              value={formData.note}
-              onChange={e =>
-                setFormData(f => ({ ...f, note: e.target.value }))
-              }
-              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
-              rows={2}
-            />
-          </div>
-          {/* Tổng tiền */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Tổng tiền</label>
-            <input
-              type="number"
-              value={formData.total}
-              onChange={e =>
-                setFormData(f => ({ ...f, total: e.target.value }))
-              }
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.total ? "border-red-500" : ""
-                }`}
-            />
-            {errors.total && (
-              <p className="text-red-500 text-xs mt-1">{errors.total}</p>
-            )}
-          </div>
-          {/* Trạng thái thanh toán */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Trạng thái thanh toán</label>
-            <select
-              value={formData.paymentStatus}
-              onChange={e =>
-                setFormData(f => ({ ...f, paymentStatus: e.target.value }))
-              }
-              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
-            >
-              <option value="COMPLETED">COMPLETED</option>
-              <option value="INCOMPLETED">INCOMPLETED</option>
-            </select>
-          </div>
-          {/* Nơi lấy hàng */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Nơi lấy hàng</label>
-            {initIds.pickupLocationIds && initIds.pickupLocationIds.length > 0 ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.85 }}
+          transition={{ duration: 0.25, type: "spring" }}
+        >
+          <h4 className="text-lg font-semibold mb-3 text-center">
+            Booking slot #{slotToBook}
+          </h4>
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-y-auto max-h-[60vh] space-y-3 pr-1">
+            {/* CustomerId */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Mã khách hàng</label>
               <select
-                value={formData.pickupLocation}
-                onChange={e => setFormData(f => ({ ...f, pickupLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+                value={formData.customerId}
+                onChange={e =>
+                  setFormData(f => ({ ...f, customerId: e.target.value }))
+                }
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.customerId ? "border-red-500" : ""
+                  }`}
               >
-                <option value="">Chọn nơi lấy hàng</option>
-                {initIds.pickupLocationIds.map(id => (
+                <option value="">Chọn khách hàng</option>
+                {initIds.customerIds.map(id => (
                   <option key={id} value={id}>{id}</option>
                 ))}
               </select>
-            ) : (
-              <input
-                type="text"
-                value={formData.pickupLocation}
-                onChange={e => setFormData(f => ({ ...f, pickupLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
-              />
-            )}
-            {errors.pickupLocation && (
-              <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>
-            )}
-          </div>
-          {/* Nơi giao hàng */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Nơi giao hàng</label>
-            {initIds.deliveryLocationIds && initIds.deliveryLocationIds.length > 0 ? (
+              {errors.customerId && (
+                <p className="text-red-500 text-xs mt-1">{errors.customerId}</p>
+              )}
+            </div>
+            {/* OperatorStaffId */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Mã nhân viên vận hành</label>
               <select
-                value={formData.deliveryLocation}
-                onChange={e => setFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                value={formData.operatorStaffId}
+                onChange={e =>
+                  setFormData(f => ({ ...f, operatorStaffId: e.target.value }))
+                }
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.operatorStaffId ? "border-red-500" : ""
+                  }`}
               >
-                <option value="">Chọn nơi giao hàng</option>
-                {initIds.deliveryLocationIds.map(id => (
+                <option value="">Chọn nhân viên vận hành</option>
+                {initIds.operatorStaffIds.map(id => (
                   <option key={id} value={id}>{id}</option>
                 ))}
               </select>
-            ) : (
+              {errors.operatorStaffId && (
+                <p className="text-red-500 text-xs mt-1">{errors.operatorStaffId}</p>
+              )}
+            </div>
+            {/* TransportUnitId */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Mã đơn vị vận chuyển</label>
+              <select
+                value={formData.transportUnitId}
+                onChange={e =>
+                  setFormData(f => ({ ...f, transportUnitId: e.target.value }))
+                }
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.transportUnitId ? "border-red-500" : ""
+                  }`}
+              >
+                <option value="">Chọn đơn vị vận chuyển</option>
+                {initIds.transportUnitIds.map(id => (
+                  <option key={id} value={id}>{id}</option>
+                ))}
+              </select>
+              {errors.transportUnitId && (
+                <p className="text-red-500 text-xs mt-1">{errors.transportUnitId}</p>
+              )}
+            </div>
+            {/* Delivery Date */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Ngày giao</label>
               <input
-                type="text"
-                value={formData.deliveryLocation}
-                onChange={e => setFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                type="datetime-local"
+                value={formData.deliveryDate}
+                onChange={e =>
+                  setFormData(f => ({ ...f, deliveryDate: e.target.value }))
+                }
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryDate ? "border-red-500" : ""
+                  }`}
               />
-            )}
-            {errors.deliveryLocation && (
-              <p className="text-red-500 text-xs mt-1">{errors.deliveryLocation}</p>
-            )}
-          </div>
-          <div className="flex gap-2 mt-2 justify-center sticky bottom-0 bg-white py-2 z-10 border-t border-gray-100">
-            <button
-              type="submit"
-              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition"
-            >
-              Lưu
-            </button>
-            <button
-              type="button"
-              className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:ring-2 focus:ring-blue-100 transition"
-              onClick={() => setBookingModalOpen(false)}
-            >
-              Hủy
-            </button>
-          </div>
-        </form>
+              {errors.deliveryDate && (
+                <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
+              )}
+            </div>
+            {/* Note */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Ghi chú</label>
+              <textarea
+                value={formData.note}
+                onChange={e =>
+                  setFormData(f => ({ ...f, note: e.target.value }))
+                }
+                className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
+                rows={2}
+              />
+            </div>
+            {/* Tổng tiền */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Tổng tiền</label>
+              <input
+                type="number"
+                value={formData.total}
+                onChange={e =>
+                  setFormData(f => ({ ...f, total: e.target.value }))
+                }
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.total ? "border-red-500" : ""
+                  }`}
+              />
+              {errors.total && (
+                <p className="text-red-500 text-xs mt-1">{errors.total}</p>
+              )}
+            </div>
+            {/* Trạng thái thanh toán */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Trạng thái thanh toán</label>
+              <select
+                value={formData.paymentStatus}
+                onChange={e =>
+                  setFormData(f => ({ ...f, paymentStatus: e.target.value }))
+                }
+                className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
+              >
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="INCOMPLETED">INCOMPLETED</option>
+              </select>
+            </div>
+            {/* Nơi lấy hàng */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Nơi lấy hàng</label>
+              {initIds.pickupLocationIds && initIds.pickupLocationIds.length > 0 ? (
+                <select
+                  value={formData.pickupLocation}
+                  onChange={e => setFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+                >
+                  <option value="">Chọn nơi lấy hàng</option>
+                  {initIds.pickupLocationIds.map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={formData.pickupLocation}
+                  onChange={e => setFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+                />
+              )}
+              {errors.pickupLocation && (
+                <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>
+              )}
+            </div>
+            {/* Nơi giao hàng */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Nơi giao hàng</label>
+              {initIds.deliveryLocationIds && initIds.deliveryLocationIds.length > 0 ? (
+                <select
+                  value={formData.deliveryLocation}
+                  onChange={e => setFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                >
+                  <option value="">Chọn nơi giao hàng</option>
+                  {initIds.deliveryLocationIds.map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={formData.deliveryLocation}
+                  onChange={e => setFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                />
+              )}
+              {errors.deliveryLocation && (
+                <p className="text-red-500 text-xs mt-1">{errors.deliveryLocation}</p>
+              )}
+            </div>
+            <div className="flex gap-2 mt-2 justify-center sticky bottom-0 bg-white py-2 z-10 border-t border-gray-100">
+              <button
+                type="submit"
+                className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition"
+              >
+                Lưu
+              </button>
+              <button
+                type="button"
+                className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:ring-2 focus:ring-blue-100 transition"
+                onClick={() => setBookingModalOpen(false)}
+              >
+                Hủy
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </Modal>
 
       {/* Edit Booking Modal */}
@@ -578,171 +591,178 @@ export default function SlotGrid({ storageId }) {
         className="modal bg-white rounded-lg shadow-xl p-4 max-w-md w-full mx-auto mt-24 border border-gray-200 flex flex-col"
         overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50"
       >
-        <h4 className="text-lg font-semibold mb-3 text-center">
-          Chỉnh sửa Booking slot #{editFormData?.slotIndex + 1}
-        </h4>
-        <form onSubmit={handleEditSubmit} className="flex-1 flex flex-col overflow-y-auto max-h-[60vh] space-y-3 pr-1">
-          {/* Các trường giống như form booking */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Mã khách hàng</label>
-            <select
-              value={editFormData?.customerId || ""}
-              onChange={e => setEditFormData(f => ({ ...f, customerId: e.target.value }))}
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.customerId ? "border-red-500" : ""}`}
-            >
-              <option value="">Chọn khách hàng</option>
-              {initIds.customerIds.map(id => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-            {errors.customerId && (
-              <p className="text-red-500 text-xs mt-1">{errors.customerId}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Mã nhân viên vận hành</label>
-            <select
-              value={editFormData?.operatorStaffId || ""}
-              onChange={e => setEditFormData(f => ({ ...f, operatorStaffId: e.target.value }))}
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.operatorStaffId ? "border-red-500" : ""}`}
-            >
-              <option value="">Chọn nhân viên vận hành</option>
-              {initIds.operatorStaffIds.map(id => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-            {errors.operatorStaffId && (
-              <p className="text-red-500 text-xs mt-1">{errors.operatorStaffId}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Mã đơn vị vận chuyển</label>
-            <select
-              value={editFormData?.transportUnitId || ""}
-              onChange={e => setEditFormData(f => ({ ...f, transportUnitId: e.target.value }))}
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.transportUnitId ? "border-red-500" : ""}`}
-            >
-              <option value="">Chọn đơn vị vận chuyển</option>
-              {initIds.transportUnitIds.map(id => (
-                <option key={id} value={id}>{id}</option>
-              ))}
-            </select>
-            {errors.transportUnitId && (
-              <p className="text-red-500 text-xs mt-1">{errors.transportUnitId}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Ngày giao</label>
-            <input
-              type="datetime-local"
-              value={editFormData?.deliveryDate || ""}
-              onChange={e => setEditFormData(f => ({ ...f, deliveryDate: e.target.value }))}
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryDate ? "border-red-500" : ""}`}
-            />
-            {errors.deliveryDate && (
-              <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Ghi chú</label>
-            <textarea
-              value={editFormData?.note || ""}
-              onChange={e => setEditFormData(f => ({ ...f, note: e.target.value }))}
-              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
-              rows={2}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Tổng tiền</label>
-            <input
-              type="number"
-              value={editFormData?.total || ""}
-              onChange={e => setEditFormData(f => ({ ...f, total: e.target.value }))}
-              className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.total ? "border-red-500" : ""}`}
-            />
-            {errors.total && (
-              <p className="text-red-500 text-xs mt-1">{errors.total}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Trạng thái thanh toán</label>
-            <select
-              value={editFormData?.paymentStatus || "INCOMPLETED"}
-              onChange={e => setEditFormData(f => ({ ...f, paymentStatus: e.target.value }))}
-              className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
-            >
-              <option value="COMPLETED">COMPLETED</option>
-              <option value="INCOMPLETED">INCOMPLETED</option>
-            </select>
-          </div>
-          {/* Nơi lấy hàng */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Nơi lấy hàng</label>
-            {initIds.pickupLocationIds && initIds.pickupLocationIds.length > 0 ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.85 }}
+          transition={{ duration: 0.25, type: "spring" }}
+        >
+          <h4 className="text-lg font-semibold mb-3 text-center">
+            Chỉnh sửa Booking slot #{editFormData?.slotIndex + 1}
+          </h4>
+          <form onSubmit={handleEditSubmit} className="flex-1 flex flex-col overflow-y-auto max-h-[60vh] space-y-3 pr-1">
+            {/* Các trường giống như form booking */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Mã khách hàng</label>
               <select
-                value={editFormData?.pickupLocation || ""}
-                onChange={e => setEditFormData(f => ({ ...f, pickupLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+                value={editFormData?.customerId || ""}
+                onChange={e => setEditFormData(f => ({ ...f, customerId: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.customerId ? "border-red-500" : ""}`}
               >
-                <option value="">Chọn nơi lấy hàng</option>
-                {initIds.pickupLocationIds.map(id => (
+                <option value="">Chọn khách hàng</option>
+                {initIds.customerIds.map(id => (
                   <option key={id} value={id}>{id}</option>
                 ))}
               </select>
-            ) : (
-              <input
-                type="text"
-                value={editFormData?.pickupLocation || ""}
-                onChange={e => setEditFormData(f => ({ ...f, pickupLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
-              />
-            )}
-            {errors.pickupLocation && (
-              <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>
-            )}
-          </div>
-          {/* Nơi giao hàng */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Nơi giao hàng</label>
-            {initIds.deliveryLocationIds && initIds.deliveryLocationIds.length > 0 ? (
+              {errors.customerId && (
+                <p className="text-red-500 text-xs mt-1">{errors.customerId}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Mã nhân viên vận hành</label>
               <select
-                value={editFormData?.deliveryLocation || ""}
-                onChange={e => setEditFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                value={editFormData?.operatorStaffId || ""}
+                onChange={e => setEditFormData(f => ({ ...f, operatorStaffId: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.operatorStaffId ? "border-red-500" : ""}`}
               >
-                <option value="">Chọn nơi giao hàng</option>
-                {initIds.deliveryLocationIds.map(id => (
+                <option value="">Chọn nhân viên vận hành</option>
+                {initIds.operatorStaffIds.map(id => (
                   <option key={id} value={id}>{id}</option>
                 ))}
               </select>
-            ) : (
+              {errors.operatorStaffId && (
+                <p className="text-red-500 text-xs mt-1">{errors.operatorStaffId}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Mã đơn vị vận chuyển</label>
+              <select
+                value={editFormData?.transportUnitId || ""}
+                onChange={e => setEditFormData(f => ({ ...f, transportUnitId: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.transportUnitId ? "border-red-500" : ""}`}
+              >
+                <option value="">Chọn đơn vị vận chuyển</option>
+                {initIds.transportUnitIds.map(id => (
+                  <option key={id} value={id}>{id}</option>
+                ))}
+              </select>
+              {errors.transportUnitId && (
+                <p className="text-red-500 text-xs mt-1">{errors.transportUnitId}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Ngày giao</label>
               <input
-                type="text"
-                value={editFormData?.deliveryLocation || ""}
-                onChange={e => setEditFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
-                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                type="datetime-local"
+                value={editFormData?.deliveryDate || ""}
+                onChange={e => setEditFormData(f => ({ ...f, deliveryDate: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryDate ? "border-red-500" : ""}`}
               />
-            )}
-            {errors.deliveryLocation && (
-              <p className="text-red-500 text-xs mt-1">{errors.deliveryLocation}</p>
-            )}
-          </div>
-          <div className="flex gap-2 mt-2 justify-center sticky bottom-0 bg-white py-2 z-10 border-t border-gray-100">
-            <button
-              type="submit"
-              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition"
-            >
-              Lưu chỉnh sửa
-            </button>
-            <button
-              type="button"
-              className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:ring-2 focus:ring-blue-100 transition"
-              onClick={() => setEditModalOpen(false)}
-            >
-              Hủy
-            </button>
-          </div>
-        </form>
+              {errors.deliveryDate && (
+                <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Ghi chú</label>
+              <textarea
+                value={editFormData?.note || ""}
+                onChange={e => setEditFormData(f => ({ ...f, note: e.target.value }))}
+                className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
+                rows={2}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Tổng tiền</label>
+              <input
+                type="number"
+                value={editFormData?.total || ""}
+                onChange={e => setEditFormData(f => ({ ...f, total: e.target.value }))}
+                className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.total ? "border-red-500" : ""}`}
+              />
+              {errors.total && (
+                <p className="text-red-500 text-xs mt-1">{errors.total}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Trạng thái thanh toán</label>
+              <select
+                value={editFormData?.paymentStatus || "INCOMPLETED"}
+                onChange={e => setEditFormData(f => ({ ...f, paymentStatus: e.target.value }))}
+                className="w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow"
+              >
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="INCOMPLETED">INCOMPLETED</option>
+              </select>
+            </div>
+            {/* Nơi lấy hàng */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Nơi lấy hàng</label>
+              {initIds.pickupLocationIds && initIds.pickupLocationIds.length > 0 ? (
+                <select
+                  value={editFormData?.pickupLocation || ""}
+                  onChange={e => setEditFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+                >
+                  <option value="">Chọn nơi lấy hàng</option>
+                  {initIds.pickupLocationIds.map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={editFormData?.pickupLocation || ""}
+                  onChange={e => setEditFormData(f => ({ ...f, pickupLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.pickupLocation ? "border-red-500" : ""}`}
+                />
+              )}
+              {errors.pickupLocation && (
+                <p className="text-red-500 text-xs mt-1">{errors.pickupLocation}</p>
+              )}
+            </div>
+            {/* Nơi giao hàng */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Nơi giao hàng</label>
+              {initIds.deliveryLocationIds && initIds.deliveryLocationIds.length > 0 ? (
+                <select
+                  value={editFormData?.deliveryLocation || ""}
+                  onChange={e => setEditFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                >
+                  <option value="">Chọn nơi giao hàng</option>
+                  {initIds.deliveryLocationIds.map(id => (
+                    <option key={id} value={id}>{id}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={editFormData?.deliveryLocation || ""}
+                  onChange={e => setEditFormData(f => ({ ...f, deliveryLocation: e.target.value }))}
+                  className={`w-full border border-gray-300 p-1.5 rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-shadow ${errors.deliveryLocation ? "border-red-500" : ""}`}
+                />
+              )}
+              {errors.deliveryLocation && (
+                <p className="text-red-500 text-xs mt-1">{errors.deliveryLocation}</p>
+              )}
+            </div>
+            <div className="flex gap-2 mt-2 justify-center sticky bottom-0 bg-white py-2 z-10 border-t border-gray-100">
+              <button
+                type="submit"
+                className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition"
+              >
+                Lưu chỉnh sửa
+              </button>
+              <button
+                type="button"
+                className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300 focus:ring-2 focus:ring-blue-100 transition"
+                onClick={() => setEditModalOpen(false)}
+              >
+                Hủy
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </Modal>
 
       {/* Confirm chọn slot nhanh */}
@@ -751,24 +771,31 @@ export default function SlotGrid({ storageId }) {
         onRequestClose={() => setConfirmModalOpen(false)}
         className="modal p-6 bg-white rounded shadow-lg"
       >
-        <h4 className="text-xl mb-4">
-          Bạn có muốn chọn vị trí này (Slot #
-          {pendingSlot !== null ? pendingSlot : ""})?
-        </h4>
-        <div className="flex gap-2">
-          <button
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-            onClick={handleConfirmChooseSlot}
-          >
-            Lưu
-          </button>
-          <button
-            className="px-4 py-2 bg-gray-300 rounded"
-            onClick={() => setConfirmModalOpen(false)}
-          >
-            Hủy
-          </button>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.85 }}
+          transition={{ duration: 0.25, type: "spring" }}
+        >
+          <h4 className="text-xl mb-4">
+            Bạn có muốn chọn vị trí này (Slot #
+            {pendingSlot !== null ? pendingSlot : ""})?
+          </h4>
+          <div className="flex gap-2">
+            <button
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+              onClick={handleConfirmChooseSlot}
+            >
+              Lưu
+            </button>
+            <button
+              className="px-4 py-2 bg-gray-300 rounded"
+              onClick={() => setConfirmModalOpen(false)}
+            >
+              Hủy
+            </button>
+          </div>
+        </motion.div>
       </Modal>
     </div>
   );

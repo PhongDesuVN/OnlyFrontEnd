@@ -952,6 +952,64 @@ const StatsCards = React.memo(({ stats }) => (
   </div>
 ));
 
+// 3. useMemo, useCallback dependencies tối ưu
+// 4. Đơn giản hóa useMemo cho từng trang
+// 5. Props truyền xuống component con tối giản
+// 6. Xử lý lỗi API nhất quán
+// 7. Hàm xử lý form gọn gàng
+
+// --- 3, 4, 5: useMemo, useCallback, props ---
+// Đảm bảo các useMemo chỉ nhận đúng dependencies, không truyền thừa
+// Đơn giản hóa các useMemo, gom các props thành object nếu cần
+
+// --- 6: Xử lý lỗi API nhất quán ---
+function handleApiError(err, setErrors, toast, fallbackMsg) {
+  if (!err) return;
+  if (err.response?.status === 400 && setErrors) {
+    const errorData = err.response.data;
+    if (typeof errorData === 'object' && !Array.isArray(errorData)) {
+      setErrors(errorData);
+    } else {
+      toast.error(
+        'Dữ liệu không hợp lệ: ' +
+          (typeof errorData === 'string' ? errorData : JSON.stringify(errorData))
+      );
+    }
+  } else if (err.response?.status === 403) {
+    toast.error('Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.');
+    window.location.href = '/login';
+  } else if (err.response?.status === 401) {
+    toast.error('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+    window.location.href = '/login';
+  } else {
+    toast.error(fallbackMsg || err.response?.data?.error || err.message);
+  }
+}
+
+// --- 7: Hàm xử lý form gọn gàng ---
+function useFormHandlers(initialState, validate) {
+  const [formData, setFormData] = useState(initialState);
+  const [errors, setErrors] = useState({});
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  }, [errors]);
+
+  const handleSubmit = useCallback((onSubmit) => (e) => {
+    e.preventDefault();
+    const valid = validate(formData, setErrors);
+    if (valid) {
+      onSubmit(formData, setErrors);
+    }
+  }, [formData, validate]);
+
+  return { formData, setFormData, errors, setErrors, handleChange, handleSubmit };
+}
+
 // Cập nhật StorageUnitManagement để truyền getAuthHeaders
 export default function StorageUnitManagement() {
   const navigate = useNavigate();
@@ -1138,23 +1196,7 @@ export default function StorageUnitManagement() {
         data: err.response?.data,
         message: err.message,
       });
-      if (err.response?.status === 400) {
-        const errorData = err.response.data;
-        console.log('Chi tiết lỗi 400:', JSON.stringify(errorData, null, 2));
-        if (typeof errorData === 'object' && !Array.isArray(errorData)) {
-          setErrors(errorData);
-        } else {
-          toast.error(
-            'Dữ liệu không hợp lệ: ' +
-              (typeof errorData === 'string' ? errorData : JSON.stringify(errorData))
-          );
-        }
-      } else if (err.response?.status === 403) {
-        toast.error('Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.');
-        window.location.href = '/login';
-      } else {
-        toast.error('Không thể thêm kho: ' + (err.response?.data?.error || err.message));
-      }
+      handleApiError(err, setErrors, toast, 'Không thể thêm kho');
     } finally {
       setLoading(false);
     }
@@ -1256,6 +1298,10 @@ export default function StorageUnitManagement() {
     setCurrentPage(page);
   }, []);
 
+  const navigateToManager = useCallback(() => {
+    navigate('/manager');
+  }, [navigate]);
+
   const stats = useMemo(() => {
     const total = allStorages.length;
     const active = allStorages.filter((r) => r.status === "ACTIVE").length;
@@ -1277,9 +1323,17 @@ export default function StorageUnitManagement() {
   const OverviewStorages = useMemo(
     () => (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <BarChart className="mr-2" /> Tổng Quan Kho Lưu Trữ
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <BarChart className="mr-2" /> Tổng Quan Kho Lưu Trữ
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StatsCards stats={stats} />
 
         {loading ? (
@@ -1320,9 +1374,17 @@ export default function StorageUnitManagement() {
 
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <List className="mr-2" /> Danh Sách Kho Lưu Trữ
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <List className="mr-2" /> Danh Sách Kho Lưu Trữ
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StorageTable
           storages={result.data}
           loading={loading}
@@ -1343,9 +1405,17 @@ export default function StorageUnitManagement() {
   const AddStorage = useMemo(
     () => (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <Plus className="mr-2" /> Thêm Kho Mới
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <Plus className="mr-2" /> Thêm Kho Mới
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StorageUnitForm
           onSubmit={handleCreate}
           onCancel={() => setCurrentPage("view")}
@@ -1386,9 +1456,17 @@ export default function StorageUnitManagement() {
   const SearchStorages = useMemo(
     () => (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <Search className="mr-2" /> Tìm Kiếm Kho Lưu Trữ
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <Search className="mr-2" /> Tìm Kiếm Kho Lưu Trữ
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StorageTable
           storages={filteredStorages}
           showSearchBar={true}
