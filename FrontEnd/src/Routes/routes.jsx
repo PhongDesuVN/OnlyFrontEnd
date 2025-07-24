@@ -108,6 +108,11 @@ export default function AppRoutes() {
                 <Route path="/customer/booking/:bookingId" element={<C_BookingDetail />} />
             </Route>
 
+            <Route path="/schedule" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar/></ScheduleRouteProtection>}/>
+            <Route path="/schedule/calendar" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar/></ScheduleRouteProtection>}/>
+            <Route path="/schedule/shifts" element={<ScheduleRouteProtection requiredRole="MANAGER"><ShiftManagement/></ScheduleRouteProtection>}/>
+            <Route path="/schedule/timeoff" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><TimeOffRequests/></ScheduleRouteProtection>}/>
+
 
 
 
