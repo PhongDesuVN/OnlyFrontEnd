@@ -1017,14 +1017,14 @@ const C_Dashboard = () => {
         <RequireAuth allowedRoles={["CUSTOMER"]}>
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}
-                <header className="bg-purple-100 shadow-sm border-b border-gray-200">
+                <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center py-4">
                             <div className="flex items-center space-x-4">
                                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                                     <Truck className="w-6 h-6 text-white" />
                                 </div>
-                                <h1 className="text-xl font-bold text-gray-800">Vận Chuyển Nhà</h1>
+                                <h1 className="text-xl font-bold text-white">Vận Chuyển Nhà</h1>
                             </div>
 
                             <div className="flex items-center space-x-4">
@@ -1035,11 +1035,11 @@ const C_Dashboard = () => {
                                         alt={userInfo.name}
                                         className="w-8 h-8 rounded-full"
                                     />
-                                    <span className="text-sm font-medium text-gray-700">{userInfo.name}</span>
+                                    <span className="text-sm font-medium text-white">{userInfo.name}</span>
                                 </div>
                                 <button
                                     onClick={handleLogout}
-                                    className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                                    className="flex items-center space-x-2 px-4 py-2 text-white hover:text-gray-200 transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" />
                                     <span>Đăng xuất</span>
@@ -1051,94 +1051,86 @@ const C_Dashboard = () => {
 
                 <div className="flex">
                     {/* Sidebar */}
-                    <aside className="w-64 bg-blue-50 shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
+                    <aside className="w-64 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white min-h-screen sticky top-0 h-screen">
                         <nav className="p-4 space-y-2">
                             <button
                                 onClick={() => setActiveComponent('dashboard')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'dashboard'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <BarChart3 className="w-5 h-5" />
+                                <BarChart3 className="w-5 h-5 text-white" />
                                 <span>Tổng quan</span>
                             </button>
-
                             <button
                                 onClick={() => setActiveComponent('booking')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'booking'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <Plus className="w-5 h-5" />
+                                <Plus className="w-5 h-5 text-white" />
                                 <span>Tạo đơn hàng</span>
                             </button>
-
                             <button
                                 onClick={() => setActiveComponent('promotions')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'promotions'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <Gift className="w-5 h-5" />
+                                <Gift className="w-5 h-5 text-white" />
                                 <span>Khuyến mãi</span>
                             </button>
-
                             <button
                                 onClick={() => setActiveComponent('feedback')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'feedback'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <Package className="w-5 h-5" />
+                                <Package className="w-5 h-5 text-white" />
                                 <span>Kho và vận chuyển</span>
                             </button>
-
-                            {/* Thêm nút Nhật kí hoạt động */}
                             <button
                                 onClick={() => setActiveComponent('historycmt')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'historycmt'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <History className="w-5 h-5" />
+                                <History className="w-5 h-5 text-white" />
                                 <span>Nhật kí hoạt động</span>
                             </button>
-
                             <button
                                 onClick={() => setActiveComponent('orderHistory')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'orderHistory'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <History className="w-5 h-5" />
+                                <History className="w-5 h-5 text-white" />
                                 <span>Lịch sử đơn hàng</span>
                             </button>
-
                             <button
                                 onClick={() => setActiveComponent('editInfo')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'editInfo'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <Edit className="w-5 h-5" />
+                                <Edit className="w-5 h-5 text-white" />
                                 <span>Chỉnh sửa thông tin</span>
                             </button>
-
                             <button
                                 onClick={() => setActiveComponent('complaints')}
                                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'complaints'
-                                        ? 'bg-blue-100 text-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                    ? 'bg-blue-500/30 text-white'
+                                    : 'hover:bg-purple-500/20 text-white'}
+                                `}
                             >
-                                <MessageSquare className="w-5 h-5" />
+                                <MessageSquare className="w-5 h-5 text-white" />
                                 <span>Khiếu nại</span>
                             </button>
                         </nav>
