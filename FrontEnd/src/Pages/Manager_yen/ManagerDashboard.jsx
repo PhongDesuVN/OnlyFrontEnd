@@ -574,7 +574,7 @@ const Dashboard = () => {
                     {/* Main Content */}
                     <div className="flex-1 pl-[16px] pt-6 pb-8 pr-4 min-w-0 flex flex-col gap-10">
                         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mt-6">
-                            DASHBOARD QUẢN LÝ
+                            QUẢN LÍ TỔNG QUAN
                         </h1>
 
                         {/* Thống kê tổng quan */}

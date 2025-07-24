@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
+
 import {
     User,
     History,
@@ -48,9 +51,13 @@ import RequireAuth from '../../Components/RequireAuth';
 import FeedbackModal from './FeedbackModal.jsx';
 import { getAllBookingsOfCustomer } from './feedbackDataService';
 
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
+
 const C_Dashboard = () => {
+
+    const prevOrderStatusRef = useRef({});
     const location = useLocation();
     // Ưu tiên state.activeTab nếu có khi khởi tạo
     const [activeComponent, setActiveComponent] = useState(() => {
@@ -66,6 +73,9 @@ const C_Dashboard = () => {
             setActiveComponent(location.state.activeTab);
         }
     }, [location.state]);
+
+
+
     const [userInfo, setUserInfo] = useState({
         name: 'Nguyễn Văn An',
         email: 'nguyenvanan@email.com',
@@ -74,7 +84,7 @@ const C_Dashboard = () => {
         avatar: null
     });
     const [orderHistory, setOrderHistory] = useState([]);
-    const [complaints, setComplaints] = useState([]);
+    // const [complaints, setComplaints] = useState([]);
     const [customerStats, setCustomerStats] = useState({
         totalOrders: 0,
         completedOrders: 0,
@@ -221,7 +231,7 @@ const C_Dashboard = () => {
             for (const order of incompletedToDelete) {
                 try {
                     await apiCall(`/api/customer/bookings/${order.bookingId}/cancel`, { method: 'PATCH', auth: true });
-                } catch (e) {
+                } catch ( e) {
                     // Có thể log lỗi nếu cần
                 }
             }
@@ -232,6 +242,8 @@ const C_Dashboard = () => {
             // --- KẾT THÚC ---
 
             setOrderHistory(bookings);
+
+
             // Calculate statistics
             const completedPayments = bookings.filter(order => order.paymentStatus === 'COMPLETED');
             const stats = {
@@ -249,6 +261,60 @@ const C_Dashboard = () => {
             // setLoading(false); // Xóa
         }
     };
+    const [qrUrls, setQrUrls] = useState({});
+
+    const fetchQrUrl = async (bookingId) => {
+        try {
+            const response = await apiCall('/api/payment', {
+                method: 'POST',
+                auth: true,
+                body: JSON.stringify({ bookingId })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data.qrUrl;
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy QR:', error);
+        }
+        return null;
+    };
+    useEffect(() => {
+        const loadQrUrls = async () => {
+            const incompletedOrders = orderHistory.filter(o => o.paymentStatus === "INCOMPLETED");
+            const urls = {};
+            for (const order of incompletedOrders) {
+                const qr = await fetchQrUrl(order.bookingId);
+                if (qr) {
+                    urls[order.bookingId] = qr;
+                }
+            }
+            setQrUrls(urls);
+        };
+
+        if (orderHistory.length > 0) {
+            loadQrUrls();
+        }
+    }, [orderHistory]);
+
+    useEffect(() => {
+        const prevStatuses = prevOrderStatusRef.current;
+        const newStatuses = {};
+
+        orderHistory.forEach(order => {
+            const prevStatus = prevStatuses[order.bookingId];
+            const newStatus = order.paymentStatus;
+            newStatuses[order.bookingId] = newStatus;
+
+            if (prevStatus === 'INCOMPLETED' && newStatus === 'COMPLETED') {
+                //  Hiển thị thông báo khi chuyển từ INCOMPLETED → COMPLETED
+                alert(`🎉 Thanh toán thành công cho đơn hàng #${order.bookingId}`);
+            }
+        });
+
+        // Cập nhật trạng thái cũ cho lần render tiếp theo
+        prevOrderStatusRef.current = newStatuses;
+    }, [orderHistory]);
 
     // Lấy tất cả booking của customer đang đăng nhập (API mới)
     const fetchAllCustomerBookings = async () => {
@@ -687,6 +753,17 @@ const C_Dashboard = () => {
 
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
+                                    {order.paymentStatus === "INCOMPLETED" && qrUrls[order.bookingId] && (
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-600">Mã QR thanh toán</p>
+                                            <img
+                                                src={qrUrls[order.bookingId]}
+                                                alt="QR Thanh toán"
+                                                className="w-40 h-40 object-contain border rounded-xl shadow"
+                                            />
+                                        </div>
+                                    )}
+
                                     {order.status === 'COMPLETED' && !order.rating && (
                                         <button
                                             onClick={() => openFeedbackModal(order)}

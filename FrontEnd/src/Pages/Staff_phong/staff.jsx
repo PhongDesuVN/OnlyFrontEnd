@@ -210,6 +210,11 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
             window.history.back()
         }
     }
+    const handleLogout = () => {
+        Cookies.remove('authToken');
+        Cookies.remove('username');
+        navigate('/login');
+    };
 
     // Hàm format số tiền
     const formatCurrency = (value) => {
@@ -436,7 +441,14 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
                                             </div>
                                             <button
                                                 className="p-2 rounded-full hover:bg-gray-100 transition"
-                                                onClick={() => setCurrentPage('settings')}
+                                                onClick={() => {
+                                                    if (currentPage === 'settings') {
+                                                        setCurrentPage('main')
+                                                    } else {
+                                                        setCurrentPage('settings')
+                                                    }
+                                                }}
+
                                                 aria-label="Cài đặt"
                                             >
                                                 <Settings className="w-5 h-5 text-gray-400" />
