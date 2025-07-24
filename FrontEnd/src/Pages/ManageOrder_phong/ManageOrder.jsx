@@ -4,25 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Package, CreditCard, Search, List, BarChart,
     Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle,
-    Plus, Edit2, Trash2, Save, X
+    Plus, Edit2, Trash2, Save, X, ArrowLeft
 } from 'lucide-react';
 import ManageOrderApi from '../../utils/ManageOrder_phongApi.js';
 
 // Header
 const Header = () => {
     return (
-        <header className="fixed w-full top-0 bg-white shadow-lg">
+        <header className="fixed w-full top-0 bg-[#0d47a1] shadow-lg z-50">
             <div className="container mx-auto px-4 py-4">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
-                        <Truck className="w-8 h-8 text-blue-600" />
-                        <h1 className="text-xl font-bold text-black">Vận Chuyển Nhà</h1>
+                        <Truck className="w-8 h-8 text-white" />
+                        <h1 className="text-xl font-bold text-white">Vận Chuyển Nhà</h1>
                     </div>
                     <nav className="hidden md:flex space-x-8">
                     </nav>
                     <div className="flex space-x-3">
-                        <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                            <Link to="/" className="text-black hover:text-blue-600 transition-colors">Trang Chủ</Link>
+                        <button className="px-4 py-2 border border-white text-white rounded-lg hover:bg-blue-700 hover:text-white transition-all">
+                            <Link to="/" className="text-white hover:text-blue-200 transition-colors">Trang Chủ</Link>
                         </button>
                     </div>
                 </div>
@@ -36,8 +36,8 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
     const pageLabels = {
         overview: 'Tổng Quan',
         view: 'Danh Sách',
-
         search: 'Tìm Kiếm',
+        back: 'Quay Lại'
     };
 
     return (
@@ -45,29 +45,37 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             transition={{ duration: 0.5 }}
-            className="w-64 bg-gradient-to-b from-blue-900 to-purple-600 text-white p-6 h-screen shadow-2xl"
+            className="w-64 bg-gradient-to-b from-[#0d47a1] to-[#1976d2] text-white p-6 min-h-screen flex flex-col justify-between shadow-2xl"
         >
-            <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
-                <Package className="mr-2" /> Quản Lý Đơn Hàng
-            </h1>
-            <nav>
-                {['overview', 'view', 'search'].map(page => (
-                    <motion.button
-                        key={page}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${currentPage === page ? 'bg-blue-500 shadow-lg' : 'hover:bg-blue-600'
-                            }`}
-                        onClick={() => setCurrentPage(page)}
-                    >
-                        {page === 'overview' && <BarChart className="mr-2" size={20} />}
-                        {page === 'view' && <List className="mr-2" size={20} />}
-
-                        {page === 'search' && <Search className="mr-2" size={20} />}
-                        {pageLabels[page]}
-                    </motion.button>
-                ))}
-            </nav>
+            <div>
+                <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
+                    <Package className="mr-2" /> Quản Lý Đơn Hàng
+                </h1>
+                <nav>
+                    {['back', 'overview', 'view', 'search'].map(page => (
+                        <motion.button
+                            key={page}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${currentPage === page ? 'bg-blue-300 text-blue-900 shadow-lg' : 'hover:bg-blue-500 hover:text-white'} `}
+                            onClick={() => {
+                                if (page === 'back') {
+                                    window.history.back();
+                                } else {
+                                    setCurrentPage(page);
+                                }
+                            }}
+                        >
+                            {page === 'overview' && <BarChart className="mr-2" size={20} />}
+                            {page === 'view' && <List className="mr-2" size={20} />}
+                            {page === 'search' && <Search className="mr-2" size={20} />}
+                            {page === 'back' && <ArrowLeft className="mr-2" size={20} />}
+                            {pageLabels[page]}
+                        </motion.button>
+                    ))}
+                </nav>
+            </div>
+            <div className="mt-auto"></div>
         </motion.div>
     );
 };
@@ -409,46 +417,44 @@ const OverviewOrders = ({ orders }) => {
                     </div>
                 </motion.div>
 
-                {/* Tiến trình giao hàng */}
-                <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="bg-white p-6 rounded-xl shadow-lg border border-gray-100"
-                >
-                    <h2 className="text-xl font-bold mb-4 flex items-center text-gray-800">
-                        <Truck className="mr-2 text-blue-600" />
-                        Tiến Trình Giao Hàng
+                {/* Tiến trình giao hàng nhỏ gọn */}
+                <div className="bg-white rounded-xl shadow-md border border-blue-100 p-5">
+                    <h2 className="text-base font-bold mb-5 flex items-center gap-2 text-blue-700">
+                        <Truck className="w-5 h-5 text-blue-500" /> Tiến Trình Giao Hàng
                     </h2>
-                    <div className="space-y-3">
-                        {Object.entries(deliveryStats).map(([status, count], index) => {
-                            const colors = {
-                                'Chuẩn bị hàng': 'bg-gray-500',
-                                'Đã rời kho': 'bg-blue-500',
-                                'Đang giao': 'bg-yellow-500',
-                                'Đã giao': 'bg-green-500'
-                            };
-                            const percentage = orders.length > 0 ? (count / orders.length) * 100 : 0;
-
-                            return (
-                                <div key={status} className="flex items-center justify-between">
-                                    <span className="text-gray-600 text-sm">{status}</span>
-                                    <div className="flex items-center">
-                                        <div className="w-24 bg-gray-200 rounded-full h-2 mr-3">
-                                            <motion.div
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${percentage}%` }}
-                                                transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
-                                                className={`${colors[status]} h-2 rounded-full`}
-                                            ></motion.div>
+                    <div className="space-y-4">
+                        {Object.entries(deliveryStats)
+                            .filter(([progress]) => progress && progress !== 'null' && progress !== undefined && progress !== '')
+                            .map(([status, count], index) => {
+                                // Icon, màu, và nền cho từng trạng thái
+                                const statusMap = {
+                                    'Đã hủy': { icon: <div className="w-6 h-6 flex items-center justify-center rounded-full bg-red-50"><X className="w-4 h-4 text-red-400" /></div>, bar: 'bg-red-200', fill: 'bg-red-400', text: 'text-red-600' },
+                                    'Đã giao': { icon: <div className="w-6 h-6 flex items-center justify-center rounded-full bg-green-50"><CheckCircle className="w-4 h-4 text-green-400" /></div>, bar: 'bg-green-100', fill: 'bg-green-400', text: 'text-green-700' },
+                                    'Đang giao': { icon: <div className="w-6 h-6 flex items-center justify-center rounded-full bg-yellow-50"><Truck className="w-4 h-4 text-yellow-400" /></div>, bar: 'bg-yellow-100', fill: 'bg-yellow-400', text: 'text-yellow-700' },
+                                    'Chuẩn bị hàng': { icon: <div className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-100"><Package className="w-4 h-4 text-gray-400" /></div>, bar: 'bg-gray-200', fill: 'bg-gray-400', text: 'text-gray-700' },
+                                };
+                                const { icon, bar, fill, text } = statusMap[status] || statusMap['Chuẩn bị hàng'];
+                                const percentage = orders.length > 0 ? (count / orders.length) * 100 : 0;
+                                return (
+                                    <div key={status} className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2 w-36 min-w-[90px]">
+                                            {icon}
+                                            <span className={`font-medium text-xs ${text}`}>{status}</span>
                                         </div>
-                                        <span className="font-semibold text-gray-800 text-sm">{count}</span>
+                                        <div className="flex-1 flex items-center gap-2">
+                                            <div className={`relative w-full h-2 ${bar} rounded-full overflow-hidden`}>
+                                                <div
+                                                    className={`absolute left-0 top-0 h-2 rounded-full transition-all duration-700 ${fill}`}
+                                                    style={{ width: `${percentage}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className={`font-bold text-base min-w-[28px] text-right ${text}`}>{count}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
                     </div>
-                </motion.div>
+                </div>
             </div>
 
             {/* Đơn hàng gần đây */}
@@ -554,6 +560,8 @@ const ViewOrders = ({ orders, onEditOrder }) => {
     const [editingOrder, setEditingOrder] = useState(null);
     const [filterStatus, setFilterStatus] = useState('Tất cả');
     const [filterPayment, setFilterPayment] = useState('Tất cả');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // Số đơn hàng mỗi trang
 
     const handleEdit = (order) => {
         setEditingOrder(order);
@@ -575,10 +583,25 @@ const ViewOrders = ({ orders, onEditOrder }) => {
         return statusMatch && paymentMatch;
     });
 
+    // Tính toán phân trang
+    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+    const paginatedOrders = filteredOrders.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     // Reset bộ lọc
     const resetFilters = () => {
         setFilterStatus('Tất cả');
         setFilterPayment('Tất cả');
+        setCurrentPage(1); // Reset về trang 1 khi reset bộ lọc
+    };
+
+    // Điều hướng trang
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
     };
 
     return (
@@ -599,7 +622,10 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái Đơn Hàng</label>
                     <select
                         value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
+                        onChange={(e) => {
+                            setFilterStatus(e.target.value);
+                            setCurrentPage(1); // Reset về trang 1 khi thay đổi bộ lọc
+                        }}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="Tất cả">Tất cả</option>
@@ -613,7 +639,10 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái Thanh Toán</label>
                     <select
                         value={filterPayment}
-                        onChange={(e) => setFilterPayment(e.target.value)}
+                        onChange={(e) => {
+                            setFilterPayment(e.target.value);
+                            setCurrentPage(1); // Reset về trang 1 khi thay đổi bộ lọc
+                        }}
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="Tất cả">Tất cả</option>
@@ -642,7 +671,7 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredOrders.map(order => (
+                        {paginatedOrders.map(order => (
                             <motion.tr
                                 key={order.id}
                                 whileHover={{ backgroundColor: '#f3f4f6' }}
@@ -680,6 +709,37 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                 </table>
             </div>
 
+            {/* Phân trang */}
+            {totalPages > 1 && (
+                <div className="mt-4 flex justify-center items-center space-x-2">
+                    <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`px-4 py-2 rounded-lg ${currentPage === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    >
+                        Trang trước
+                    </button>
+                    <div className="flex space-x-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                onClick={() => goToPage(page)}
+                                className={`px-3 py-1 rounded-lg ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+                    <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`px-4 py-2 rounded-lg ${currentPage === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                    >
+                        Trang sau
+                    </button>
+                </div>
+            )}
+
             <AnimatePresence>
                 <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
                     <OrderForm
@@ -694,14 +754,29 @@ const ViewOrders = ({ orders, onEditOrder }) => {
     );
 };
 
-
-
 // SearchOrders
 const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // Số đơn hàng mỗi trang
+
     const filteredOrders = orders.filter(order =>
         order.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.customer.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // Tính toán phân trang
+    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+    const paginatedOrders = filteredOrders.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    // Điều hướng trang
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
 
     return (
         <motion.div
@@ -723,7 +798,10 @@ const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
                         placeholder="Nhập mã đơn hoặc tên khách hàng..."
                         className="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+                        }}
                     />
                 </motion.div>
                 <div className="overflow-x-auto">
@@ -737,7 +815,7 @@ const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredOrders.map(order => (
+                            {paginatedOrders.map(order => (
                                 <motion.tr
                                     key={order.id}
                                     whileHover={{ backgroundColor: '#f3f4f6' }}
@@ -759,6 +837,36 @@ const SearchOrders = ({ orders, searchTerm, setSearchTerm }) => {
                         </tbody>
                     </table>
                 </div>
+                {/* Phân trang */}
+                {totalPages > 1 && (
+                    <div className="mt-4 flex justify-center items-center space-x-2">
+                        <button
+                            onClick={() => goToPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className={`px-4 py-2 rounded-lg ${currentPage === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                        >
+                            Trang trước
+                        </button>
+                        <div className="flex space-x-1">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => goToPage(page)}
+                                    className={`px-3 py-1 rounded-lg ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => goToPage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className={`px-4 py-2 rounded-lg ${currentPage === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                        >
+                            Trang sau
+                        </button>
+                    </div>
+                )}
             </div>
         </motion.div>
     );
@@ -805,19 +913,23 @@ const Dashboard = () => {
         note: booking.note || ''
     });
 
-    // Hàm ánh xạ status sang deliveryProgress
+    // Hàm ánh xạ status sang deliveryProgress (đồng bộ với backend)
     const mapStatusToDeliveryProgress = (status) => {
         switch (status) {
+            case 'PENDING':
             case 'Đang xử lý':
                 return 'Chuẩn bị hàng';
+            case 'SHIPPING':
             case 'Đang giao':
                 return 'Đang giao';
+            case 'COMPLETED':
             case 'Hoàn thành':
                 return 'Đã giao';
+            case 'CANCELED':
             case 'Hủy':
                 return 'Đã hủy';
             default:
-                return 'Chuẩn bị hàng';
+                return null; // Không tính các status khác
         }
     };
 
@@ -866,6 +978,7 @@ const Dashboard = () => {
             setLoading(false);
         }
     };
+
     // Cập nhật đơn hàng
     const handleEditOrder = async (updatedOrder) => {
         const token = localStorage.getItem('authToken');
@@ -999,7 +1112,6 @@ const Dashboard = () => {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-
                             </motion.div>
                         )}
                         {currentPage === 'search' && (
