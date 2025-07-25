@@ -100,8 +100,13 @@ class RevenueService {
     // Lấy danh sách doanh thu có phân trang/filter
     async getPagedRevenues(params) {
         try {
+            // Xóa các key rỗng/null
+            const cleanParams = { ...params };
+            Object.keys(cleanParams).forEach(key => {
+                if (cleanParams[key] === '' || cleanParams[key] === null || cleanParams[key] === undefined) delete cleanParams[key];
+            });
             const response = await axiosInstance.get('/api/revenues/filtered', {
-                params,
+                params: cleanParams,
             });
             return response.data;
         } catch (error) {
@@ -117,8 +122,13 @@ const revenueService = new RevenueService();
 // Lấy danh sách doanh thu có phân trang/filter
 export const getPagedRevenues = async (params) => {
     try {
+        // Xóa các key rỗng/null
+        const cleanParams = { ...params };
+        Object.keys(cleanParams).forEach(key => {
+            if (cleanParams[key] === '' || cleanParams[key] === null || cleanParams[key] === undefined) delete cleanParams[key];
+        });
         const response = await axiosInstance.get('/api/revenues/filtered', {
-            params,
+            params: cleanParams,
         });
         return response.data;
     } catch (error) {

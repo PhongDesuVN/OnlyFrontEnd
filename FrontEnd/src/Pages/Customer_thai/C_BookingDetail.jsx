@@ -371,7 +371,7 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
                                             <Hash className="w-5 h-5 text-gray-400" />
                                             <div>
                                                 <p className="text-sm text-gray-600">Slot kho</p>
-                                                <p className="font-medium text-gray-800">Slot #{booking.slotIndex || 'N/A'}</p>
+                                                <p className="font-medium text-gray-800">Slot #{booking.newSlot || 'N/A'}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-3">
@@ -394,7 +394,7 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
                                             <Car className="w-5 h-5 text-gray-400" />
                                             <div>
                                                 <p className="text-sm text-gray-600">Số lượng xe</p>
-                                                <p className="font-medium text-gray-800">{booking.vehicleQuantity || 0} xe</p>
+                                                <p className="font-medium text-gray-800">{booking.newVehicle || 0} xe</p>
                                             </div>
                                         </div>
                                         {booking.operatorName && (

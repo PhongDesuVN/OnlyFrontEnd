@@ -269,6 +269,9 @@ const C_Dashboard = () => {
         }
     };
     const [qrUrls, setQrUrls] = useState({});
+    const [qrBookingId, setQrBookingId] = useState(null);
+    const [qrUrl, setQrUrl] = useState(null);
+    const [loadingQrBookingId, setLoadingQrBookingId] = useState(null);
 
     const fetchQrUrl = async (bookingId) => {
         try {
@@ -536,9 +539,18 @@ const C_Dashboard = () => {
     };
     const paymentNotifiedRef = useRef({});
     const handleGetQr = async (bookingId) => {
+        if (qrBookingId === bookingId) {
+            // Đang hiện QR của booking này, bấm lần nữa thì ẩn đi
+            setQrBookingId(null);
+            setQrUrl(null);
+            return;
+        }
+        setLoadingQrBookingId(bookingId); // Bắt đầu loading
         const qr = await fetchQrUrl(bookingId);
+        setLoadingQrBookingId(null); // Kết thúc loading
         if (qr) {
-            setQrUrls(prev => ({ ...prev, [bookingId]: qr }));
+            setQrBookingId(bookingId);
+            setQrUrl(qr);
             if (paymentNotifiedRef.current[bookingId] === undefined) {
                 paymentNotifiedRef.current[bookingId] = false;
             }
@@ -805,13 +817,20 @@ const C_Dashboard = () => {
                                         <>
                                             <button
                                                 onClick={() => handleGetQr(order.bookingId)}
-                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+                                                disabled={loadingQrBookingId === order.bookingId}
                                             >
+                                                {loadingQrBookingId === order.bookingId ? (
+                                                    <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                                                    </svg>
+                                                ) : null}
                                                 Thanh toán
                                             </button>
-                                            {qrUrls[order.bookingId] && (
+                                            {qrBookingId === order.bookingId && qrUrl && (
                                                 <img
-                                                    src={qrUrls[order.bookingId]}
+                                                    src={qrUrl}
                                                     alt="QR Thanh toán"
                                                     className="w-40 h-40 object-contain border rounded-xl shadow mt-2"
                                                 />
