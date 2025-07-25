@@ -18,7 +18,7 @@ const statusMapToBackend = {
     "Hoạt động": "ACTIVE",
     "Hết hạn": "EXPIRED",
     "Đang chờ": "PENDING",
-    "Đã hủy": "CANCELLED",
+    "Đã hủy": "CANCELED",
     "Sắp bắt đầu": "UPCOMING"
 }
 
@@ -26,7 +26,7 @@ const statusMapToFrontend = {
     ACTIVE: "Hoạt động",
     EXPIRED: "Hết hạn",
     PENDING: "Đang chờ",
-    CANCELLED: "Đã hủy",
+    CANCELED: "Đã hủy",
     UPCOMING: "Sắp bắt đầu"
 }
 
@@ -40,18 +40,17 @@ const discountTypeMapToFrontend = {
     AMOUNT: "Số tiền cố định"
 }
 
-// Hàm validate ký tự đặc biệt cho tìm kiếm
-const validateSearchKeyword = (keyword) => {
-    const regex = /^[a-zA-Z0-9\s-_()%]*$/;
-    return regex.test(keyword);
-}
-
 // Hàm validate discountValue dựa trên discountType
 const validateDiscountValue = (value, discountType) => {
     const numValue = parseFloat(value);
     if (isNaN(numValue) || numValue < 0) return false;
     if (discountType === "Phần trăm" && numValue > 100) return false;
     return true;
+}
+
+// Hàm validate độ dài keyword tìm kiếm
+const validateSearchKeyword = (keyword) => {
+    return keyword.length <= 100; // Chỉ kiểm tra độ dài tối đa 100 ký tự
 }
 
 // Component LeftMenu (giữ nguyên)
@@ -236,7 +235,7 @@ const PromotionManager = () => {
 
     const fetchPromotions = async () => {
         if (keyword && !validateSearchKeyword(keyword)) {
-            setSearchError("Tên tìm kiếm chỉ được chứa chữ cái, số, khoảng trắng, và các ký tự: -, _, (, ), %")
+            setSearchError("Tên tìm kiếm không được vượt quá 100 ký tự!")
             return
         }
         setSearchError("")
@@ -450,7 +449,7 @@ const PromotionManager = () => {
                                         onChange={(e) => {
                                             setKeyword(e.target.value)
                                             if (e.target.value && !validateSearchKeyword(e.target.value)) {
-                                                setSearchError("Tên tìm kiếm chỉ được chứa chữ cái, số, khoảng trắng, và các ký tự: -, _, (, ), %")
+                                                setSearchError("Tên tìm kiếm không được vượt quá 100 ký tự!")
                                             } else {
                                                 setSearchError("")
                                             }
