@@ -7,7 +7,6 @@ import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, List, Plus, Search, Eye, Edit, ArrowLeft } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
-import Pagination from "../../Components/HungStorage/Pagination";
 import PaymentSidebar from "./PaymentSidebar";
 import {
   Chart as ChartJS,
@@ -23,6 +22,10 @@ import { Line } from "react-chartjs-2";
 import { format, subDays, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import SidebarPayment from "./PaymentSidebar";
+import Header from '../../Components/FormLogin_yen/Header.jsx';
+import Footer from '../../Components/FormLogin_yen/Footer.jsx';
+import SidebarStorageApproval from '../StorageApproval/SidebarStorageApproval';
 
 const API_BASE = "/api/payments";
 
@@ -305,13 +308,8 @@ export default function PaymentManagement() {
       const params = new URLSearchParams();
       params.append("page", page - 1); // Spring pageable is 0-based
       params.append("size", size);
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
-      });
-      if (searchTerm.trim()) {
-        params.append("customerName", searchTerm.trim());
-      }
-      const response = await axiosInstance.get(`/api/payments/search?${params.toString()}`);
+      // Chỉ truyền page và size cho API /api/payments/list
+      const response = await axiosInstance.get(`/api/payments/list?${params.toString()}`);
       const data = response.data;
       setPayments(data.content || []);
       setPagination({
@@ -326,7 +324,7 @@ export default function PaymentManagement() {
     } finally {
       setLoading(false);
     }
-  }, [filters, searchTerm, pagination.itemsPerPage]);
+  }, [pagination.itemsPerPage]);
 
   useEffect(() => {
     if (currentPage === "list" || currentPage === "overview") {
@@ -524,14 +522,7 @@ export default function PaymentManagement() {
               </tbody>
             </table>
           </div>
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.totalItems}
-            itemsPerPage={pagination.itemsPerPage}
-            onPageChange={handlePageChange}
-            onItemsPerPageChange={handleItemsPerPageChange}
-          />
+        
         </>
       )}
     </div>
@@ -605,22 +596,41 @@ export default function PaymentManagement() {
     </motion.div>
   );
 
+  // Handler cho sidebar home button
+  const handleBackToHome = () => {
+    navigate("/manager-dashboard");
+  };
+  // Handler cho sidebar logout button
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    window.location.href = "/login";
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <PaymentSidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <div className="flex-1 p-8 overflow-auto">
-        <button
-          className="mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
-          onClick={() => navigate(-1)}
-        >
-          ← Quay lại
-        </button>
-        <AnimatePresence mode="wait">
-          {currentPage === "overview" && <>{Overview}</>}
-          {currentPage === "list" && <>{PaymentList}</>}
-          {currentPage === "detail" && <>{Detail}</>}
-        </AnimatePresence>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <div className="flex flex-1">
+        <SidebarPayment
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+          onBackToHome={handleBackToHome}
+          onLogout={handleLogout}
+        />
+        <main className="flex-1 ml-64 pt-20 pb-16 px-6">
+          <button
+            className="mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
+            onClick={() => navigate(-1)}
+          >
+            ← Quay lại
+          </button>
+          <AnimatePresence mode="wait">
+            {currentPage === "overview" && <>{Overview}</>}
+            {currentPage === "list" && <>{PaymentList}</>}
+            {currentPage === "detail" && <>{Detail}</>}
+          </AnimatePresence>
+        </main>
       </div>
+      <Footer />
     </div>
   );
 }

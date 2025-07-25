@@ -44,11 +44,11 @@ import { format, subDays, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import axiosInstance from '../../utils/axiosInstance';
 import SlotGrid from "../../Components/HungStorage/SlotGrid";
-import Sidebar from "../../Components/HungStorage/Sidebar";
 import { LoadingSpinner, ErrorMessage } from "../../Components/HungStorage/LoadingError";
-import Footer from "../../Components/HungStorage/Footer";
-import Pagination from "../../Components/HungStorage/Pagination";
 import RequireAuth from '../../Components/RequireAuth';
+import Sidebar from "../../Components/HungStorage/Sidebar";
+import Header from '../../Components/FormLogin_yen/Header.jsx';
+import Footer from '../../Components/FormLogin_yen/Footer.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
@@ -277,28 +277,6 @@ const FilterBar = React.memo(({ filters, onFiltersChange, onClearFilters, result
     </div>
   );
 });
-
-// Component Header
-const Header = React.memo(() => (
-  <header className="fixed w-full top-0 bg-white shadow-lg z-10">
-    <div className="container mx-auto px-4 py-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Warehouse className="w-8 h-8 text-blue-600" />
-          <h1 className="text-xl font-bold text-gray-800">Quản Lý Kho Lưu Trữ</h1>
-        </div>
-        <div className="flex space-x-3">
-          <Link
-            to="/"
-            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-          >
-            Trang Chủ
-          </Link>
-        </div>
-      </div>
-    </div>
-  </header>
-));
 
 // Component SearchBar
 const SearchBar = React.memo(({ value, onChange, onClear, resultCount }) => (
@@ -704,7 +682,7 @@ const StorageStatusChart = React.memo(({ storages }) => {
     const statusColors = {
       ACTIVE: "#10B981",
       INACTIVE: "#EF4444",
-      UNKNOWN: "#6B7280",
+      REJECTED: "#6B7280",
     };
 
     const labels = Object.keys(statusCounts);
@@ -894,7 +872,39 @@ const StorageTable = React.memo(
             </table>
           </div>
 
-          {showPagination && paginationProps && <Pagination {...paginationProps} />}
+          {showPagination && paginationProps && (
+            <div className="w-full flex justify-center items-center gap-3 py-6">
+              <button
+                onClick={() => handlePageChange(Math.max(1, paginationProps.currentPage - 1))}
+                disabled={paginationProps.currentPage === 1}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${paginationProps.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                title="Trang trước"
+              >
+                Trước
+              </button>
+              {Array.from({ length: paginationProps.totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${paginationProps.currentPage === page ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                  title={`Trang ${page}`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => handlePageChange(Math.min(paginationProps.totalPages, paginationProps.currentPage + 1))}
+                disabled={paginationProps.currentPage === paginationProps.totalPages}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${paginationProps.currentPage === paginationProps.totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                title="Trang sau"
+              >
+                Sau
+              </button>
+              <span className="text-sm text-gray-600 font-medium ml-2">
+                Trang {paginationProps.currentPage} / {paginationProps.totalPages}
+              </span>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -907,7 +917,7 @@ const StatsCards = React.memo(({ stats }) => (
     {[
       { label: "Tổng số kho", value: stats.total, color: "blue" },
       { label: "Kho đang hoạt động", value: stats.active, color: "green" },
-      { label: "Kho có sẵn", value: stats.available, color: "yellow" },
+      { label: "Bị từ chối", value: stats.rejected, color: "yellow" },
       { label: "Kho ngừng hoạt động", value: stats.inactive, color: "red" },
     ].map((item, idx) => (
       <motion.div
@@ -941,6 +951,64 @@ const StatsCards = React.memo(({ stats }) => (
     ))}
   </div>
 ));
+
+// 3. useMemo, useCallback dependencies tối ưu
+// 4. Đơn giản hóa useMemo cho từng trang
+// 5. Props truyền xuống component con tối giản
+// 6. Xử lý lỗi API nhất quán
+// 7. Hàm xử lý form gọn gàng
+
+// --- 3, 4, 5: useMemo, useCallback, props ---
+// Đảm bảo các useMemo chỉ nhận đúng dependencies, không truyền thừa
+// Đơn giản hóa các useMemo, gom các props thành object nếu cần
+
+// --- 6: Xử lý lỗi API nhất quán ---
+function handleApiError(err, setErrors, toast, fallbackMsg) {
+  if (!err) return;
+  if (err.response?.status === 400 && setErrors) {
+    const errorData = err.response.data;
+    if (typeof errorData === 'object' && !Array.isArray(errorData)) {
+      setErrors(errorData);
+    } else {
+      toast.error(
+        'Dữ liệu không hợp lệ: ' +
+          (typeof errorData === 'string' ? errorData : JSON.stringify(errorData))
+      );
+    }
+  } else if (err.response?.status === 403) {
+    toast.error('Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.');
+    window.location.href = '/login';
+  } else if (err.response?.status === 401) {
+    toast.error('Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.');
+    window.location.href = '/login';
+  } else {
+    toast.error(fallbackMsg || err.response?.data?.error || err.message);
+  }
+}
+
+// --- 7: Hàm xử lý form gọn gàng ---
+function useFormHandlers(initialState, validate) {
+  const [formData, setFormData] = useState(initialState);
+  const [errors, setErrors] = useState({});
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  }, [errors]);
+
+  const handleSubmit = useCallback((onSubmit) => (e) => {
+    e.preventDefault();
+    const valid = validate(formData, setErrors);
+    if (valid) {
+      onSubmit(formData, setErrors);
+    }
+  }, [formData, validate]);
+
+  return { formData, setFormData, errors, setErrors, handleChange, handleSubmit };
+}
 
 // Cập nhật StorageUnitManagement để truyền getAuthHeaders
 export default function StorageUnitManagement() {
@@ -1128,23 +1196,7 @@ export default function StorageUnitManagement() {
         data: err.response?.data,
         message: err.message,
       });
-      if (err.response?.status === 400) {
-        const errorData = err.response.data;
-        console.log('Chi tiết lỗi 400:', JSON.stringify(errorData, null, 2));
-        if (typeof errorData === 'object' && !Array.isArray(errorData)) {
-          setErrors(errorData);
-        } else {
-          toast.error(
-            'Dữ liệu không hợp lệ: ' +
-              (typeof errorData === 'string' ? errorData : JSON.stringify(errorData))
-          );
-        }
-      } else if (err.response?.status === 403) {
-        toast.error('Không có quyền truy cập. Vui lòng kiểm tra vai trò hoặc đăng nhập lại.');
-        window.location.href = '/login';
-      } else {
-        toast.error('Không thể thêm kho: ' + (err.response?.data?.error || err.message));
-      }
+      handleApiError(err, setErrors, toast, 'Không thể thêm kho');
     } finally {
       setLoading(false);
     }
@@ -1246,12 +1298,16 @@ export default function StorageUnitManagement() {
     setCurrentPage(page);
   }, []);
 
+  const navigateToManager = useCallback(() => {
+    navigate('/manager');
+  }, [navigate]);
+
   const stats = useMemo(() => {
     const total = allStorages.length;
     const active = allStorages.filter((r) => r.status === "ACTIVE").length;
-    const available = allStorages.filter((r) => r.status === "AVAILABLE").length;
+    const rejected = allStorages.filter((r) => r.status === "REJECTED").length;
     const inactive = allStorages.filter((r) => r.status === "INACTIVE").length;
-    return { total, active, available, inactive };
+    return { total, active, rejected, inactive };
   }, [allStorages]);
 
   const searchProps = useMemo(
@@ -1267,9 +1323,17 @@ export default function StorageUnitManagement() {
   const OverviewStorages = useMemo(
     () => (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <BarChart className="mr-2" /> Tổng Quan Kho Lưu Trữ
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <BarChart className="mr-2" /> Tổng Quan Kho Lưu Trữ
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StatsCards stats={stats} />
 
         {loading ? (
@@ -1286,6 +1350,7 @@ export default function StorageUnitManagement() {
     ),
     [stats, loading, allStorages, error, fetchInitialData]
   );
+
 
   const ViewStorages = useMemo(() => {
     const result = getFilteredAndPaginatedData;
@@ -1309,9 +1374,17 @@ export default function StorageUnitManagement() {
 
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <List className="mr-2" /> Danh Sách Kho Lưu Trữ
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <List className="mr-2" /> Danh Sách Kho Lưu Trữ
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StorageTable
           storages={result.data}
           loading={loading}
@@ -1321,7 +1394,6 @@ export default function StorageUnitManagement() {
           onDelete={handleDeleteClick}
           onView={handleView}
           showActions={true}
-          showPagination={true}
           paginationProps={paginationProps}
           showFilters={true}
           filterProps={filterProps}
@@ -1333,9 +1405,17 @@ export default function StorageUnitManagement() {
   const AddStorage = useMemo(
     () => (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <Plus className="mr-2" /> Thêm Kho Mới
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <Plus className="mr-2" /> Thêm Kho Mới
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StorageUnitForm
           onSubmit={handleCreate}
           onCancel={() => setCurrentPage("view")}
@@ -1376,9 +1456,17 @@ export default function StorageUnitManagement() {
   const SearchStorages = useMemo(
     () => (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-          <Search className="mr-2" /> Tìm Kiếm Kho Lưu Trữ
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-4xl font-bold flex items-center text-gray-800">
+            <Search className="mr-2" /> Tìm Kiếm Kho Lưu Trữ
+          </h2>
+          <button
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold shadow hover:bg-blue-700 transition"
+            onClick={navigateToManager}
+          >
+            Quay về trang quản lý
+          </button>
+        </div>
         <StorageTable
           storages={filteredStorages}
           showSearchBar={true}
@@ -1396,37 +1484,13 @@ export default function StorageUnitManagement() {
     [filteredStorages, searchProps, loading, error, fetchInitialData]
   );
 
-  if (error && allStorages.length === 0) {
-    return (
-      <RequireAuth>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center p-10">
-            <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
-            <p className="text-gray-600 mb-4">{error}</p>
-            <button
-              onClick={fetchInitialData}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Thử lại
-            </button>
-          </div>
-        </div>
-      </RequireAuth>
-    );
-  }
-
-  return (
-    <RequireAuth>
-      <div className="min-h-screen bg-gray-50 flex">
+  // Memoize Sidebar for performance
+  const MemoSidebar = useMemo(() => (
         <Sidebar currentPage={currentPage} onPageChange={handlePageChangeMain} className="h-screen" />
-        <div className="flex-1 min-h-screen p-8 overflow-auto">
-          <button
-            className="mb-4 px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 font-semibold shadow"
-            onClick={() => navigate(-1)}
-          >
-            ← Quay lại
-          </button>
+  ), [currentPage, handlePageChangeMain]);
+
+  // Memoize main content for performance
+  const MemoMainContent = useMemo(() => (
           <AnimatePresence mode="wait">
             {currentPage === "overview" && (
               <motion.div
@@ -1560,7 +1624,75 @@ export default function StorageUnitManagement() {
               </motion.div>
             )}
           </AnimatePresence>
+  ), [currentPage, OverviewStorages, ViewStorages, AddStorage, EditStorage, SearchStorages, viewingStorage]);
+
+  if (error && allStorages.length === 0) {
+    return (
+      <RequireAuth>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center p-10">
+            <AlertCircle className="mx-auto mb-4 text-red-500" size={48} />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Có lỗi xảy ra</h2>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={fetchInitialData}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Thử lại
+            </button>
         </div>
+        </div>
+      </RequireAuth>
+    );
+  }
+
+  return (
+    <RequireAuth>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex flex-1">
+          <div className="w-64 fixed h-full z-20">
+            {MemoSidebar}
+          </div>
+          <main className="flex-1 ml-64 pt-20 pb-16 px-6">
+            {MemoMainContent}
+            {/* Pagination - Manager_Yen style for 'view' page only */}
+            {currentPage === 'view' && pagination.totalPages > 1 && (
+              <div className="w-full flex justify-center items-center gap-3 py-6">
+                <button
+                  onClick={() => handlePageChange(Math.max(1, pagination.currentPage - 1))}
+                  disabled={pagination.currentPage === 1}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pagination.currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                  title="Trang trước"
+                >
+                  Trước
+                </button>
+                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pagination.currentPage === page ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    title={`Trang ${page}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${pagination.currentPage === pagination.totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+                  title="Trang sau"
+                >
+                  Sau
+                </button>
+                <span className="text-sm text-gray-600 font-medium ml-2">
+                  Trang {pagination.currentPage} / {pagination.totalPages}
+                </span>
+              </div>
+            )}
+          </main>
+        </div>
+        <Footer />
       </div>
 
       <AnimatePresence>
@@ -1602,8 +1734,6 @@ export default function StorageUnitManagement() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <Footer />
     </RequireAuth>
   );
 }
