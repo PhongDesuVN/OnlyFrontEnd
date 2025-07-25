@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, ThumbsDown, Search, Calendar, Truck, Package, Filter } from 'lucide-react';
 import { apiCall } from '../../utils/api';
 import RequireAuth from '../../Components/RequireAuth';
+import { useFeedbackStore } from './store';
 
 const RatingStars = ({ rating, size = "w-4 h-4" }) => (
     <div className="flex items-center space-x-1">
@@ -16,6 +17,7 @@ const RatingStars = ({ rating, size = "w-4 h-4" }) => (
 );
 
 const FeedbackCard = ({ feedback, onLike, onDislike }) => {
+    const { setHistoryFeedbacks } = useFeedbackStore();
     const [isLiked, setIsLiked] = useState(!!feedback.isLike);
     const [isDisliked, setIsDisliked] = useState(!!feedback.isDislike);
     const [likeCount, setLikeCount] = useState(feedback.likes || 0);
@@ -33,12 +35,18 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
                 setDislikeCount(updated.dislikes);
                 setIsLiked(true);
                 setIsDisliked(false);
+                setHistoryFeedbacks((prev) =>
+                    prev.map((fb) =>
+                        fb.feedbackId === feedback.feedbackId ? { ...fb, ...updated } : fb
+                    )
+                );
                 if (onLike) onLike(feedback.feedbackId, updated);
             }
         } finally {
             setLoading(false);
         }
     };
+
     const handleDislike = async () => {
         if (isDisliked || loading) return;
         setLoading(true);
@@ -50,13 +58,25 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
                 setDislikeCount(updated.dislikes);
                 setIsDisliked(true);
                 setIsLiked(false);
+                setHistoryFeedbacks((prev) =>
+                    prev.map((fb) =>
+                        fb.feedbackId === feedback.feedbackId ? { ...fb, ...updated } : fb
+                    )
+                );
                 if (onDislike) onDislike(feedback.feedbackId, updated);
             }
         } finally {
             setLoading(false);
         }
     };
-    const formatDate = (dateString) => new Date(dateString).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const formatDate = (dateString) =>
+        new Date(dateString).toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+
     return (
         <div className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-300">
             <div className="flex items-start justify-between mb-4">
@@ -103,44 +123,50 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
 };
 
 const C_History = () => {
-    const [feedbacks, setFeedbacks] = useState([]);
+    const { historyFeedbacks } = useFeedbackStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 4;
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showTypeFilter, setShowTypeFilter] = useState(false);
     const [typeFilter, setTypeFilter] = useState('ALL'); // ALL, STORAGE, TRANSPORT
     const [sortOption, setSortOption] = useState('createdAt-desc');
 
     useEffect(() => {
+        const { historyFeedbacks, setHistoryFeedbacks } = useFeedbackStore.getState();
+        let isFirstLoad = historyFeedbacks.length === 0;
+
+        if (isFirstLoad) setLoading(true);
+
         const fetchFeedbacks = async () => {
-            setLoading(true);
             try {
                 const response = await apiCall('/api/customer/feedback/myfeedbacks', { auth: true });
                 if (response.ok) {
                     const data = await response.json();
-                    setFeedbacks(Array.isArray(data) ? data : []);
+                    setHistoryFeedbacks(Array.isArray(data) ? data : []);
                 } else {
                     setError('Lỗi khi tải dữ liệu feedback');
                 }
             } catch (err) {
                 setError('Có lỗi xảy ra khi tải feedback');
             } finally {
-                setLoading(false);
+                if (isFirstLoad) setLoading(false);
             }
         };
-        fetchFeedbacks();
-    }, []);
+
+        if (isFirstLoad) fetchFeedbacks();
+    }, [setLoading, setError]);
 
     // Filter feedbacks
-    let filteredFeedbacks = feedbacks.filter(fb => fb.type !== 'STAFF');
+    let filteredFeedbacks = historyFeedbacks.filter(fb => fb.type !== 'STAFF');
     if (typeFilter === 'STORAGE') filteredFeedbacks = filteredFeedbacks.filter(fb => fb.type === 'STORAGE');
     if (typeFilter === 'TRANSPORT') filteredFeedbacks = filteredFeedbacks.filter(fb => fb.type === 'TRANSPORT' || fb.type === 'TRANSPORTATION');
     filteredFeedbacks = filteredFeedbacks.filter(fb =>
         fb.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
         fb.bookingId.toString().includes(searchTerm)
     );
+
     // Sort
     filteredFeedbacks = filteredFeedbacks.slice().sort((a, b) => {
         switch (sortOption) {
@@ -153,15 +179,11 @@ const C_History = () => {
             default: return 0;
         }
     });
+
     const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredFeedbacks.slice(indexOfFirstItem, indexOfLastItem);
-
-    // Cập nhật feedback khi like/dislike
-    const handleFeedbackUpdate = (feedbackId, updated) => {
-        setFeedbacks(prev => prev.map(fb => fb.feedbackId === feedbackId ? { ...fb, ...updated } : fb));
-    };
 
     const Pagination = () => {
         if (totalPages <= 1) return null;
@@ -212,7 +234,6 @@ const C_History = () => {
                             <Search className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
                         </div>
                         <div className="flex items-center space-x-2">
-                            {/* Nút lọc loại feedback */}
                             <div className="relative">
                                 <button
                                     className="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center space-x-1"
@@ -240,7 +261,6 @@ const C_History = () => {
                                     </div>
                                 )}
                             </div>
-                            {/* Dropdown sắp xếp */}
                             <select
                                 value={sortOption}
                                 onChange={e => { setSortOption(e.target.value); setCurrentPage(1); }}
@@ -256,7 +276,7 @@ const C_History = () => {
                         </div>
                     </div>
                     <div>
-                        {loading ? (
+                        {loading && historyFeedbacks.length === 0 ? (
                             <div className="py-12 text-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                                 <p className="mt-3 text-gray-600">Đang tải dữ liệu...</p>
@@ -280,8 +300,8 @@ const C_History = () => {
                                         <FeedbackCard
                                             key={feedback.feedbackId}
                                             feedback={feedback}
-                                            onLike={handleFeedbackUpdate}
-                                            onDislike={handleFeedbackUpdate}
+                                            onLike={() => {}}
+                                            onDislike={() => {}}
                                         />
                                     ))}
                                 </div>
@@ -294,4 +314,5 @@ const C_History = () => {
         </RequireAuth>
     );
 };
+
 export default C_History;

@@ -74,6 +74,12 @@ const C_Dashboard = () => {
         }
     }, [location.state]);
 
+    useEffect(() => {
+        if (activeComponent === 'orderHistory') {
+            fetchCustomerData();
+        }
+        // eslint-disable-next-line
+    }, [activeComponent]);
 
 
     const [userInfo, setUserInfo] = useState({
@@ -610,7 +616,7 @@ const C_Dashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between">
                         <div>
@@ -645,20 +651,6 @@ const C_Dashboard = () => {
                         </div>
                         <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                             <TrendingUp className="w-6 h-6 text-purple-600" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Đánh giá TB</p>
-                            <p className="text-2xl font-bold text-yellow-600">
-                                {customerStats.averageRating.toFixed(1)}/5
-                            </p>
-                        </div>
-                        <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <Star className="w-6 h-6 text-yellow-600" />
                         </div>
                     </div>
                 </div>
@@ -1041,7 +1033,11 @@ const C_Dashboard = () => {
                                         <Gift className="w-6 h-6" />
                                     </div>
                                     <span className="text-sm bg-white bg-opacity-20 px-2 py-1 rounded-full">
-                                        {promotion.discountPercentage}% OFF
+                                        {promotion.discountType === 'PERCENTAGE'
+                                            ? `${promotion.discountValue}% OFF`
+                                            : promotion.discountType === 'AMOUNT'
+                                                ? `${promotion.discountValue.toLocaleString()} VNĐ OFF`
+                                                : ''}
                                     </span>
                                 </div>
 
@@ -1049,7 +1045,14 @@ const C_Dashboard = () => {
                                 <p className="text-sm opacity-90 mb-4">{promotion.description}</p>
 
                                 <div className="flex items-center justify-between text-sm">
-                                    <span>Mã: {promotion.code}</span>
+                                    {/* Bỏ hiển thị mã code, thay bằng discountValue/discountType */}
+                                    <span>
+                                        {promotion.discountType === 'PERCENTAGE'
+                                            ? `Giảm ${promotion.discountValue}%`
+                                            : promotion.discountType === 'AMOUNT'
+                                                ? `Giảm ${promotion.discountValue.toLocaleString()} VNĐ`
+                                                : ''}
+                                    </span>
                                     <span>Hết hạn: {new Date(promotion.endDate).toLocaleDateString('vi-VN')}</span>
                                 </div>
                             </div>

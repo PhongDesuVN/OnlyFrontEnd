@@ -13,6 +13,7 @@ import {
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell
 } from 'recharts';
+import { useFeedbackStore } from './store';
 
 const RatingStars = ({ rating, size = "w-4 h-4" }) => {
     return (
@@ -29,13 +30,14 @@ const RatingStars = ({ rating, size = "w-4 h-4" }) => {
 };
 
 const FeedbackCard = ({ feedback, onLike, onDislike }) => {
+    const { setHistoryFeedbacks } = useFeedbackStore();
     const [isLiked, setIsLiked] = useState(!!feedback.isLikedByCurrentUser);
     const [isDisliked, setIsDisliked] = useState(!!feedback.isDislikedByCurrentUser);
     const [likeCount, setLikeCount] = useState(feedback.likes || 0);
     const [dislikeCount, setDislikeCount] = useState(feedback.dislikes || 0);
 
     const handleLike = async () => {
-        if (isLiked) return; // Đã like thì không làm gì
+        if (isLiked) return;
         try {
             const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, { method: 'PATCH', auth: true });
             if (response.ok) {
@@ -44,6 +46,11 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
                 setDislikeCount(updatedFeedback.dislikes);
                 setIsLiked(true);
                 setIsDisliked(false);
+                setHistoryFeedbacks((prev) =>
+                    prev.map((fb) =>
+                        fb.feedbackId === feedback.feedbackId ? { ...fb, ...updatedFeedback } : fb
+                    )
+                );
                 if (onLike) onLike(updatedFeedback);
             }
         } catch (error) {
@@ -52,7 +59,7 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
     };
 
     const handleDislike = async () => {
-        if (isDisliked) return; // Đã dislike thì không làm gì
+        if (isDisliked) return;
         try {
             const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, { method: 'PATCH', auth: true });
             if (response.ok) {
@@ -61,6 +68,11 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
                 setDislikeCount(updatedFeedback.dislikes);
                 setIsDisliked(true);
                 setIsLiked(false);
+                setHistoryFeedbacks((prev) =>
+                    prev.map((fb) =>
+                        fb.feedbackId === feedback.feedbackId ? { ...fb, ...updatedFeedback } : fb
+                    )
+                );
                 if (onDislike) onDislike(updatedFeedback);
             }
         } catch (error) {
@@ -87,37 +99,34 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
                 </div>
                 <RatingStars rating={feedback.rating} />
             </div>
-
             <div className="mb-4">
                 <p className="text-gray-700 leading-relaxed">{feedback.content}</p>
             </div>
-
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={handleLike}
-                        disabled={feedback.isLike}
-                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${feedback.isLike
+                        disabled={isLiked}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${isLiked
                             ? 'bg-blue-100 text-blue-600 cursor-not-allowed opacity-60'
-                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50'}
-                        `}
+                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50'
+                        }`}
                     >
-                        <ThumbsUp className={`w-4 h-4 ${feedback.isLike ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
-                        <span className="text-sm">{feedback.likes}</span>
+                        <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
+                        <span className="text-sm">{likeCount}</span>
                     </button>
                     <button
                         onClick={handleDislike}
-                        disabled={feedback.isDislike}
-                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${feedback.isDislike
+                        disabled={isDisliked}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${isDisliked
                             ? 'bg-red-100 text-red-600 cursor-not-allowed opacity-60'
-                            : 'bg-gray-100 text-gray-600 hover:bg-red-50'}
-                        `}
+                            : 'bg-gray-100 text-gray-600 hover:bg-red-50'
+                        }`}
                     >
-                        <ThumbsDown className={`w-4 h-4 ${feedback.isDislike ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
-                        <span className="text-sm">{feedback.dislikes}</span>
+                        <ThumbsDown className={`w-4 h-4 ${isDisliked ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
+                        <span className="text-sm">{dislikeCount}</span>
                     </button>
                 </div>
-
                 <div className="text-sm text-gray-500">
                     Đơn hàng: #{feedback.bookingId}
                 </div>
@@ -155,14 +164,12 @@ const RankingCard = ({ item, rank, type }) => {
                     <div className="text-2xl font-bold text-blue-600">{item.totalLikes}</div>
                 </div>
             </div>
-
             <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     {type === 'storage' ? item.storageUnitName : item.transportUnitName}
                 </h3>
                 <p className="text-gray-600 text-sm">{item.address || 'Địa chỉ không có sẵn'}</p>
             </div>
-
             <div className="flex items-center justify-between">
                 <RatingStars rating={Math.round(item.averageStar)} />
                 <div className="text-sm text-gray-500">
@@ -192,9 +199,7 @@ const ServiceCard = ({ service, type, onClick }) => {
                 </div>
                 <Eye className="w-5 h-5 text-gray-400" />
             </div>
-
             <div className="mb-4">
-                {/* Hiển thị lại tên thay vì address */}
                 <p className="text-gray-600 text-sm mb-2">
                     {type === 'storage' ? service.storageUnitName : service.transportUnitName}
                 </p>
@@ -206,7 +211,6 @@ const ServiceCard = ({ service, type, onClick }) => {
                     </div>
                 </div>
             </div>
-
             <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>{service.totalFeedbacks} đánh giá</span>
                 <span>{service.totalLikes} lượt thích</span>
@@ -261,7 +265,6 @@ const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCr
                     </div>
                     <div className="flex justify-between items-center mb-4">
                         <h4 className="text-lg font-semibold text-gray-800">Tất cả đánh giá</h4>
-                        {/* Đã xóa nút Tạo đánh giá */}
                     </div>
                     <div className="space-y-4">
                         {feedbacks && feedbacks.length > 0 ? (
@@ -286,11 +289,8 @@ const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCr
     );
 };
 
-// Top 3 Bar Chart Component
 const Top3BarChart = ({ data, type, onBarClick }) => {
-    // Sort by averageStar desc, then pick top 3
     const sorted = [...data].sort((a, b) => b.averageStar - a.averageStar).slice(0, 3);
-    // Arrange as [top2, top1, top3] for visual order
     let arranged = [];
     if (sorted.length === 3) {
         arranged = [sorted[1], sorted[0], sorted[2]];
@@ -299,13 +299,7 @@ const Top3BarChart = ({ data, type, onBarClick }) => {
     } else {
         arranged = sorted;
     }
-    // Bar colors: [2nd, 1st, 3rd]
-    const barColors = [
-        '#A3A3A3', // 2nd - gray
-        '#FFD700', // 1st - gold
-        '#FF9800'  // 3rd - orange
-    ];
-    // Custom Tooltip
+    const barColors = ['#A3A3A3', '#FFD700', '#FF9800'];
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length && payload[0].payload) {
             const item = payload[0].payload;
@@ -354,51 +348,52 @@ const Top3BarChart = ({ data, type, onBarClick }) => {
 };
 
 const C_Feedback = ({ hideNavbar }) => {
+    const { topStorages, topTransports, allStorages, allTransports } = useFeedbackStore();
     const [isLoggedIn] = useState(true);
     const [activeTab, setActiveTab] = useState('ranking');
-    const [topStorages, setTopStorages] = useState([]);
-    const [topTransports, setTopTransports] = useState([]);
-    const [allStorages, setAllStorages] = useState([]);
-    const [allTransports, setAllTransports] = useState([]);
     const [selectedService, setSelectedService] = useState(null);
     const [selectedType, setSelectedType] = useState(null);
     const [serviceFeedbacks, setServiceFeedbacks] = useState([]);
     const [showModal, setShowModal] = useState(false);
-    // Pagination state
+    const [loading, setLoading] = useState(false);
     const [storagePage, setStoragePage] = useState(1);
     const [transportPage, setTransportPage] = useState(1);
     const ITEMS_PER_PAGE = 9;
-    // Search state
     const [storageSearch, setStorageSearch] = useState('');
     const [transportSearch, setTransportSearch] = useState('');
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        const { allStorages, allTransports, setTopStorages, setTopTransports, setAllStorages, setAllTransports } = useFeedbackStore.getState();
+        let isFirstLoad = allStorages.length === 0 && allTransports.length === 0;
 
-    // Reset page when tab changes
+        if (isFirstLoad) setLoading(true);
+
+        const fetchData = async () => {
+            try {
+                const [topStorageData, topTransportData, allStorageData, allTransportData] = await Promise.all([
+                    getTopStorages(),
+                    getTopTransports(),
+                    getAllStorageWithFeedbacks(),
+                    getAllTransportWithFeedbacks(),
+                ]);
+                setTopStorages(topStorageData);
+                setTopTransports(topTransportData);
+                setAllStorages(allStorageData);
+                setAllTransports(allTransportData);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                if (isFirstLoad) setLoading(false);
+            }
+        };
+
+        if (isFirstLoad) fetchData();
+    }, [setLoading]);
+
     useEffect(() => {
         setStoragePage(1);
         setTransportPage(1);
     }, [activeTab]);
-
-    const fetchData = async () => {
-        try {
-            // Sử dụng các hàm mới thay cho API cũ
-            const [topStorageData, topTransportData, allStorageData, allTransportData] = await Promise.all([
-                getTopStorages(),
-                getTopTransports(),
-                getAllStorageWithFeedbacks(),
-                getAllTransportWithFeedbacks()
-            ]);
-            setTopStorages(topStorageData);
-            setTopTransports(topTransportData);
-            setAllStorages(allStorageData);
-            setAllTransports(allTransportData);
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    };
 
     const handleServiceClick = async (service, type) => {
         try {
@@ -418,7 +413,6 @@ const C_Feedback = ({ hideNavbar }) => {
     };
 
     const handleFeedbackCreated = () => {
-        // Refresh the current service feedbacks
         if (selectedService && selectedType) {
             handleServiceClick(selectedService, selectedType);
         }
@@ -428,14 +422,13 @@ const C_Feedback = ({ hideNavbar }) => {
         console.log('Đăng xuất');
     };
 
-    // Pagination helpers
     const getPaginatedData = (data, page) => {
         const start = (page - 1) * ITEMS_PER_PAGE;
         return data.slice(start, start + ITEMS_PER_PAGE);
     };
+
     const getTotalPages = (data) => Math.ceil(data.length / ITEMS_PER_PAGE);
 
-    // Lọc dữ liệu theo search
     const filteredStorages = allStorages.filter(s =>
         (s.storageUnitName || '').toLowerCase().includes(storageSearch.toLowerCase())
     );
@@ -445,10 +438,8 @@ const C_Feedback = ({ hideNavbar }) => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-
-            {/* Navigation Tabs */}
             <section className="">
-                <div className="container mx-auto ">
+                <div className="container mx-auto">
                     <div className="flex justify-center mb-8">
                         <div className="bg-white rounded-xl p-2 shadow-lg">
                             <div className="flex space-x-2">
@@ -457,7 +448,7 @@ const C_Feedback = ({ hideNavbar }) => {
                                     className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'ranking'
                                         ? 'bg-blue-600 text-white shadow-lg'
                                         : 'text-gray-600 hover:text-gray-800'
-                                        }`}
+                                    }`}
                                 >
                                     <div className="flex items-center space-x-2">
                                         <TrendingUp className="w-5 h-5" />
@@ -469,7 +460,7 @@ const C_Feedback = ({ hideNavbar }) => {
                                     className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'storage'
                                         ? 'bg-green-600 text-white shadow-lg'
                                         : 'text-gray-600 hover:text-gray-800'
-                                        }`}
+                                    }`}
                                 >
                                     <div className="flex items-center space-x-2">
                                         <Package className="w-5 h-5" />
@@ -481,7 +472,7 @@ const C_Feedback = ({ hideNavbar }) => {
                                     className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'transport'
                                         ? 'bg-orange-600 text-white shadow-lg'
                                         : 'text-gray-600 hover:text-gray-800'
-                                        }`}
+                                    }`}
                                 >
                                     <div className="flex items-center space-x-2">
                                         <Truck className="w-5 h-5" />
@@ -493,13 +484,16 @@ const C_Feedback = ({ hideNavbar }) => {
                     </div>
                 </div>
             </section>
-
-            {/* Content Sections */}
             <section className="">
-                <div className="container mx-auto   ">
+                <div className="container mx-auto">
+                    {loading && (allStorages.length === 0 && allTransports.length === 0) && (
+                        <div className="text-center py-12 text-gray-500">
+                            <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                            <p>Đang tải dữ liệu...</p>
+                        </div>
+                    )}
                     {activeTab === 'ranking' && (
                         <div className="flex flex-col md:flex-row gap-8 md:gap-12">
-                            {/* Top Storage Bar Chart */}
                             <div className="flex-1 bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-2">
                                     <Package className="w-7 h-7 text-green-500" />
@@ -511,7 +505,6 @@ const C_Feedback = ({ hideNavbar }) => {
                                     onBarClick={handleServiceClick}
                                 />
                             </div>
-                            {/* Top Transport Bar Chart */}
                             <div className="flex-1 bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
                                 <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-2">
                                     <Truck className="w-7 h-7 text-orange-500" />
@@ -525,7 +518,6 @@ const C_Feedback = ({ hideNavbar }) => {
                             </div>
                         </div>
                     )}
-
                     {activeTab === 'storage' && (
                         <div>
                             <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
@@ -534,7 +526,6 @@ const C_Feedback = ({ hideNavbar }) => {
                                     <span>Tất Cả Kho Bãi</span>
                                 </div>
                             </h2>
-                            {/* Search bar on top */}
                             <div className="mb-6">
                                 <input
                                     type="text"
@@ -559,7 +550,6 @@ const C_Feedback = ({ hideNavbar }) => {
                                     ))}
                                 </div>
                             </div>
-                            {/* Pagination controls */}
                             {getTotalPages(filteredStorages) > 1 && (
                                 <div className="flex justify-center mt-8 gap-2">
                                     <button
@@ -587,13 +577,11 @@ const C_Feedback = ({ hideNavbar }) => {
                                     </button>
                                 </div>
                             )}
-                            {/* Tổng số kho bãi */}
                             <div className="text-center text-gray-600 mt-4">
                                 Tổng số kho bãi: {filteredStorages.length}
                             </div>
                         </div>
                     )}
-
                     {activeTab === 'transport' && (
                         <div>
                             <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
@@ -602,7 +590,6 @@ const C_Feedback = ({ hideNavbar }) => {
                                     <span>Tất Cả Đơn Vị Vận Chuyển</span>
                                 </div>
                             </h2>
-                            {/* Search bar on top */}
                             <div className="mb-6">
                                 <input
                                     type="text"
@@ -627,7 +614,6 @@ const C_Feedback = ({ hideNavbar }) => {
                                     ))}
                                 </div>
                             </div>
-                            {/* Pagination controls */}
                             {getTotalPages(filteredTransports) > 1 && (
                                 <div className="flex justify-center mt-8 gap-2">
                                     <button
@@ -655,7 +641,6 @@ const C_Feedback = ({ hideNavbar }) => {
                                     </button>
                                 </div>
                             )}
-                            {/* Tổng số vận chuyển */}
                             <div className="text-center text-gray-600 mt-4">
                                 Tổng số đơn vị vận chuyển: {filteredTransports.length}
                             </div>
@@ -663,7 +648,6 @@ const C_Feedback = ({ hideNavbar }) => {
                     )}
                 </div>
             </section>
-            {/* Feedback Modal */}
             <FeedbackModal
                 isOpen={showModal}
                 onClose={() => {
@@ -681,4 +665,4 @@ const C_Feedback = ({ hideNavbar }) => {
     );
 };
 
-export default C_Feedback; 
+export default C_Feedback;
