@@ -275,7 +275,7 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
                     <h4 className="font-semibold text-blue-800 mb-3">
                         Thêm: {selectedFurniture.VatDung}
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Số lượng
@@ -298,20 +298,6 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
                                 step="0.1"
                                 value={furnitureForm.volume}
                                 onChange={(e) => setFurnitureForm(prev => ({ ...prev, volume: parseFloat(e.target.value) || 0 }))}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="0.0"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Khối lượng (kg)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.1"
-                                value={furnitureForm.weight}
-                                onChange={(e) => setFurnitureForm(prev => ({ ...prev, weight: parseFloat(e.target.value) || 0 }))}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="0.0"
                             />
@@ -341,7 +327,7 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
                     <h4 className="font-semibold text-yellow-800 mb-3">
                         Chỉnh sửa: {editingFurniture.name}
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Số lượng
@@ -368,21 +354,7 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
                                 placeholder="0.0"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Khối lượng (kg)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.1"
-                                value={furnitureForm.weight}
-                                onChange={(e) => setFurnitureForm(prev => ({ ...prev, weight: parseFloat(e.target.value) || 0 }))}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="0.0"
-                            />
-                        </div>
-                    </div>
+                            </div>
                     <div className="flex gap-2">
                         <button
                             onClick={handleUpdateFurniture}
@@ -413,7 +385,7 @@ const FurnitureSelector = ({ onFurnitureChange }) => {
                                     <div className="flex-1">
                                         <div className="font-medium text-gray-800">{item.name}</div>
                                         <div className="text-sm text-gray-600">
-                                            SL: {item.quantity} | Thể tích: {item.volume} | Khối lượng: {item.weight}
+                                            SL: {item.quantity} | Thể tích: {item.volume}
                                         </div>
                                     </div>
                                     <div className="flex gap-2">

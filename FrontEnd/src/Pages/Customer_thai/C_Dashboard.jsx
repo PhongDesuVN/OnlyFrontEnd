@@ -604,7 +604,7 @@ const C_Dashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between">
                         <div>
@@ -639,20 +639,6 @@ const C_Dashboard = () => {
                         </div>
                         <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                             <TrendingUp className="w-6 h-6 text-purple-600" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Đánh giá TB</p>
-                            <p className="text-2xl font-bold text-yellow-600">
-                                {customerStats.averageRating.toFixed(1)}/5
-                            </p>
-                        </div>
-                        <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <Star className="w-6 h-6 text-yellow-600" />
                         </div>
                     </div>
                 </div>

@@ -134,8 +134,7 @@ const C_BookingContent = ({ isLoggedIn }) => {
         
         if (promotion.discountType === 'PERCENTAGE' && promotion.discountValue) {
             // Apply percentage discount
-            const discountAmount = (currentTotal * promotion.discountValue) / 100;
-            discountedTotal = currentTotal - discountAmount;
+            const discountAmount = Math.round((currentTotal * promotion.discountValue) / 100);            discountedTotal = currentTotal - discountAmount;
         } else if (promotion.discountType === 'AMOUNT' && promotion.discountValue) {
             // Apply fixed amount discount
             discountedTotal = Math.max(0, currentTotal - promotion.discountValue);
@@ -192,8 +191,7 @@ const C_BookingContent = ({ isLoggedIn }) => {
             }
 
             // Tổng tiền cơ bản
-            let total = distance * vehicleQuantity * 1000;
-
+            let total = Math.round(distance * vehicleQuantity * 12000)
             // New logic for home type fees
             if (homeType === 'Nhà thường') {
                 if (homeOptions.inAlley) {
@@ -225,8 +223,7 @@ const C_BookingContent = ({ isLoggedIn }) => {
                 const selectedPromotion = promotions.find(p => p.id === bookingData.promotionId);
                 if (selectedPromotion) {
                     if (selectedPromotion.discountType === 'PERCENTAGE' && selectedPromotion.discountValue) {
-                        const discountAmount = (total * selectedPromotion.discountValue) / 100;
-                        total = total - discountAmount;
+                        const discountAmount = Math.round((total * selectedPromotion.discountValue) / 100);                        total = total - discountAmount;
                     } else if (selectedPromotion.discountType === 'AMOUNT' && selectedPromotion.discountValue) {
                         total = Math.max(0, total - selectedPromotion.discountValue);
                     }
@@ -400,7 +397,7 @@ const C_BookingContent = ({ isLoggedIn }) => {
             clearTimeout(timeoutId);
             const data = await response.json();
             if (data && data.routes && data.routes.length > 0) {
-                return data.routes[0].distance / 1000; // km
+                return Number((data.routes[0].distance / 1000).toFixed(1)) // km
             } else {
                 return 0;
             }
@@ -1027,8 +1024,7 @@ const C_BookingContent = ({ isLoggedIn }) => {
                                     )}
                                 </div>
 
-                                {(loadingDistance || distanceError || bookingData.total > 0 || bookingData.distance > 0) && (
-                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                {(bookingData.pickupCoords || bookingData.deliveryCoords || bookingData.homeType) && (                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                                         <h4 className="font-semibold text-blue-800 mb-2">Thông tin tính toán:</h4>
                                         {loadingDistance && (
                                             <div className="text-blue-600 text-sm mb-2">Đang tính toán khoảng cách...</div>
