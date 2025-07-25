@@ -36,7 +36,7 @@ const Header = () => {
                             className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all ml-2"
                             onClick={() => navigate('/staff')}
                         >
-                            Quay về trang Staff
+                            Quay về
                         </button>
                     </div>
                 </div>
@@ -49,8 +49,8 @@ const Header = () => {
 const Sidebar = ({ currentPage, setCurrentPage }) => {
     const pageLabels = {
         overview: 'Tổng Quan',
-        list: 'Danh Sách User',
-        search: 'Tìm Kiếm User',
+        list: 'Danh Sách ',
+        search: 'Tìm Kiếm ',
         // add: 'Thêm User Mới' // Bỏ chức năng thêm user
     };
 
@@ -98,7 +98,7 @@ const UserOverview = ({ users }) => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
                 {
-                    label: 'Tổng số User',
+                    label: 'Tổng số Khách hàng tư vấn',
                     value: users.length,
                     color: 'blue',
                     icon: Users
@@ -208,7 +208,7 @@ const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => {
             transition={{ duration: 0.5 }}
         >
             <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-                <List className="mr-2" /> Danh Sách User
+                <List className="mr-2" /> Danh Sách Khách Hàng
             </h2>
             <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
                 <table className="w-full border-collapse">
@@ -216,7 +216,7 @@ const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => {
                     <tr className="bg-gray-100">
                         <th className="border p-3 text-left text-gray-700">ID</th>
                         <th className="border p-3 text-left text-gray-700">Họ Tên</th>
-                        <th className="border p-3 text-left text-gray-700">Username</th>
+                        <th className="border p-3 text-left text-gray-700">Tên đăng nhập</th>
                         <th className="border p-3 text-left text-gray-700">Email</th>
                         <th className="border p-3 text-left text-gray-700">Vai Trò</th>
                         <th className="border p-3 text-left text-gray-700">Số Điện Thoại</th>
@@ -355,7 +355,7 @@ const SearchUsers = ({ users, searchParams, setSearchParams }) => {
             transition={{ duration: 0.5 }}
         >
             <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-                <Search className="mr-2" /> Tìm Kiếm User
+                <Search className="mr-2" /> Tìm Kiếm Khách Hàng
             </h2>
 
             {/* Search Form */}
@@ -372,7 +372,7 @@ const SearchUsers = ({ users, searchParams, setSearchParams }) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Tên đăng nhập</label>
                         <input
                             type="text"
                             placeholder="Nhập username..."
@@ -437,7 +437,7 @@ const SearchUsers = ({ users, searchParams, setSearchParams }) => {
 
             {/* Search Results */}
             <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                <h3 className="text-xl font-bold mb-4">Kết Quả Tìm Kiếm ({filteredUsers.length} user)</h3>
+                <h3 className="text-xl font-bold mb-4">Kết Quả Tìm Kiếm ({filteredUsers.length} khách hàng)</h3>
                 {filteredUsers.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filteredUsers.map(user => (
@@ -615,7 +615,7 @@ const UserForm = ({ user, isEdit, onSave, onCancel }) => {
                                     className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                                         errors.username ? 'border-red-500' : 'border-gray-300'
                                     }`}
-                                    placeholder="Nhập username (4-100 ký tự)..."
+                                    placeholder="Nhập tên đăng nhập (4-100 ký tự)..."
                                     minLength={4}
                                     maxLength={100}
                                 />
@@ -833,7 +833,7 @@ const Dashboard = () => {
             });
             setUsers(sortedUsers);
         } catch (err) {
-            setError('Không thể tải danh sách user. Sử dụng dữ liệu mẫu.');
+            setError('Không thể tải danh sách khách hàng . Sử dụng dữ liệu mẫu.');
             console.error('Error loading users:', err);
             // Giữ dữ liệu mẫu nếu API không hoạt động
         } finally {
