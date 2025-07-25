@@ -66,8 +66,6 @@ const Header = ({ onLogout }) => {
 const Dashboard = () => {
     const [activeTab, setActiveTab] = useState("performance");
     const [selectedYear, setSelectedYear] = useState("2024");
-    const [startMonth, setStartMonth] = useState("1");
-    const [endMonth, setEndMonth] = useState("12");
     const [selectedUnit, setSelectedUnit] = useState("Tất cả");
     const [selectedPeriod, setSelectedPeriod] = useState("month");
     const [selectedMetric, setSelectedMetric] = useState("revenue");
@@ -80,8 +78,6 @@ const Dashboard = () => {
     // Debounce các tham số
     const [debouncedYear] = useDebounce(selectedYear, 500);
     const [debouncedUnit] = useDebounce(selectedUnit, 500);
-    const [debouncedStartMonth] = useDebounce(startMonth, 500);
-    const [debouncedEndMonth] = useDebounce(endMonth, 500);
 
     // Lấy username từ cookies
     const username = Cookies.get("username") || "Staff User";
@@ -119,7 +115,6 @@ const Dashboard = () => {
 
     // Gọi API khi component mount hoặc khi bộ lọc thay đổi
     useEffect(() => {
-        console.log('useEffect chạy lại với:', debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth, selectedPeriod, selectedMetric);
         const token = Cookies.get("authToken");
         if (!token) {
             navigate("/login", { replace: true });
@@ -128,7 +123,9 @@ const Dashboard = () => {
 
         const fetchDashboardData = async () => {
             try {
-                setError(null);
+                setError(null); // Reset lỗi trước khi gọi API
+
+                // Gọi API lấy thống kê tổng quan
                 const statsResponse = await DashBoardApi.getDashboardStats();
                 setDashboardStats({
                     newReceipts: statsResponse.newReceipts || 0,
@@ -136,19 +133,24 @@ const Dashboard = () => {
                     newCustomers: statsResponse.newCustomers || 0,
                 });
 
+                // Gọi API lấy hoạt động gần đây
                 const activitiesResponse = await DashBoardApi.getRecentActivities();
                 setRecentActivities(Array.isArray(activitiesResponse) ? activitiesResponse : []);
 
-                const revenueResponse = await DashBoardApi.getMonthlyRevenue(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
+                // Gọi API lấy doanh thu hàng tháng
+                const revenueResponse = await DashBoardApi.getMonthlyRevenue(debouncedYear, debouncedUnit);
                 setMonthlyRevenue(revenueResponse || []);
 
-                const performanceResponse = await DashBoardApi.getPerformanceData(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
+                // Gọi API lấy dữ liệu hiệu suất
+                const performanceResponse = await DashBoardApi.getPerformanceData(debouncedYear, debouncedUnit);
                 setPerformanceData(performanceResponse || []);
 
-                const detailResponse = await DashBoardApi.getDetailData(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
+                // Gọi API lấy dữ liệu chi tiết
+                const detailResponse = await DashBoardApi.getDetailData(debouncedYear, debouncedUnit);
                 setDetailData(detailResponse || []);
 
-                const transportResponse = await DashBoardApi.getTransportData(debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth);
+                // Gọi API lấy dữ liệu tổng quan vận chuyển
+                const transportResponse = await DashBoardApi.getTransportData(debouncedYear, debouncedUnit);
                 setTransportData({
                     totalShipments: transportResponse.totalShipments || 0,
                     revenue: transportResponse.revenue || "0 đ",
@@ -160,12 +162,15 @@ const Dashboard = () => {
                     volumeGrowth: transportResponse.volumeGrowth || 0,
                 });
 
+                // Gọi API lấy xếp hạng cá nhân
                 const rankingResponse = await DashBoardApi.getRankingData(selectedPeriod, selectedMetric);
                 setRankingData(rankingResponse || []);
 
+                // Gọi API lấy xếp hạng đội nhóm
                 const teamRankingResponse = await DashBoardApi.getTeamRanking(selectedPeriod, selectedMetric);
                 setTeamRanking(teamRankingResponse || []);
 
+                // Gọi API lấy thành tích
                 const achievementsResponse = await DashBoardApi.getAchievements();
                 setAchievements(Array.isArray(achievementsResponse) ? achievementsResponse : []);
             } catch (error) {
@@ -175,7 +180,8 @@ const Dashboard = () => {
         };
 
         fetchDashboardData();
-    }, [navigate, debouncedYear, debouncedUnit, debouncedStartMonth, debouncedEndMonth, selectedPeriod, selectedMetric]);
+    }, [navigate, debouncedYear, debouncedUnit, selectedPeriod, selectedMetric]);
+
     // Reset về trang 1 khi detailData thay đổi
     useEffect(() => {
         setCurrentPage(1);
@@ -263,74 +269,6 @@ const Dashboard = () => {
                         <span style={{ fontSize: '1.2rem', marginRight: '0.5rem' }}>←</span> Quay lại
                     </button>
                     {/* Kết thúc nút Quay lại */}
-                    {/* Filter chọn năm và đơn vị */}
-                    <div className="flex gap-4 justify-end mb-4">
-                        <label className="flex items-center gap-2 text-gray-700 font-medium">
-                            Năm:
-                            <select
-                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                value={selectedYear}
-                                onChange={e => {
-                                    setSelectedYear(e.target.value);
-                                    console.log('Chọn năm:', e.target.value);
-                                }}
-                            >
-                                <option value="2022">2022</option>
-                                <option value="2023">2023</option>
-                                <option value="2024">2024</option>
-                            </select>
-                        </label>
-                        <label className="flex items-center gap-2 text-gray-700 font-medium">
-                            Từ tháng:
-                            <select
-                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                value={startMonth}
-                                onChange={e => {
-                                    setStartMonth(e.target.value);
-                                    // Nếu endMonth < startMonth thì cập nhật endMonth luôn
-                                    if (parseInt(e.target.value) > parseInt(endMonth)) {
-                                        setEndMonth(e.target.value);
-                                    }
-                                    console.log('Chọn từ tháng:', e.target.value);
-                                }}
-                            >
-                                {[...Array(12)].map((_, i) => (
-                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className="flex items-center gap-2 text-gray-700 font-medium">
-                            Đến tháng:
-                            <select
-                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                value={endMonth}
-                                onChange={e => {
-                                    setEndMonth(e.target.value);
-                                    console.log('Chọn đến tháng:', e.target.value);
-                                }}
-                            >
-                                {[...Array(12)].map((_, i) => (
-                                    <option key={i + 1} value={i + 1} disabled={parseInt(startMonth) > i + 1}>{i + 1}</option>
-                                ))}
-                            </select>
-                        </label>
-                        <label className="flex items-center gap-2 text-gray-700 font-medium">
-                            Đơn vị:
-                            <select
-                                className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                value={selectedUnit}
-                                onChange={e => {
-                                    setSelectedUnit(e.target.value);
-                                    console.log('Chọn đơn vị:', e.target.value);
-                                }}
-                            >
-                                <option value="Tất cả">Tất cả</option>
-                                <option value="Chuyển Nhà 24H">Chuyển Nhà 24H</option>
-                                <option value="DV Chuyển Nhà SG">DV Chuyển Nhà SG</option>
-                                <option value="Chuyển Nhà Minh Anh">Chuyển Nhà Minh Anh</option>
-                            </select>
-                        </label>
-                    </div>
                     {/* Hiển thị thông báo lỗi */}
                     {error && (
                         <div className="bg-red-100 text-red-600 p-4 rounded-lg text-center">
@@ -704,7 +642,7 @@ const Dashboard = () => {
                                 ))}
                             </div>
 
-                            {/* Individual Ranking Table */}
+                            {/* Enhanced Individual Ranking Table */}
                             <div className="bg-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:shadow-2xl">
                                 <div className="p-6 border-b border-gray-200">
                                     <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -859,12 +797,14 @@ const Dashboard = () => {
                                                             <span className="font-medium">{team.change}</span>
                                                         </div>
                                                     </div>
+
                                                     <h3
                                                         className={`font-bold text-lg text-gray-800 mb-4 transform transition-all duration-300 ${hoveredCard === `team-${index}` ? "scale-105" : ""
                                                             }`}
                                                     >
                                                         {team.name}
                                                     </h3>
+
                                                     <div className="space-y-3">
                                                         {[
                                                             { label: "Tổng doanh thu:", value: team.totalRevenue, color: "text-green-600" },
@@ -888,7 +828,7 @@ const Dashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Achievement Section */}
+                            {/* Enhanced Achievement Section */}
                             <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg shadow-xl border-0 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl overflow-hidden relative">
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
                                 <div className="p-8 relative z-10">
@@ -930,4 +870,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default Dashboard
