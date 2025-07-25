@@ -31,12 +31,7 @@ const API_BASE = "/api/payments";
 
 const StatsCards = React.memo(({ stats }) => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    {[
-      { label: "Tổng số thanh toán", value: stats.total, color: "blue" },
-      { label: "Đã thanh toán", value: stats.paid, color: "green" },
-      { label: "Chờ xử lý", value: stats.pending, color: "yellow" },
-      { label: "Thất bại", value: stats.failed, color: "red" },
-    ].map((item, idx) => (
+    {[{ label: "Tổng số thanh toán", value: stats.total, color: "blue" }].map((item, idx) => (
       <motion.div
         key={idx}
         whileHover={{ scale: 1.05 }}
