@@ -50,29 +50,21 @@ function getCookie(name) {
 // Component chính quản lý thông tin chức vụ
 const Staff = () => {
     // ==================== STATES ====================
-    const [staff, setStaff] = useState({
-        tenChucVu: "",
-        tenChucVuPhu: "",
-        moTa: "",
-        trangThai: "active",
-    });
-
-    // State quản lý trạng thái loading, thông báo và dữ liệu API
     const [isLoading, setIsLoading] = useState(false)
     const [message, setMessage] = useState("")
     const [messageType, setMessageType] = useState("")
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const [dashboardExpanded, setDashboardExpanded] = useState(true)
     const [currentPage, setCurrentPage] = useState('main')
-const [stats, setStats] = useState({
-    newReceipts: 0,
-    pendingOrders: 0,
-    newCustomers: 0,
-});
-const [activities, setActivities] = useState([]);
+    const [stats, setStats] = useState({
+        newReceipts: 0,
+        pendingOrders: 0,
+        newCustomers: 0,
+    });
+    const [activities, setActivities] = useState([]);
 
-const [userRole, setUserRole] = useState('');
-const [username, setUsername] = useState(Cookies.get("username") || "Staff User");
+    const [userRole, setUserRole] = useState('');
+    const [username, setUsername] = useState(Cookies.get("username") || "Staff User");
 
     const navigate = useNavigate()
     useEffect(() => {
@@ -95,7 +87,6 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
     useEffect(() => {
         const token = Cookies.get("authToken");
         if (!token) {
-            // Nếu không có token thì chuyển về trang login
             navigate("/login", { replace: true });
             return;
         }
@@ -125,99 +116,31 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
     }, [navigate]);
 
     // ==================== FUNCTIONS ====================
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setStaff((prevState) => ({
-            ...prevState,
-            [name]: value,
-        }));
-        if (message) {
-            setMessage("");
-            setMessageType("");
-        }
-    };
-
-    const validateForm = () => {
-        if (!staff.tenChucVu.trim()) {
-            setMessage("Vui lòng nhập tên chức vụ");
-            setMessageType("error");
-            return false;
-        }
-        return true;
-    };
-
-    const handleSubmit = async () => {
-        if (!validateForm()) return;
-
-        setIsLoading(true);
-
+    const handleLogout = async () => {
+        Cookies.remove("authToken");
+        Cookies.remove("userRole");
+        Cookies.remove("username");
         try {
-            const token = Cookies.get("authToken");
-            const decodedToken = jwtDecode(token);
-            const userId = decodedToken.staffId;
-
-            const positionData = {
-                title: staff.tenChucVu,
-                secondaryTitle: staff.tenChucVuPhu || "",
-                description: staff.moTa || "",
-                status: staff.trangThai === "active" ? "đang hoạt động" : "Tạm ngưng",
-                userId: userId,
-            };
-
-            const response = await DashBoardApi.addPosition(positionData);
-
-            setMessage(response.message || "Thêm/Cập nhật chức vụ thành công!");
-            setMessageType("success");
-
-            setStaff({
-                tenChucVu: "",
-                tenChucVuPhu: "",
-                moTa: "",
-                trangThai: "active",
+            await fetch("/api/dashboard/staff", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${Cookies.get("authToken")}`,
+                },
+                credentials: "include",
             });
-        } catch (error) {
-            if (error.message.includes("Người dùng này đã có một chức vụ")) {
-                setMessage("Người dùng đã có chức vụ. Vui lòng cập nhật hoặc xóa chức vụ hiện tại.");
-            } else {
-                setMessage(error.message || "Có lỗi xảy ra. Vui lòng thử lại!");
-            }
-            setMessageType("error");
-        } finally {
-            setIsLoading(false);
-        }
+        } catch (e) { }
+        window.location.href = "/login";
     };
 
-    const handleGoBack = () => {
-        if (window.confirm("Bạn có chắc muốn quay lại? Dữ liệu chưa lưu sẽ bị mất.")) {
-            window.history.back();
-        }
-    }
 
 
-    // Hàm format số tiền
-    const formatCurrency = (value) => {
-        if (!value) return ""
-        const number = Number.parseFloat(value)
-        if (isNaN(number)) return ""
-        return new Intl.NumberFormat("vi-VN").format(number) + " VNĐ"
-    }
 
-        const handleLogout = async () => {
-            Cookies.remove("authToken");
-            Cookies.remove("userRole");
-            Cookies.remove("username");
-            try {
-                await fetch("/api/dashboard/staff", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${Cookies.get("authToken")}`,
-                    },
-                    credentials: "include",
-                });
-            } catch (e) { }
-            window.location.href = "/login";
-        };
 
+
+
+
+
+    // Dữ liệu menu
     const menuItems = [
         { name: "Trang Chủ", icon: Home, path: "/", hasLink: true },
         {
@@ -253,8 +176,6 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
         }] : []),
 
     ]
-
-
 
     // ==================== RENDER ====================
     return (
@@ -294,7 +215,6 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
                             </div>
                         </div>
 
-                        {/* Navigation Menu */}
                         <nav className="flex-1 p-4 overflow-y-auto">
                             <ul className="space-y-2">
                                 {menuItems.map((item, index) => {
@@ -482,7 +402,6 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
                                     </Link>
                                 </nav>
                             </div>
-
                             <div className="flex items-center space-x-6">
                                 <div className="text-right">
                                     <p className="text-sm text-blue-100">Ngày hôm nay</p>
@@ -502,7 +421,6 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
                             </div>
                         </div>
                     </header>
-
                     {/* Content Area */}
                     <div className="flex-1 overflow-y-auto p-8">
                         {/* Alert Messages */}
@@ -528,233 +446,71 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
                                 </div>
                             </div>
                         )}
-
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                            {/* Main Form */}
-                            <div className="xl:col-span-2">
-                                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                                    {/* Form Header */}
-                                    <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8">
-                                        <div className="flex items-center">
-                                            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mr-6 backdrop-blur-sm">
-                                                <Briefcase className="w-8 h-8 text-white" />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-2xl font-bold mb-2">Thêm Chức Vụ Mới</h2>
-                                                <p className="text-blue-100">Điền thông tin chi tiết để thêm chức vụ mới vào hệ thống</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Form Body */}
-                                    <div className="p-8">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {/* Tên Chức Vụ */}
-                                            <div className="space-y-3">
-                                                <label className="block text-sm font-semibold text-gray-700">
-                                                    Tên Chức Vụ <span className="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    name="tenChucVu"
-                                                    value={staff.tenChucVu}
-                                                    onChange={handleChange}
-                                                    placeholder="Ví dụ: Trưởng phòng, Nhân viên..."
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 bg-gray-50 focus:bg-white"
-                                                    disabled={isLoading}
-                                                />
-                                            </div>
-
-                                            {/* Tên chức vụ phụ */}
-                                            <div className="space-y-3">
-                                                <label className="block text-sm font-semibold text-gray-700">Tên Chức Vụ Phụ</label>
-                                                <input
-                                                    type="text"
-                                                    name="tenChucVuPhu"
-                                                    value={staff.tenChucVuPhu}
-                                                    onChange={handleChange}
-                                                    placeholder="Tên gọi khác (tùy chọn)"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 bg-gray-50 focus:bg-white"
-                                                    disabled={isLoading}
-                                                />
-                                            </div>
-
-                                          
-
-                                            {/* Trạng thái */}
-                                            <div className="space-y-3">
-                                                <label className="block text-sm font-semibold text-gray-700">Trạng Thái</label>
-                                                <select
-                                                    name="trangThai"
-                                                    value={staff.trangThai}
-                                                    onChange={handleChange}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 bg-gray-50 focus:bg-white"
-                                                    disabled={isLoading}
-                                                >
-                                                    <option value="active">🟢 Đang hoạt động</option>
-                                                    <option value="inactive">🔴 Tạm ngưng</option>
-                                                </select>
-                                            </div>
-
-                                            {/* Mô tả */}
-                                            <div className="md:col-span-2 space-y-3">
-                                                <label className="block text-sm font-semibold text-gray-700">Mô Tả Công Việc</label>
-                                                <textarea
-                                                    name="moTa"
-                                                    value={staff.moTa}
-                                                    onChange={handleChange}
-                                                    placeholder="Mô tả chi tiết về nhiệm vụ, trách nhiệm của chức vụ này..."
-                                                    rows="4"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-400 resize-none bg-gray-50 focus:bg-white"
-                                                    disabled={isLoading}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Form Actions */}
-                                        <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
-                                            <button
-                                                type="button"
-                                                onClick={handleGoBack}
-                                                className="px-6 py-3 bg-gradient-to-r from-blue-100 to-blue-300 hover:from-blue-200 hover:to-blue-400 text-blue-800 font-semibold rounded-xl transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 disabled:opacity-50 flex items-center border-none"
-                                                disabled={isLoading}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 mb-10">
+                            {/* Thống kê Staff */}
+                            <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-10 flex flex-col items-center justify-center min-h-[320px]">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+                                    <PieChart className="w-10 h-10 text-blue-600" />
+                                    Thống Kê Staff
+                                </h3>
+                                <div className="flex flex-col md:flex-row gap-8 w-full justify-center items-center">
+                                    {[
+                                        { label: "Đơn Hoàn Tất", value: stats.newReceipts, color: "blue", icon: Receipt },
+                                        { label: "Đơn Hàng Chờ", value: stats.pendingOrders, color: "amber", icon: ShoppingCart },
+                                        { label: "Khách Hàng Mới", value: stats.newCustomers, color: "emerald", icon: UserPlus },
+                                    ].map((stat, index) => {
+                                        const IconComponent = stat.icon;
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`flex flex-col items-center justify-center p-8 rounded-2xl shadow-lg min-w-[180px] min-h-[140px] transition-all duration-300 cursor-pointer select-none
+                                    ${stat.color === "blue" ? "bg-blue-50 border border-blue-200" : stat.color === "amber" ? "bg-amber-50 border border-amber-200" : stat.color === "emerald" ? "bg-emerald-50 border border-emerald-200" : "bg-purple-50 border border-purple-200"}
+                                hover:scale-105 hover:shadow-2xl active:scale-95`}
+                                                tabIndex={0}
+                                                aria-label={stat.label}
                                             >
-                                                <ChevronLeft className="w-4 h-4 mr-2" />
-                                                Quay Lại
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={handleSubmit}
-                                                className={`px-8 py-3 font-semibold rounded-xl transition-all duration-200 transform hover:-translate-y-0.5 ${isLoading
-                                                    ? "bg-gray-400 cursor-not-allowed"
-                                                    : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg"
-                                                    } text-white flex items-center border-none`}
-                                                disabled={isLoading}
-                                            >
-                                                {isLoading ? (
-                                                    <>
-                                                        <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                                                        Đang xử lý...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Plus className="w-5 h-5 mr-2" />
-                                                        Thêm Chức Vụ
-                                                    </>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
+                                                <IconComponent className={`w-12 h-12 mb-3 ${stat.color === "blue" ? "text-blue-600" : stat.color === "amber" ? "text-amber-600" : stat.color === "emerald" ? "text-emerald-600" : "text-purple-600"}`} />
+                                                <p className="text-lg font-semibold mb-1">{stat.label}</p>
+                                                <p className="text-3xl font-extrabold">{stat.value}</p>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
-
-                            {/* Sidebar Stats */}
-                            <div className="space-y-6">
-                                {/* Quick Stats */}
-                                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                                        <PieChart className="w-5 h-5 mr-2" />
-                                        Thống Kê Staff
-                                    </h3>
-
-                                    <div className="space-y-4">
-                                        {[
-                                            { label: "Đơn Hoàn Tất", value: stats.newReceipts, color: "blue", icon: Receipt },
-                                            { label: "Đơn Hàng Chờ", value: stats.pendingOrders, color: "amber", icon: ShoppingCart },
-                                            { label: "Khách Hàng Mới", value: stats.newCustomers, color: "emerald", icon: UserPlus },
-
-                                        ].map((stat, index) => {
-                                            const IconComponent = stat.icon;
-                                            return (
-                                                <div
-                                                    key={index}
-                                                    className={`p-4 rounded-xl hover:shadow-md transition-shadow ${stat.color === "blue"
-                                                        ? "bg-blue-50 border border-blue-100"
-                                                        : stat.color === "amber"
-                                                            ? "bg-amber-50 border border-amber-100"
-                                                            : stat.color === "emerald"
-                                                                ? "bg-emerald-50 border border-emerald-100"
-                                                                : "bg-purple-50 border border-purple-100"
-                                                            }`}
-                                                >
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <p
-                                                                className={`text-sm font-medium ${stat.color === "blue"
-                                                                    ? "text-blue-600"
-                                                                    : stat.color === "amber"
-                                                                        ? "text-amber-600"
-                                                                        : stat.color === "emerald"
-                                                                            ? "text-emerald-600"
-                                                                            : "text-purple-600"
-                                                                    }`}
-                                                            >
-                                                                {stat.label}
-                                                            </p>
-                                                            <p
-                                                                className={`text-2xl font-bold ${stat.color === "blue"
-                                                                    ? "text-blue-700"
-                                                                    : stat.color === "amber"
-                                                                        ? "text-amber-700"
-                                                                        : stat.color === "emerald"
-                                                                            ? "text-emerald-700"
-                                                                            : "text-purple-700"
-                                                                    }`}
-                                                            >
-                                                                {stat.value}
-                                                            </p>
-                                                        </div>
-                                                        <div
-                                                            className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.color === "blue"
-                                                                ? "bg-blue-100"
-                                                                : stat.color === "amber"
-                                                                    ? "bg-amber-100"
-                                                                    : stat.color === "emerald"
-                                                                        ? "bg-emerald-100"
-                                                                        : "bg-purple-100"
-                                                                }`}
-                                                        >
-                                                            <IconComponent
-                                                                className={`w-6 h-6 ${stat.color === "blue"
-                                                                    ? "text-blue-600"
-                                                                    : stat.color === "amber"
-                                                                        ? "text-amber-600"
-                                                                        : stat.color === "emerald"
-                                                                            ? "text-emerald-600"
-                                                                            : "text-purple-600"
-                                                                    }`}
-                                                            />
-                                                        </div>
-                                                    </div>
+                            {/* Hoạt động gần đây */}
+                            <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-10 flex flex-col min-h-[320px]">
+                                <h3 className="text-2xl font-bold text-gray-800 mb-8 flex items-center gap-3">
+                                    <Activity className="w-10 h-10 text-green-600" />
+                                    Hoạt Động Gần Đây
+                                </h3>
+                                <div className="space-y-6">
+                                    {activities.length > 0 ? (
+                                        activities.map((activity, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center justify-between border-b border-gray-100 pb-4 transition-all duration-300 cursor-pointer select-none hover:scale-105 hover:shadow-lg active:scale-95"
+                                                tabIndex={0}
+                                                aria-label={activity.action}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                                                    <p className="text-lg text-gray-700 font-medium">{activity.action}</p>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
+                                                <p className="text-base text-gray-500 font-semibold">{activity.timeAgo}</p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500 text-lg">Không có hoạt động gần đây</p>
+                                    )}
                                 </div>
-
-                                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                                        <Activity className="w-5 h-5 mr-2" />
-                                        Hoạt Động Gần Đây
-                                    </h3>
-
-                                    <div className="space-y-4">
-                                        {activities.length > 0 ? (
-                                            activities.map((activity, index) => (
-                                                <div key={index} className="flex items-center justify-between border-b border-gray-100 pb-3">
-                                                    <div className="flex items-center">
-                                                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                                                        <p className="text-gray-700">{activity.action}</p>
-                                                    </div>
-                                                    <p className="text-xs text-gray-500">{activity.timeAgo}</p>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <p className="text-gray-500 text-sm">Không có hoạt động gần đây</p>
-                                        )}
-                                    </div>
-                                </div>
+                            </div>
+                        </div>
+                        {/* Banner chào mừng chuyên nghiệp */}
+                        <div className="w-full bg-gradient-to-r from-blue-700 via-blue-500 to-emerald-400 rounded-3xl shadow-2xl flex flex-col items-center justify-center py-16 px-8 mb-10 animate-in fade-in duration-700">
+                            <div className="flex flex-col items-center">
+                                <span className="text-7xl mb-4 animate-bounce">🌞</span>
+                                <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-lg text-center">Chào mừng bạn đến với hệ thống quản lý nhân viên</h2>
+                                <p className="text-xl md:text-2xl text-white font-medium mb-2 drop-shadow text-center max-w-2xl">Chúc bạn một ngày làm việc hiệu quả, nhiều năng lượng tích cực và luôn đạt thành công mới trong công việc! Hãy cùng nhau tạo nên giá trị và phát triển bền vững. </p>
                             </div>
                         </div>
                     </div>

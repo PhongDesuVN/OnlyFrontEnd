@@ -97,6 +97,27 @@ const LeftMenu = ({ onBackToHome, onOverview, onApproveNewStaff, onProfile, onLo
         </aside>
     );
 };
+const EmailButton = ({ staff, status, onSend }) => {
+    const buttonStatus = {
+        sending: { text: 'Đang gửi...', disabled: true, className: 'bg-gradient-to-r from-yellow-600 to-yellow-700' },
+        sent: { text: 'Đã gửi ✓', disabled: true, className: 'bg-gradient-to-r from-green-600 to-green-700' },
+        error: { text: 'Lỗi ✗', disabled: false, className: 'bg-gradient-to-r from-red-600 to-red-700' },
+        default: { text: 'Gửi Email', disabled: false, className: 'bg-gradient-to-r from-blue-600 to-blue-700' },
+    }[status || 'default'];
+
+
+    return (
+        <button
+            onClick={() => onSend(staff)}
+            disabled={buttonStatus.disabled}
+            className={`inline-flex items-center px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md ${buttonStatus.className}`}
+            title={`Gửi email đến ${staff.fullName || 'nhân viên'}`}
+        >
+            <Mail className="h-4 w-4 mr-1" />
+            {buttonStatus.text}
+        </button>
+    );
+};
 
 const StaffPerformancePage = () => {
     const [performanceData, setPerformanceData] = useState([]);
@@ -158,24 +179,26 @@ const StaffPerformancePage = () => {
 
     // Send email to individual staff
     const sendIndividualEmail = async (staff) => {
+        const key = staff.email;
         try {
-            setEmailStatus(prev => ({ ...prev, [staff.id]: 'sending' }));
+            setEmailStatus(prev => ({ ...prev, [key]: 'sending' }));
             await axios.post('/api/report-performance/send-selected-emails', [staff]);
-            setEmailStatus(prev => ({ ...prev, [staff.id]: 'sent' }));
+            setEmailStatus(prev => ({ ...prev, [key]: 'sent' }));
             setTimeout(() => {
-                setEmailStatus(prev => ({ ...prev, [staff.id]: null }));
+                setEmailStatus(prev => ({ ...prev, [key]: null }));
             }, 3000);
         } catch (error) {
             console.error('Lỗi khi gửi email:', error);
-            setEmailStatus(prev => ({ ...prev, [staff.id]: 'error' }));
+            setEmailStatus(prev => ({ ...prev, [key]: 'error' }));
             setTimeout(() => {
-                setEmailStatus(prev => ({ ...prev, [staff.id]: null }));
+                setEmailStatus(prev => ({ ...prev, [key]: null }));
             }, 3000);
             if (error.response?.status === 403) {
-                alert(`Truy cập bị từ chối: Không thể gửi email đến ${staff.fullName}.`);
+                alert(`Không thể gửi email đến ${staff.fullName}`);
             }
         }
     };
+
 
     // Handle navigation
     const handleBackToHome = () => {
@@ -197,16 +220,6 @@ const StaffPerformancePage = () => {
         }
     };
 
-    // Get email button status
-    const getEmailButtonStatus = (staffId) => {
-        const status = emailStatus[staffId];
-        switch (status) {
-            case 'sending': return { text: 'Đang gửi...', disabled: true, className: 'bg-gradient-to-r from-yellow-600 to-yellow-700' };
-            case 'sent': return { text: 'Đã gửi ✓', disabled: true, className: 'bg-gradient-to-r from-green-600 to-green-700' };
-            case 'error': return { text: 'Lỗi ✗', disabled: false, className: 'bg-gradient-to-r from-red-600 to-red-700' };
-            default: return { text: 'Gửi Email', disabled: false, className: 'bg-gradient-to-r from-blue-600 to-blue-700' };
-        }
-    };
 
     // Prepare chart data
     const chartData = performanceData.map(staff => ({
@@ -444,14 +457,13 @@ const StaffPerformancePage = () => {
                                     </thead>
                                     <tbody className="divide-y divide-blue-200">
                                     {paginatedData.map((staff) => {
-                                        const buttonStatus = getEmailButtonStatus(staff.id);
                                         const level = staff.performanceLevel === 'EXCELLENT' ? 'Xuất sắc' :
                                             staff.performanceLevel === 'GOOD' ? 'Tốt' :
                                                 staff.performanceLevel === 'AVERAGE' ? 'Trung bình' :
                                                     staff.performanceLevel === 'POOR' ? 'Kém' : 'Không xác định';
                                         return (
-                                            <tr key={staff.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                            <tr key={staff.email} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
                                                     <div>
                                                         <div className="text-sm font-medium text-gray-900">{staff.fullName || 'N/A'}</div>
                                                         <div className="text-sm text-gray-500">{staff.email || 'N/A'}</div>
@@ -466,15 +478,13 @@ const StaffPerformancePage = () => {
                                                         </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    <button
-                                                        onClick={() => sendIndividualEmail(staff)}
-                                                        disabled={buttonStatus.disabled}
-                                                        className={`inline-flex items-center px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-all duration-300 shadow-sm hover:shadow-md ${buttonStatus.className}`}
-                                                        title={`Gửi email đến ${staff.fullName || 'nhân viên'}`}
-                                                    >
-                                                        <Mail className="h-4 w-4 mr-1" />
-                                                        {buttonStatus.text}
-                                                    </button>
+                                                    <EmailButton
+                                                        staff={staff}
+                                                        status={emailStatus[staff.email]}
+                                                        onSend={sendIndividualEmail}
+                                                    />
+
+
                                                 </td>
                                             </tr>
                                         );
