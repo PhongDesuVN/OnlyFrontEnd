@@ -592,13 +592,15 @@ const PromotionManager = () => {
                 open={dialog.open}
                 onClose={() => setDialog({ open: false, type: "", promo: null, data: null })}
                 onConfirm={handleConfirmed}
-                title={dialog.type === "cancel" ? "Xác nhận hủy khuyến mãi" : dialog.type === "update-description" ? "Xác nhận cập nhật mô tả" : "Xác nhận cập nhật"}
+                title={
+                    dialog.type === "cancel"
+                        ? "Xác nhận hủy khuyến mãi"
+                        : "Xác nhận cập nhật khuyến mãi"
+                }
                 message={
                     dialog.type === "cancel"
                         ? "Bạn có chắc chắn muốn hủy khuyến mãi này không?"
-                        : dialog.type === "update-description"
-                            ? "Bạn có chắc muốn cập nhật mô tả này không?"
-                            : "Bạn có chắc chắn muốn cập nhật khuyến mãi này không?"
+                        : "Bạn có chắc chắn muốn cập nhật khuyến mãi này không?"
                 }
                 confirmLabel={dialog.type === "cancel" ? "Xác nhận" : undefined}
                 confirmColor="from-blue-600 to-blue-700"
