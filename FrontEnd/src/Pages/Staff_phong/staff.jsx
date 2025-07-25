@@ -247,7 +247,6 @@ const [username, setUsername] = useState(Cookies.get("username") || "Staff User"
                 { name: "Yêu Cầu Nghỉ Phép", icon: UserCheck, path: "/schedule/timeoff", hasLink: true },
             ],
         },
-        { name: 'Quản Lý Biên Lai', icon: Receipt, path: '/receipts', hasLink: true },
         { name: "Quản Lý Đơn Hàng", icon: ShoppingCart, path: "/manageorder", hasLink: true },
         { name: "Quản Lý Khách Hàng", icon: Users, path: "/manageuser", hasLink: true },
         // Only show revenue management for MANAGER role
