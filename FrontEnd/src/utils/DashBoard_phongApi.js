@@ -1,6 +1,5 @@
 import { apiCall } from './api';
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
 
 const DashBoardApi = {
     addPosition: async (positionData) => {
@@ -141,11 +140,11 @@ const DashBoardApi = {
         }
     },
 
-    getMonthlyRevenue: async (year, unit) => {
+    getMonthlyRevenue: async (year, unit, startMonth, endMonth) => {
         try {
             const response = await apiCall('/api/dashboard/staff/monthly-revenue', {
                 method: 'GET',
-                params: { year, unit },
+                params: { year, unit, startMonth, endMonth },
                 auth: true,
             });
             let data;
@@ -174,11 +173,11 @@ const DashBoardApi = {
         }
     },
 
-    getPerformanceData: async (year, unit) => {
+    getPerformanceData: async (year, unit, startMonth, endMonth) => {
         try {
             const response = await apiCall('/api/dashboard/staff/performance-data', {
                 method: 'GET',
-                params: { year, unit },
+                params: { year, unit, startMonth, endMonth },
                 auth: true,
             });
             let data;
@@ -207,11 +206,11 @@ const DashBoardApi = {
         }
     },
 
-    getDetailData: async (year, unit) => {
+    getDetailData: async (year, unit, startMonth, endMonth) => {
         try {
             const response = await apiCall('/api/dashboard/staff/detail-data', {
                 method: 'GET',
-                params: { year, unit },
+                params: { year, unit, startMonth, endMonth },
                 auth: true,
             });
             let data;
@@ -240,11 +239,11 @@ const DashBoardApi = {
         }
     },
 
-    getTransportData: async (year, unit) => {
+    getTransportData: async (year, unit, startMonth, endMonth) => {
         try {
             const response = await apiCall('/api/dashboard/staff/transport-data', {
                 method: 'GET',
-                params: { year, unit },
+                params: { year, unit, startMonth, endMonth },
                 auth: true,
             });
             let data;
@@ -281,7 +280,7 @@ const DashBoardApi = {
                     Cookies.remove("authToken");
                     Cookies.remove("userRole");
                     Cookies.remove("username");
-                    window.location.href = "/login"; // Chuyển hướng mà không dùng useNavigate
+                    window.location.href = "/login";
                     throw new Error("Không có quyền truy cập. Vui lòng đăng nhập lại.");
                 }
                 throw new Error(data.message || 'Lỗi khi lấy dữ liệu vận chuyển');

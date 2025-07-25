@@ -554,27 +554,12 @@ const OverviewOrders = ({ orders }) => {
     );
 };
 
-// ViewOrders với CRUD và bộ lọc
-const ViewOrders = ({ orders, onEditOrder }) => {
-    const [showModal, setShowModal] = useState(false);
-    const [editingOrder, setEditingOrder] = useState(null);
+// ViewOrders with filters
+const ViewOrders = ({ orders }) => {
     const [filterStatus, setFilterStatus] = useState('Tất cả');
     const [filterPayment, setFilterPayment] = useState('Tất cả');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10; // Số đơn hàng mỗi trang
-
-    const handleEdit = (order) => {
-        setEditingOrder(order);
-        setShowModal(true);
-    };
-
-    const handleSave = (orderData) => {
-        if (editingOrder) {
-            onEditOrder(orderData);
-        }
-        setShowModal(false);
-        setEditingOrder(null);
-    };
 
     // Áp dụng bộ lọc
     const filteredOrders = orders.filter(order => {
@@ -667,7 +652,6 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                             <th className="border p-3 text-left text-gray-700">Tổng Tiền</th>
                             <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
                             <th className="border p-3 text-left text-gray-700">Thanh Toán</th>
-                            <th className="border p-3 text-left text-gray-700">Thao Tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -690,19 +674,6 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                                     </span>
                                 </td>
                                 <td className="border p-3">{order.payment}</td>
-                                <td className="border p-3">
-                                    <div className="flex space-x-2">
-                                        <motion.button
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => handleEdit(order)}
-                                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                                            title="Sửa"
-                                        >
-                                            <Edit2 size={16} />
-                                        </motion.button>
-                                    </div>
-                                </td>
                             </motion.tr>
                         ))}
                     </tbody>
@@ -739,17 +710,6 @@ const ViewOrders = ({ orders, onEditOrder }) => {
                     </button>
                 </div>
             )}
-
-            <AnimatePresence>
-                <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-                    <OrderForm
-                        order={editingOrder}
-                        onSave={handleSave}
-                        onCancel={() => setShowModal(false)}
-                        isEditing={!!editingOrder}
-                    />
-                </Modal>
-            </AnimatePresence>
         </motion.div>
     );
 };
@@ -979,64 +939,6 @@ const Dashboard = () => {
         }
     };
 
-    // Cập nhật đơn hàng
-    const handleEditOrder = async (updatedOrder) => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            setError('Token không tồn tại. Vui lòng đăng nhập!');
-            return;
-        }
-        setLoading(true);
-        try {
-            const bookingRequest = {
-                status: updatedOrder.status,
-                paymentStatus: updatedOrder.payment === 'Đã thanh toán' ? 'COMPLETED' : 'INCOMPLETED',
-                deliveryDate: new Date(updatedOrder.deliveryDate).toISOString(),
-                customerId: updatedOrder.customerId,
-                customerFullName: updatedOrder.customer, // Thêm trường này
-                storageUnitId: updatedOrder.storageUnitId,
-                transportUnitId: updatedOrder.transportUnitId,
-                operatorStaffId: updatedOrder.operatorStaffId,
-                total: updatedOrder.total,
-                note: updatedOrder.note
-            };
-            const updatedBooking = await ManageOrderApi.updateOrder(updatedOrder.id, bookingRequest);
-            setOrders(orders.map(order =>
-                order.id === updatedOrder.id ? mapBookingToOrder(updatedBooking) : order
-            ));
-            alert('Cập nhật đơn hàng thành công!');
-        } catch (err) {
-            setError(`Lỗi khi cập nhật đơn hàng: ${err.message}`);
-            console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Tìm kiếm đơn hàng
-    const handleSearch = async (term) => {
-        setSearchTerm(term);
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            setError('Token không tồn tại. Vui lòng đăng nhập!');
-            return;
-        }
-        setLoading(true);
-        try {
-            const data = term.trim() === ''
-                ? await ManageOrderApi.getOrders()
-                : await ManageOrderApi.searchOrders(term);
-            const mappedOrders = Array.isArray(data) ? data.map(mapBookingToOrder) : [];
-            setOrders(mappedOrders);
-            setError(null);
-        } catch (err) {
-            setError(`Lỗi khi tìm kiếm đơn hàng: ${err.message}`);
-            console.error('Lỗi chi tiết:', err.response ? err.response.data : err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     // Lấy thông tin tổng quan
     const fetchOverview = async () => {
         const token = localStorage.getItem('authToken');
@@ -1101,7 +1003,7 @@ const Dashboard = () => {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <ViewOrders orders={orders} onEditOrder={handleEditOrder} />
+                                <ViewOrders orders={orders} />
                             </motion.div>
                         )}
                         {currentPage === 'payment' && (
@@ -1122,7 +1024,7 @@ const Dashboard = () => {
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <SearchOrders orders={orders} searchTerm={searchTerm} setSearchTerm={handleSearch} />
+                                <SearchOrders orders={orders} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                             </motion.div>
                         )}
                     </AnimatePresence>

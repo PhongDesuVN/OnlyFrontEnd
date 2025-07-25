@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, Home, Users, Shield, Phone, Mail, MapPin, Star, CheckCircle, Edit3, Palette, Image, X, Download } from 'lucide-react';
@@ -289,7 +288,7 @@ const Header = ({ onCustomizeClick, settings }) => {
                         <a href="#home" className={`hover:text-${settings.theme.primary}-600 transition-colors`}>Trang Chủ</a>
                         <a href="#services" className={`hover:text-${settings.theme.primary}-600 transition-colors`}>Hệ Thống</a>
                         <a href="#about" className={`hover:text-${settings.theme.primary}-600 transition-colors`}>Giới Thiệu</a>
-                        <a href="#contact" className={`hover:text-${settings.theme.primary}-600 transition-colors`}>Hỗ Trợ</a>
+
                     </nav>
                     <div className="flex space-x-3">
                         <button
@@ -488,140 +487,6 @@ const About = ({ settings }) => {
     );
 };
 
-// Contact với màu chủ đề
-const Contact = ({ settings }) => {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        message: '',
-    });
-
-    const handleInputChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        alert('Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong thời gian sớm nhất.');
-        setFormData({ name: '', email: '', phone: '', message: '' });
-    };
-
-    return (
-        <section id="contact" className="py-20 bg-gray-50">
-            <div className="container mx-auto px-4">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-                        Liên Hệ Với Chúng Tôi
-                    </h2>
-                    <p className="text-xl text-gray-600">
-                        Sẵn sàng hỗ trợ bạn 24/7 với dịch vụ tư vấn miễn phí
-                    </p>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <div className="space-y-8">
-                        <div className="flex items-start space-x-4">
-                            <div className={`flex items-center justify-center w-12 h-12 bg-${settings.theme.primary}-600 rounded-lg`}>
-                                <Phone className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Điện Thoại</h3>
-                                <p className="text-gray-600">+84 901 234 567</p>
-                                <p className="text-gray-600">+84 901 234 568</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4">
-                            <div className={`flex items-center justify-center w-12 h-12 bg-${settings.theme.primary}-600 rounded-lg`}>
-                                <Mail className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Email</h3>
-                                <p className="text-gray-600">info@vanchuyennha.com</p>
-                                <p className="text-gray-600">support@vanchuyennha.com</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4">
-                            <div className={`flex items-center justify-center w-12 h-12 bg-${settings.theme.primary}-600 rounded-lg`}>
-                                <MapPin className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-semibold text-gray-800 mb-2">Địa Chỉ</h3>
-                                <p className="text-gray-600">123 Đường ABC, Phố 1</p>
-                                <p className="text-gray-600">TP. Hà Nội, Việt Nam</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-white p-8 rounded-2xl shadow-lg">
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-2">
-                                    Họ và Tên *
-                                </label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-${settings.theme.primary}-500 focus:border-transparent`}
-                                    placeholder="Nhập họ và tên của bạn"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-2">
-                                    Email *
-                                </label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-${settings.theme.primary}-500 focus:border-transparent`}
-                                    placeholder="Nhập email của bạn"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-2">
-                                    Số Điện Thoại
-                                </label>
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-${settings.theme.primary}-500 focus:border-transparent`}
-                                    placeholder="Nhập số điện thoại"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 font-medium mb-2">
-                                    Tin Nhắn *
-                                </label>
-                                <textarea
-                                    name="message"
-                                    value={formData.message}
-                                    onChange={handleInputChange}
-                                    rows="4"
-                                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-${settings.theme.primary}-500 focus:border-transparent`}
-                                    placeholder="Mô tả nhu cầu của bạn..."
-                                ></textarea>
-                            </div>
-                            <button
-                                onClick={handleSubmit}
-                                className={`w-full bg-gradient-to-r ${settings.theme.gradient} text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all`}
-                            >
-                                Gửi Liên Hệ
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-};
-
 // Footer với màu chủ đề
 const Footer = ({ settings }) => {
     return (
@@ -736,7 +601,7 @@ const App = () => {
 
     return (
         <div className="min-h-screen" style={{ fontFamily: settings.fontSettings.fontFamily, fontSize: settings.fontSettings.fontSize, color: settings.fontSettings.fontColor }}>
-            <style >{`
+            <style>{`
                     @keyframes fade-in {
                         from { opacity: 0; transform: translateY(30px); }
                         to { opacity: 1; transform: translateY(0); }
@@ -758,7 +623,6 @@ const App = () => {
             <Hero settings={settings} />
             <Services settings={settings} />
             <About settings={settings} />
-            <Contact settings={settings} />
             <Footer settings={settings} />
             <CustomizationMenu
                 isOpen={isCustomizationOpen}
