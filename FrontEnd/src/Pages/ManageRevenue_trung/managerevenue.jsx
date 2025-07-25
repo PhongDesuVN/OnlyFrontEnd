@@ -16,6 +16,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, LineChart, Line
 } from "recharts";
+import dayjs from "dayjs";
 
 const ActionBtn = ({ color, children, onClick, disabled = false }) => {
     const base = "px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none";
@@ -63,6 +64,35 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const username = Cookies.get("username");
 
+    // Helper: get start/end date by range
+    const getDateRangeByType = (type) => {
+        const today = dayjs();
+        switch (type) {
+            case "today":
+                return { start: today.format("YYYY-MM-DD"), end: today.format("YYYY-MM-DD") };
+            case "week":
+                return { start: today.startOf("week").format("YYYY-MM-DD"), end: today.endOf("week").format("YYYY-MM-DD") };
+            case "month":
+                return { start: today.startOf("month").format("YYYY-MM-DD"), end: today.endOf("month").format("YYYY-MM-DD") };
+            case "year":
+                return { start: today.startOf("year").format("YYYY-MM-DD"), end: today.endOf("year").format("YYYY-MM-DD") };
+            case "range":
+                return { start: fromDate, end: toDate };
+            default:
+                return { start: "", end: "" };
+        }
+    };
+
+    // Khi chọn range thì cập nhật filter luôn
+    useEffect(() => {
+        if (["today", "week", "month", "year"].includes(range)) {
+            const { start, end } = getDateRangeByType(range);
+            setFromDate(start);
+            setToDate(end);
+            setFilter((prev) => ({ ...prev, startDate: start, endDate: end }));
+        }
+    }, [range]);
+
     useEffect(() => {
         loadRevenues();
         // eslint-disable-next-line
@@ -78,8 +108,9 @@ const Dashboard = () => {
                 page,
                 size
             };
+            // Xóa các key rỗng/null
             Object.keys(params).forEach(key => {
-                if (params[key] === '' || params[key] === null) delete params[key];
+                if (params[key] === '' || params[key] === null || params[key] === undefined) delete params[key];
             });
             const revenueData = await revenueService.getPagedRevenues(params, token);
             setRevenues(revenueData.content || []);
@@ -141,6 +172,12 @@ const Dashboard = () => {
             case "range": return fromDate && toDate ? `${fromDate} - ${toDate}` : "Khoảng ngày";
             default: return "Chọn khoảng thời gian";
         }
+    };
+
+    // Khi ấn ÁP DỤNG cho range tuỳ chọn
+    const handleApplyCustomRange = () => {
+        setFilter({ ...filter, startDate: fromDate, endDate: toDate });
+        setFilterExpanded(false);
     };
 
     // Format currency to VND
@@ -269,10 +306,7 @@ const Dashboard = () => {
                                         <div className="flex gap-2 pt-3 border-t border-blue-200">
                                             <ActionBtn
                                                 color="blue"
-                                                onClick={() => {
-                                                    setFilter({ ...filter, startDate: fromDate, endDate: toDate });
-                                                    setFilterExpanded(false);
-                                                }}
+                                                onClick={handleApplyCustomRange}
                                             >
                                                 ÁP DỤNG
                                             </ActionBtn>
@@ -308,39 +342,39 @@ const Dashboard = () => {
                                 </div>
                                 <table className="w-full text-sm">
                                     <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
-                                        <tr>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID</th>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Loại Người Hưởng</th>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID Người Hưởng</th>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Loại Nguồn</th>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID Nguồn</th>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Số Tiền</th>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Ngày</th>
-                                            <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Mô Tả</th>
-                                        </tr>
+                                    <tr>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Loại Người Hưởng</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID Người Hưởng</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Loại Nguồn</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID Nguồn</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Số Tiền</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Ngày</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Mô Tả</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        {revenues.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={8} className="text-center py-8 text-gray-500">Không có dữ liệu doanh thu để hiển thị</td>
+                                    {revenues.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={8} className="text-center py-8 text-gray-500">Không có dữ liệu doanh thu để hiển thị</td>
+                                        </tr>
+                                    ) : (
+                                        revenues.map((revenue, idx) => (
+                                            <tr
+                                                key={revenue.revenueId}
+                                                className={`hover:bg-blue-50/50 border-b border-blue-200 transition-all duration-200 ${idx % 2 === 0 ? "bg-white/50" : "bg-blue-50/20"}`}
+                                            >
+                                                <td className="px-4 py-2">{revenue.revenueId}</td>
+                                                <td className="px-4 py-2">{revenue.beneficiaryType}</td>
+                                                <td className="px-4 py-2">{revenue.beneficiaryId}</td>
+                                                <td className="px-4 py-2">{revenue.sourceType}</td>
+                                                <td className="px-4 py-2">{revenue.sourceId}</td>
+                                                <td className="px-4 py-2 text-green-600 font-medium">{formatVND(revenue.amount)}</td>
+                                                <td className="px-4 py-2">{revenue.date ? new Date(revenue.date).toLocaleDateString() : 'N/A'}</td>
+                                                <td className="px-4 py-2">{revenue.description}</td>
                                             </tr>
-                                        ) : (
-                                            revenues.map((revenue, idx) => (
-                                                <tr
-                                                    key={revenue.revenueId}
-                                                    className={`hover:bg-blue-50/50 border-b border-blue-200 transition-all duration-200 ${idx % 2 === 0 ? "bg-white/50" : "bg-blue-50/20"}`}
-                                                >
-                                                    <td className="px-4 py-2">{revenue.revenueId}</td>
-                                                    <td className="px-4 py-2">{revenue.beneficiaryType}</td>
-                                                    <td className="px-4 py-2">{revenue.beneficiaryId}</td>
-                                                    <td className="px-4 py-2">{revenue.sourceType}</td>
-                                                    <td className="px-4 py-2">{revenue.sourceId}</td>
-                                                    <td className="px-4 py-2 text-green-600 font-medium">{formatVND(revenue.amount)}</td>
-                                                    <td className="px-4 py-2">{revenue.date ? new Date(revenue.date).toLocaleDateString() : 'N/A'}</td>
-                                                    <td className="px-4 py-2">{revenue.description}</td>
-                                                </tr>
-                                            ))
-                                        )}
+                                        ))
+                                    )}
                                     </tbody>
                                 </table>
                                 <div className="flex justify-center items-center gap-2 mt-4">
