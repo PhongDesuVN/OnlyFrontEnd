@@ -8,12 +8,12 @@ import Header from "../../Components/FormLogin_yen/Header";
 import Footer from "../../Components/FormLogin_yen/Footer";
 import {
     Users, Package, TrendingUp, MapPin, ChevronDown, Calendar, Filter, XCircle,
-    Truck, LayoutDashboard, Settings, User, Circle, LogOut, BarChart3
+    Truck, LayoutDashboard, Settings, User, Circle, LogOut,
     ChevronLeft,
     ChevronRight,
     Clock,
     DollarSign
-
+,BarChart3
 
 } from "lucide-react";
 import axiosInstance from "../../utils/axiosInstance.js";
@@ -218,7 +218,7 @@ const Dashboard = () => {
         <RequireAuth>
             <div className="flex min-h-screen bg-gray-50">
                 <Header/>
-                <div className="flex flex-1 pt-[70px]">
+                <div className="flex flex-1 pt-[70px] ">
                     {/* Sidebar */}
                     <aside className="w-80 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white pb-[336px] h-full shadow-2xl border-r border-blue-700/30 backdrop-blur-sm z-20 mr-4">
                         {/* Enhanced Header */}
@@ -672,9 +672,9 @@ const Dashboard = () => {
                     </aside>
 
                     {/* Main Content */}
-                    <div className="flex-1 pl-[16px] pt-6 pr-4 min-w-0 flex flex-col gap-10">
+                    <div className="flex-1 pl-[16px] pt-6 pb-8 pr-4 min-w-0 flex flex-col gap-10">
                         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mt-6">
-                            DASHBOARD QUẢN LÝ
+                            QUẢN LÍ TỔNG QUAN
                         </h1>
 
                         {/* Thống kê tổng quan */}
@@ -814,7 +814,7 @@ const Dashboard = () => {
                                 BIỂU ĐỒ DOANH THU
                             </h4>
                             <ResponsiveContainer width="100%" height={350}>
-                                <LineChart data={chartDataRevenue} margin={{ top: 20, right: 20, left: 20, bottom: 0 }}>
+                                <LineChart data={chartDataRevenue} margin={{ top: 20, right: 20, left: 50, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                                     <XAxis dataKey="date" stroke="#374151" />
                                     <YAxis tickFormatter={(v) => v.toLocaleString('vi-VN')} stroke="#374151" />
