@@ -1,7 +1,5 @@
-"use client"
-
-import { useState } from "react"
-import { Save, Ban } from "lucide-react"
+import { useState } from "react";
+import { Save, Ban } from "lucide-react";
 
 // Hàm validate discountValue dựa trên discountType
 const validateDiscountValue = (value, discountType) => {
@@ -9,10 +7,10 @@ const validateDiscountValue = (value, discountType) => {
     if (isNaN(numValue) || numValue < 0) return false;
     if (discountType === "Phần trăm" && numValue > 100) return false;
     return true;
-}
+};
 
-const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false)
+const PromotionCard = ({ promo, onUpdate, onCancel }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [editedPromo, setEditedPromo] = useState({
         id: promo.id,
         name: promo.name || "",
@@ -21,20 +19,52 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
         endDate: new Date(promo.endDate).toISOString().split("T")[0] || "",
         status: promo.status || "Hoạt động",
         discountType: promo.discountType || "Phần trăm",
-        discountValue: promo.discountValue || 0
-    })
-    const [discountValueError, setDiscountValueError] = useState("")
+        discountValue: promo.discountValue || 0,
+    });
+    const [discountValueError, setDiscountValueError] = useState("");
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
-            case "hoạt động": return "bg-green-100 text-green-700"
-            case "hết hạn": return "bg-red-100 text-red-700"
-            case "đang chờ": return "bg-yellow-100 text-yellow-700"
-            case "đã hủy": return "bg-gray-200 text-gray-600"
-            case "sắp bắt đầu": return "bg-blue-100 text-blue-700"
-            default: return "bg-blue-100 text-blue-700"
+            case "hoạt động":
+                return "bg-green-100 text-green-700";
+            case "hết hạn":
+                return "bg-red-100 text-red-700";
+            case "đang chờ":
+                return "bg-yellow-100 text-yellow-700";
+            case "đã hủy":
+                return "bg-gray-200 text-gray-600";
+            case "sắp bắt đầu":
+                return "bg-blue-100 text-blue-700";
+            default:
+                return "bg-blue-100 text-blue-700";
         }
-    }
+    };
+
+    const handleSave = () => {
+        if (new Date(editedPromo.startDate) > new Date(editedPromo.endDate)) {
+            alert("Ngày bắt đầu phải trước ngày kết thúc!");
+            return;
+        }
+        if (!validateDiscountValue(editedPromo.discountValue, editedPromo.discountType)) {
+            alert(
+                editedPromo.discountType === "Phần trăm"
+                    ? "Giá trị giảm giá phải từ 0 đến 100 cho loại phần trăm!"
+                    : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!"
+            );
+            return;
+        }
+        if (editedPromo.name.length > 100) {
+            alert("Tên khuyến mãi không được vượt quá 100 ký tự!");
+            return;
+        }
+        if (editedPromo.description.length > 200) {
+            alert("Mô tả không được vượt quá 200 ký tự!");
+            return;
+        }
+        onUpdate(editedPromo);
+        setIsModalOpen(false);
+        setDiscountValueError("");
+    };
 
     return (
         <>
@@ -46,17 +76,19 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                 <span className="text-center truncate">{promo.description || "Chưa có mô tả"}</span>
                 <span className="text-center truncate">
                     {promo.startDate && promo.endDate
-                        ? `${new Date(promo.startDate).toLocaleDateString()} - ${new Date(promo.endDate).toLocaleDateString()}`
+                        ? `${new Date(promo.startDate).toLocaleDateString()} - ${new Date(
+                            promo.endDate
+                        ).toLocaleDateString()}`
                         : "N/A"}
                 </span>
                 <span className={`text-center truncate px-2 py-1 rounded-full ${getStatusColor(promo.status)}`}>
                     {promo.status || "Hoạt động"}
                 </span>
+                <span className="text-center truncate">{promo.discountType || "Phần trăm"}</span>
                 <span className="text-center truncate">
-                    {promo.discountType || "Phần trăm"}
-                </span>
-                <span className="text-center truncate">
-                    {promo.discountValue ? `${promo.discountValue}${promo.discountType === "Phần trăm" ? "%" : " VNĐ"}` : "N/A"}
+                    {promo.discountValue
+                        ? `${promo.discountValue}${promo.discountType === "Phần trăm" ? "%" : " VNĐ"}`
+                        : "N/A"}
                 </span>
                 <div className="pr-4 text-center flex justify-center gap-2">
                     <button
@@ -86,9 +118,9 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                     value={editedPromo.name}
                                     onChange={(e) => {
                                         if (e.target.value.length <= 100) {
-                                            setEditedPromo({ ...editedPromo, name: e.target.value })
+                                            setEditedPromo({ ...editedPromo, name: e.target.value });
                                         } else {
-                                            alert("Tên khuyến mãi không được vượt quá 100 ký tự!")
+                                            alert("Tên khuyến mãi không được vượt quá 100 ký tự!");
                                         }
                                     }}
                                     className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
@@ -121,10 +153,9 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                     value={editedPromo.description}
                                     onChange={(e) => {
                                         if (e.target.value.length <= 200) {
-                                            setEditedPromo({ ...editedPromo, description: e.target.value })
-                                            onUpdateDescription({ id: editedPromo.id, description: e.target.value })
+                                            setEditedPromo({ ...editedPromo, description: e.target.value });
                                         } else {
-                                            alert("Mô tả không được vượt quá 200 ký tự!")
+                                            alert("Mô tả không được vượt quá 200 ký tự!");
                                         }
                                     }}
                                     className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
@@ -149,8 +180,8 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                 <select
                                     value={editedPromo.discountType}
                                     onChange={(e) => {
-                                        setEditedPromo({ ...editedPromo, discountType: e.target.value, discountValue: "" })
-                                        setDiscountValueError("")
+                                        setEditedPromo({ ...editedPromo, discountType: e.target.value, discountValue: "" });
+                                        setDiscountValueError("");
                                     }}
                                     className="mt-1 p-2 w-full border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm"
                                 >
@@ -165,16 +196,16 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                         type="number"
                                         value={editedPromo.discountValue}
                                         onChange={(e) => {
-                                            const value = e.target.value
-                                            setEditedPromo({ ...editedPromo, discountValue: value })
+                                            const value = e.target.value;
+                                            setEditedPromo({ ...editedPromo, discountValue: value });
                                             if (value && !validateDiscountValue(value, editedPromo.discountType)) {
                                                 setDiscountValueError(
                                                     editedPromo.discountType === "Phần trăm"
                                                         ? "Giá trị giảm giá phải từ 0 đến 100!"
                                                         : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!"
-                                                )
+                                                );
                                             } else {
-                                                setDiscountValueError("")
+                                                setDiscountValueError("");
                                             }
                                         }}
                                         className={`mt-1 p-2 w-full border-2 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 shadow-sm pr-12 ${
@@ -188,45 +219,21 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                                         {editedPromo.discountType === "Phần trăm" ? "%" : "VND"}
                                     </span>
                                 </div>
-                                {discountValueError && (
-                                    <p className="text-red-500 text-xs mt-1">{discountValueError}</p>
-                                )}
+                                {discountValueError && <p className="text-red-500 text-xs mt-1">{discountValueError}</p>}
                             </div>
                         </div>
                         <div className="mt-6 flex justify-end gap-4">
                             <button
                                 onClick={() => {
-                                    setIsModalOpen(false)
-                                    setDiscountValueError("")
+                                    setIsModalOpen(false);
+                                    setDiscountValueError("");
                                 }}
                                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg"
                             >
                                 Thoát
                             </button>
                             <button
-                                onClick={() => {
-                                    if (new Date(editedPromo.startDate) > new Date(editedPromo.endDate)) {
-                                        alert("Ngày bắt đầu phải trước ngày kết thúc!")
-                                        return
-                                    }
-                                    if (!validateDiscountValue(editedPromo.discountValue, editedPromo.discountType)) {
-                                        alert(editedPromo.discountType === "Phần trăm"
-                                            ? "Giá trị giảm giá phải từ 0 đến 100 cho loại phần trăm!"
-                                            : "Giá trị giảm giá phải lớn hơn hoặc bằng 0!")
-                                        return
-                                    }
-                                    if (editedPromo.name.length > 100) {
-                                        alert("Tên khuyến mãi không được vượt quá 100 ký tự!")
-                                        return
-                                    }
-                                    if (editedPromo.description.length > 200) {
-                                        alert("Mô tả không được vượt quá 200 ký tự!")
-                                        return
-                                    }
-                                    onUpdate(editedPromo)
-                                    setIsModalOpen(false)
-                                    setDiscountValueError("")
-                                }}
+                                onClick={handleSave}
                                 className={`px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg ${
                                     discountValueError ? "opacity-50 cursor-not-allowed" : ""
                                 }`}
@@ -239,7 +246,7 @@ const PromotionCard = ({ promo, onUpdate, onCancel, onUpdateDescription }) => {
                 </div>
             )}
         </>
-    )
-}
+    );
+};
 
-export default PromotionCard
+export default PromotionCard;
