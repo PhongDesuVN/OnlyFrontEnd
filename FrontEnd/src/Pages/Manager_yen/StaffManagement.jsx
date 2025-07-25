@@ -638,7 +638,7 @@ export default function StaffManagement() {
                     onOverview={() => navigate("/staffperformance")}
                     onLogout={handleLogout}
                 />
-                <main className="flex-1 pt-20 pb-16 px-10 ">
+                <main className="flex-1 pb-16 px-10 ">
                     <h1 className="text-4xl pt-5 font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mb-8">
                         Quản Lý Nhân Viên
                     </h1>
