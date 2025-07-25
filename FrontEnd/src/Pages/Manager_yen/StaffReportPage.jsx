@@ -53,17 +53,6 @@ const LeftMenu = ({ onBackToHome, onOverview, onApproveNewStaff, onProfile, onLo
                     </div>
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gradient-to-b from-blue-300 via-blue-200 to-blue-300 rounded-l-full shadow-lg"></div>
                 </button>
-                <button
-                    onClick={onApproveNewStaff}
-                    className="group flex items-center gap-4 p-4 rounded-2xl text-sm font-medium transition-all duration-300 relative overflow-hidden text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"
-                >
-                    <div className="p-2.5 rounded-xl transition-all duration-300 group-hover:bg-blue-700/50">
-                        <Users className="w-5 h-5 text-blue-300 group-hover:text-blue-100" />
-                    </div>
-                    <div className="flex-1 relative z-10">
-                        <span className="font-semibold">Duyệt nhân viên mới</span>
-                    </div>
-                </button>
                 <div className="mt-6 pt-4 border-t border-blue-700/30">
                     <div className="p-2">
                         <div className="relative">
@@ -200,10 +189,10 @@ const StaffPerformancePage = () => {
     // Get performance level color
     const getPerformanceColor = (level) => {
         switch (level) {
-            case 'EXCELLENT': return 'text-green-600 bg-green-100';
-            case 'GOOD': return 'text-blue-600 bg-blue-100';
-            case 'AVERAGE': return 'text-yellow-600 bg-yellow-100';
-            case 'POOR': return 'text-red-600 bg-red-100';
+            case 'Xuất sắc': return 'text-green-600 bg-green-100';
+            case 'Tốt': return 'text-blue-600 bg-blue-100';
+            case 'Trung bình': return 'text-yellow-600 bg-yellow-100';
+            case 'Kém': return 'text-red-600 bg-red-100';
             default: return 'text-gray-600 bg-gray-100';
         }
     };
@@ -223,12 +212,19 @@ const StaffPerformancePage = () => {
     const chartData = performanceData.map(staff => ({
         name: staff.fullName?.split(' ').slice(-1)[0] || 'Không xác định',
         score: staff.performanceScore || 0,
-        level: staff.performanceLevel || 'UNKNOWN',
+        level: staff.performanceLevel === 'EXCELLENT' ? 'Xuất sắc' :
+            staff.performanceLevel === 'GOOD' ? 'Tốt' :
+                staff.performanceLevel === 'AVERAGE' ? 'Trung bình' :
+                    staff.performanceLevel === 'POOR' ? 'Kém' : 'Không xác định',
     }));
 
     // Prepare pie chart data
     const performanceLevels = performanceData.reduce((acc, staff) => {
-        acc[staff.performanceLevel] = (acc[staff.performanceLevel] || 0) + 1;
+        const level = staff.performanceLevel === 'EXCELLENT' ? 'Xuất sắc' :
+            staff.performanceLevel === 'GOOD' ? 'Tốt' :
+                staff.performanceLevel === 'AVERAGE' ? 'Trung bình' :
+                    staff.performanceLevel === 'POOR' ? 'Kém' : 'Không xác định';
+        acc[level] = (acc[level] || 0) + 1;
         return acc;
     }, {});
 
@@ -238,11 +234,11 @@ const StaffPerformancePage = () => {
     }));
 
     const COLORS = {
-        EXCELLENT: '#10B981',
-        GOOD: '#3B82F6',
-        AVERAGE: '#F59E0B',
-        POOR: '#EF4444',
-        UNKNOWN: '#6B7280',
+        'Xuất sắc': '#10B981',
+        'Tốt': '#3B82F6',
+        'Trung bình': '#F59E0B',
+        'Kém': '#EF4444',
+        'Không xác định': '#6B7280',
     };
 
     // Statistics
@@ -314,7 +310,7 @@ const StaffPerformancePage = () => {
                     onProfile={() => navigate('/profile/main')}
                     onLogout={() => navigate('/logout')}
                 />
-                <main className="flex-1  px-4 pt-20 pb-24 overflow-auto">
+                <main className="flex-1 px-4 pt-20 pb-24 overflow-auto">
                     <div className="max-w-7xl mx-auto">
                         {/* Header */}
                         <div className="mb-8">
@@ -402,7 +398,7 @@ const StaffPerformancePage = () => {
                                             dataKey="value"
                                         >
                                             {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[entry.name] || COLORS.UNKNOWN} />
+                                                <Cell key={`cell-${index}`} fill={COLORS[entry.name] || COLORS['Không xác định']} />
                                             ))}
                                         </Pie>
                                         <Tooltip />
@@ -449,6 +445,10 @@ const StaffPerformancePage = () => {
                                     <tbody className="divide-y divide-blue-200">
                                     {paginatedData.map((staff) => {
                                         const buttonStatus = getEmailButtonStatus(staff.id);
+                                        const level = staff.performanceLevel === 'EXCELLENT' ? 'Xuất sắc' :
+                                            staff.performanceLevel === 'GOOD' ? 'Tốt' :
+                                                staff.performanceLevel === 'AVERAGE' ? 'Trung bình' :
+                                                    staff.performanceLevel === 'POOR' ? 'Kém' : 'Không xác định';
                                         return (
                                             <tr key={staff.id} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -461,8 +461,8 @@ const StaffPerformancePage = () => {
                                                     <div className="text-sm font-medium text-gray-900">{staff.performanceScore || '0'}</div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPerformanceColor(staff.performanceLevel || 'UNKNOWN')}`}>
-                                                            {staff.performanceLevel || 'UNKNOWN'}
+                                                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPerformanceColor(level)}`}>
+                                                            {level}
                                                         </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
     ArrowLeft, 
     Package, 
@@ -30,6 +30,7 @@ import RequireAuth from '../../Components/RequireAuth';
 const C_BookingDetail = ({ booking: bookingProp }) => {
     const { bookingId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [booking, setBooking] = useState(bookingProp || null);
     const [customerInfo, setCustomerInfo] = useState(null);
     const [loading, setLoading] = useState(!bookingProp);
@@ -39,15 +40,13 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
 
     useEffect(() => {
         if (!booking && bookingId) {
-            // Nếu không có booking từ props, không fetch nữa hoặc có thể lấy từ localStorage/orderHistory nếu cần
-            setError('Không tìm thấy đơn hàng');
-            setLoading(false);
+            fetchBookingDetail(); // Gọi API để lấy thông tin đơn hàng
         } else {
             setLoading(false);
         }
         fetchCustomerInfo();
         fetchCustomerFeedbacks();
-    }, [bookingId, booking]);
+    }, [bookingId]);
 
     const fetchBookingDetail = async () => {
         try {
@@ -87,7 +86,7 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
         }
 
         try {
-            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { auth: true });
+            const response = await apiCall(`/api/customer/bookings/${bookingId}/cancel`, { method: 'PATCH', auth: true });
 
             if (response.ok) {
                 alert('Hủy đơn hàng thành công!');
@@ -204,6 +203,14 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
     // Log state feedbacks ngay trước return
     console.log('Render feedbacks:', feedbacks, Array.isArray(feedbacks), feedbacks.length);
 
+    const handleBack = () => {
+        if (location.state?.fromOrderHistory) {
+            navigate('/c_dashboard', { state: { activeTab: 'orderHistory' } });
+        } else {
+            navigate(-1);
+        }
+    };
+
     if (loading) {
         return (
             <RequireAuth allowedRoles={["CUSTOMER"]}>
@@ -266,7 +273,7 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
                         <div className="flex items-center justify-between py-4">
                             <div className="flex items-center space-x-4">
                                 <button
-                                    onClick={() => navigate('/c_dashboard')}
+                                    onClick={handleBack}
                                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -628,36 +635,14 @@ const C_BookingDetail = ({ booking: bookingProp }) => {
                     </div>
                 </div>
             </div>
-            <FeedbackModal
-                isOpen={feedbackModalOpen}
-                onClose={closeFeedbackModal}
-                bookingId={bookingId}
-                storageId={booking?.storageId}
-                transportId={booking?.transportId}
-            />
-            {Array.isArray(feedbacks) && feedbacks.length > 0 ? (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Nhật ký đánh giá của bạn</h3>
-                    <div className="space-y-4">
-                        {feedbacks.map((fb) => (
-                            <div key={fb.feedbackId} className="p-4 border-b last:border-b-0">
-                                <div className="flex items-center space-x-2 mb-1">
-                                    <Star className="w-4 h-4 text-yellow-400" />
-                                    <span className="font-medium">{fb.star}/5</span>
-                                    <span className="text-gray-500 text-xs ml-2">{new Date(fb.createdAt).toLocaleString('vi-VN')}</span>
-                                </div>
-                                <div className="text-gray-800 font-semibold">{fb.content}</div>
-                                <div className="text-gray-500 text-sm">Loại: {fb.type === 'STORAGE' ? 'Kho' : 'Vận chuyển'} | Đơn #{fb.bookingId}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6 text-center">
-                    <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Không tìm thấy đánh giá nào</h3>
-                    <p className="text-gray-500 mb-4">Bạn chưa có đánh giá nào cho các đơn hàng đã thực hiện.</p>
-                </div>
+            {booking && (
+                <FeedbackModal
+                    isOpen={feedbackModalOpen}
+                    onClose={closeFeedbackModal}
+                    bookingId={booking.bookingId}
+                    storageId={booking.storageId}
+                    transportId={booking.transportId}
+                />
             )}
         </RequireAuth>
     );

@@ -10,6 +10,9 @@ import {
     getFeedbacksByStorageId,
     getFeedbacksByTransportId
 } from './feedbackDataService';
+import {
+    BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell
+} from 'recharts';
 
 const RatingStars = ({ rating, size = "w-4 h-4" }) => {
     return (
@@ -26,21 +29,21 @@ const RatingStars = ({ rating, size = "w-4 h-4" }) => {
 };
 
 const FeedbackCard = ({ feedback, onLike, onDislike }) => {
-    const [isLiked, setIsLiked] = useState(false);
-    const [isDisliked, setIsDisliked] = useState(false);
+    const [isLiked, setIsLiked] = useState(!!feedback.isLikedByCurrentUser);
+    const [isDisliked, setIsDisliked] = useState(!!feedback.isDislikedByCurrentUser);
     const [likeCount, setLikeCount] = useState(feedback.likes || 0);
     const [dislikeCount, setDislikeCount] = useState(feedback.dislikes || 0);
 
     const handleLike = async () => {
+        if (isLiked) return; // Đã like thì không làm gì
         try {
-            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, { auth: true });
-
+            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/like`, { method: 'PATCH', auth: true });
             if (response.ok) {
                 const updatedFeedback = await response.json();
                 setLikeCount(updatedFeedback.likes);
                 setDislikeCount(updatedFeedback.dislikes);
-                setIsLiked(!isLiked);
-                if (isDisliked) setIsDisliked(false);
+                setIsLiked(true);
+                setIsDisliked(false);
                 if (onLike) onLike(updatedFeedback);
             }
         } catch (error) {
@@ -49,15 +52,15 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
     };
 
     const handleDislike = async () => {
+        if (isDisliked) return; // Đã dislike thì không làm gì
         try {
-            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, { auth: true });
-
+            const response = await apiCall(`/api/customer/feedback/${feedback.feedbackId}/dislike`, { method: 'PATCH', auth: true });
             if (response.ok) {
                 const updatedFeedback = await response.json();
                 setLikeCount(updatedFeedback.likes);
                 setDislikeCount(updatedFeedback.dislikes);
-                setIsDisliked(!isDisliked);
-                if (isLiked) setIsLiked(false);
+                setIsDisliked(true);
+                setIsLiked(false);
                 if (onDislike) onDislike(updatedFeedback);
             }
         } catch (error) {
@@ -93,24 +96,25 @@ const FeedbackCard = ({ feedback, onLike, onDislike }) => {
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={handleLike}
-                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${isLiked
-                                ? 'bg-blue-100 text-blue-600'
-                                : 'bg-gray-100 text-gray-600 hover:bg-blue-50'
-                            }`}
+                        disabled={feedback.isLike}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${feedback.isLike
+                            ? 'bg-blue-100 text-blue-600 cursor-not-allowed opacity-60'
+                            : 'bg-gray-100 text-gray-600 hover:bg-blue-50'}
+                        `}
                     >
-                        <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                        <span className="text-sm">{likeCount}</span>
+                        <ThumbsUp className={`w-4 h-4 ${feedback.isLike ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
+                        <span className="text-sm">{feedback.likes}</span>
                     </button>
-
                     <button
                         onClick={handleDislike}
-                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${isDisliked
-                                ? 'bg-red-100 text-red-600'
-                                : 'bg-gray-100 text-gray-600 hover:bg-red-50'
-                            }`}
+                        disabled={feedback.isDislike}
+                        className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-all ${feedback.isDislike
+                            ? 'bg-red-100 text-red-600 cursor-not-allowed opacity-60'
+                            : 'bg-gray-100 text-gray-600 hover:bg-red-50'}
+                        `}
                     >
-                        <ThumbsDown className={`w-4 h-4 ${isDisliked ? 'fill-current' : ''}`} />
-                        <span className="text-sm">{dislikeCount}</span>
+                        <ThumbsDown className={`w-4 h-4 ${feedback.isDislike ? 'fill-current cursor-not-allowed opacity-60' : ''}`} />
+                        <span className="text-sm">{feedback.dislikes}</span>
                     </button>
                 </div>
 
@@ -190,7 +194,10 @@ const ServiceCard = ({ service, type, onClick }) => {
             </div>
 
             <div className="mb-4">
-                <p className="text-gray-600 text-sm mb-2">{service.address || 'Địa chỉ không có sẵn'}</p>
+                {/* Hiển thị lại tên thay vì address */}
+                <p className="text-gray-600 text-sm mb-2">
+                    {type === 'storage' ? service.storageUnitName : service.transportUnitName}
+                </p>
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">Đánh giá trung bình:</span>
                     <div className="flex items-center">
@@ -235,47 +242,114 @@ const FeedbackModal = ({ isOpen, onClose, service, type, feedbacks, onFeedbackCr
                             <X className="w-6 h-6" />
                         </button>
                     </div>
-                        <div className="mb-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-blue-50 p-4 rounded-lg">
-                                    <div className="text-sm text-gray-600">Đánh giá trung bình</div>
-                                    <div className="text-2xl font-bold text-blue-600">{service.averageStar.toFixed(1)}/5</div>
-                                    <RatingStars rating={Math.round(service.averageStar)} />
-                                </div>
-                                <div className="bg-green-50 p-4 rounded-lg">
-                                    <div className="text-sm text-gray-600">Tổng đánh giá</div>
-                                    <div className="text-2xl font-bold text-green-600">{service.totalFeedbacks}</div>
-                                </div>
-                                <div className="bg-orange-50 p-4 rounded-lg">
-                                    <div className="text-sm text-gray-600">Tổng lượt thích</div>
-                                    <div className="text-2xl font-bold text-orange-600">{service.totalLikes}</div>
-                                </div>
+                    <div className="mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <div className="text-sm text-gray-600">Đánh giá trung bình</div>
+                                <div className="text-2xl font-bold text-blue-600">{service.averageStar.toFixed(1)}/5</div>
+                                <RatingStars rating={Math.round(service.averageStar)} />
+                            </div>
+                            <div className="bg-green-50 p-4 rounded-lg">
+                                <div className="text-sm text-gray-600">Tổng đánh giá</div>
+                                <div className="text-2xl font-bold text-green-600">{service.totalFeedbacks}</div>
+                            </div>
+                            <div className="bg-orange-50 p-4 rounded-lg">
+                                <div className="text-sm text-gray-600">Tổng lượt thích</div>
+                                <div className="text-2xl font-bold text-orange-600">{service.totalLikes}</div>
                             </div>
                         </div>
-                        <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-lg font-semibold text-gray-800">Tất cả đánh giá</h4>
+                    </div>
+                    <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-lg font-semibold text-gray-800">Tất cả đánh giá</h4>
                         {/* Đã xóa nút Tạo đánh giá */}
-                        </div>
-                        <div className="space-y-4">
-                            {feedbacks && feedbacks.length > 0 ? (
-                                feedbacks.map((feedback) => (
-                                    <FeedbackCard
-                                        key={feedback.feedbackId}
-                                        feedback={feedback}
-                                        onLike={() => onFeedbackCreated && onFeedbackCreated()}
-                                        onDislike={() => onFeedbackCreated && onFeedbackCreated()}
-                                    />
-                                ))
-                            ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                    <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                                    <p>Chưa có đánh giá nào cho {type === 'storage' ? 'kho' : 'đơn vị vận chuyển'} này</p>
-                                </div>
-                            )}
-                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        {feedbacks && feedbacks.length > 0 ? (
+                            feedbacks.map((feedback) => (
+                                <FeedbackCard
+                                    key={feedback.feedbackId}
+                                    feedback={feedback}
+                                    onLike={() => onFeedbackCreated && onFeedbackCreated()}
+                                    onDislike={() => onFeedbackCreated && onFeedbackCreated()}
+                                />
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                                <p>Chưa có đánh giá nào cho {type === 'storage' ? 'kho' : 'đơn vị vận chuyển'} này</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+        </div>
+    );
+};
+
+// Top 3 Bar Chart Component
+const Top3BarChart = ({ data, type, onBarClick }) => {
+    // Sort by averageStar desc, then pick top 3
+    const sorted = [...data].sort((a, b) => b.averageStar - a.averageStar).slice(0, 3);
+    // Arrange as [top2, top1, top3] for visual order
+    let arranged = [];
+    if (sorted.length === 3) {
+        arranged = [sorted[1], sorted[0], sorted[2]];
+    } else if (sorted.length === 2) {
+        arranged = [sorted[1], sorted[0]];
+    } else {
+        arranged = sorted;
+    }
+    // Bar colors: [2nd, 1st, 3rd]
+    const barColors = [
+        '#A3A3A3', // 2nd - gray
+        '#FFD700', // 1st - gold
+        '#FF9800'  // 3rd - orange
+    ];
+    // Custom Tooltip
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length && payload[0].payload) {
+            const item = payload[0].payload;
+            const rank = sorted.findIndex(x => x === item) + 1;
+            return (
+                <div className="z-50">
+                    <RankingCard item={item} rank={rank} type={type} />
+                </div>
+            );
+        }
+        return null;
+    };
+    return (
+        <ResponsiveContainer width="100%" height={320}>
+            <BarChart
+                data={arranged}
+                margin={{ top: 20, right: 20, left: 20, bottom: 40 }}
+                barCategoryGap={40}
+            >
+                <XAxis
+                    dataKey={type === 'storage' ? 'storageUnitName' : 'transportUnitName'}
+                    tick={{ fontSize: 14, fill: '#333' }}
+                    interval={0}
+                    angle={-15}
+                    textAnchor="end"
+                />
+                <YAxis
+                    domain={[0, 5]}
+                    ticks={[0, 1, 2, 3, 4, 5]}
+                    tick={{ fontSize: 14, fill: '#333' }}
+                    label={{ value: 'Sao trung bình', angle: -90, position: 'insideLeft', fontSize: 14 }}
+                />
+                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: '#f3f4f6', opacity: 0.3 }} />
+                <Bar
+                    dataKey="averageStar"
+                    radius={[8, 8, 0, 0]}
+                    onClick={(_, idx) => onBarClick(arranged[idx], type)}
+                >
+                    {arranged.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={barColors[idx] || '#60a5fa'} />
+                    ))}
+                </Bar>
+            </BarChart>
+        </ResponsiveContainer>
     );
 };
 
@@ -290,10 +364,23 @@ const C_Feedback = ({ hideNavbar }) => {
     const [selectedType, setSelectedType] = useState(null);
     const [serviceFeedbacks, setServiceFeedbacks] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    // Pagination state
+    const [storagePage, setStoragePage] = useState(1);
+    const [transportPage, setTransportPage] = useState(1);
+    const ITEMS_PER_PAGE = 9;
+    // Search state
+    const [storageSearch, setStorageSearch] = useState('');
+    const [transportSearch, setTransportSearch] = useState('');
 
     useEffect(() => {
         fetchData();
     }, []);
+
+    // Reset page when tab changes
+    useEffect(() => {
+        setStoragePage(1);
+        setTransportPage(1);
+    }, [activeTab]);
 
     const fetchData = async () => {
         try {
@@ -341,32 +428,35 @@ const C_Feedback = ({ hideNavbar }) => {
         console.log('Đăng xuất');
     };
 
+    // Pagination helpers
+    const getPaginatedData = (data, page) => {
+        const start = (page - 1) * ITEMS_PER_PAGE;
+        return data.slice(start, start + ITEMS_PER_PAGE);
+    };
+    const getTotalPages = (data) => Math.ceil(data.length / ITEMS_PER_PAGE);
+
+    // Lọc dữ liệu theo search
+    const filteredStorages = allStorages.filter(s =>
+        (s.storageUnitName || '').toLowerCase().includes(storageSearch.toLowerCase())
+    );
+    const filteredTransports = allTransports.filter(t =>
+        (t.transportUnitName || '').toLowerCase().includes(transportSearch.toLowerCase())
+    );
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
 
-            {/* Hero Section */}
-            <section className="pt-24 pb-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <div className="container mx-auto px-4 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                        Đánh Giá & Xếp Hạng
-                    </h1>
-                    <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                        Khám phá bảng xếp hạng và đánh giá chi tiết của các dịch vụ vận chuyển và kho bãi
-                    </p>
-                </div>
-            </section>
-
             {/* Navigation Tabs */}
-            <section className="py-8">
-                <div className="container mx-auto px-4">
+            <section className="">
+                <div className="container mx-auto ">
                     <div className="flex justify-center mb-8">
                         <div className="bg-white rounded-xl p-2 shadow-lg">
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => setActiveTab('ranking')}
                                     className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'ranking'
-                                            ? 'bg-blue-600 text-white shadow-lg'
-                                            : 'text-gray-600 hover:text-gray-800'
+                                        ? 'bg-blue-600 text-white shadow-lg'
+                                        : 'text-gray-600 hover:text-gray-800'
                                         }`}
                                 >
                                     <div className="flex items-center space-x-2">
@@ -377,8 +467,8 @@ const C_Feedback = ({ hideNavbar }) => {
                                 <button
                                     onClick={() => setActiveTab('storage')}
                                     className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'storage'
-                                            ? 'bg-green-600 text-white shadow-lg'
-                                            : 'text-gray-600 hover:text-gray-800'
+                                        ? 'bg-green-600 text-white shadow-lg'
+                                        : 'text-gray-600 hover:text-gray-800'
                                         }`}
                                 >
                                     <div className="flex items-center space-x-2">
@@ -389,8 +479,8 @@ const C_Feedback = ({ hideNavbar }) => {
                                 <button
                                     onClick={() => setActiveTab('transport')}
                                     className={`px-6 py-3 rounded-lg font-semibold transition-all ${activeTab === 'transport'
-                                            ? 'bg-orange-600 text-white shadow-lg'
-                                            : 'text-gray-600 hover:text-gray-800'
+                                        ? 'bg-orange-600 text-white shadow-lg'
+                                        : 'text-gray-600 hover:text-gray-800'
                                         }`}
                                 >
                                     <div className="flex items-center space-x-2">
@@ -405,58 +495,33 @@ const C_Feedback = ({ hideNavbar }) => {
             </section>
 
             {/* Content Sections */}
-            <section className="py-12">
-                <div className="container mx-auto px-4">
+            <section className="">
+                <div className="container mx-auto   ">
                     {activeTab === 'ranking' && (
-                        <div className="space-y-12">
-                            {/* Top Storage Rankings */}
-                            <div>
-                                <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                                    <div className="flex items-center justify-center space-x-3">
-                                        <Package className="w-8 h-8 text-green-500" />
-                                        <span>Top 3 Kho Bãi Nổi Bật</span>
-                                    </div>
+                        <div className="flex flex-col md:flex-row gap-8 md:gap-12">
+                            {/* Top Storage Bar Chart */}
+                            <div className="flex-1 bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-2">
+                                    <Package className="w-7 h-7 text-green-500" />
+                                    Top 3 Kho Bãi Nổi Bật
                                 </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {topStorages.map((storage, index) => (
-                                        <div
-                                            key={storage.storageId}
-                                            className="cursor-pointer"
-                                            onClick={() => handleServiceClick(storage, 'storage')}
-                                        >
-                                            <RankingCard 
-                                                item={storage} 
-                                                rank={index + 1} 
-                                                type="storage" 
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
+                                <Top3BarChart
+                                    data={topStorages}
+                                    type="storage"
+                                    onBarClick={handleServiceClick}
+                                />
                             </div>
-
-                            {/* Top Transport Rankings */}
-                            <div>
-                                <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-                                    <div className="flex items-center justify-center space-x-3">
-                                        <Truck className="w-8 h-8 text-orange-500" />
-                                        <span>Top 3 Đơn Vị Vận Chuyển Nổi Bật</span>
-                                    </div>
+                            {/* Top Transport Bar Chart */}
+                            <div className="flex-1 bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+                                <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center gap-2">
+                                    <Truck className="w-7 h-7 text-orange-500" />
+                                    Top 3 Đơn Vị Vận Chuyển Nổi Bật
                                 </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {topTransports.map((transport, index) => (
-                                        <div
-                                            key={transport.transportId}
-                                            className="cursor-pointer"
-                                            onClick={() => handleServiceClick(transport, 'transport')}
-                                        >
-                                            <RankingCard 
-                                                item={transport} 
-                                                rank={index + 1} 
-                                                type="transport" 
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
+                                <Top3BarChart
+                                    data={topTransports}
+                                    type="transport"
+                                    onBarClick={handleServiceClick}
+                                />
                             </div>
                         </div>
                     )}
@@ -469,15 +534,62 @@ const C_Feedback = ({ hideNavbar }) => {
                                     <span>Tất Cả Kho Bãi</span>
                                 </div>
                             </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {allStorages.map((storage) => (
-                                    <ServiceCard
-                                        key={storage.storageId}
-                                        service={storage}
-                                        type="storage"
-                                        onClick={handleServiceClick}
-                                    />
-                                ))}
+                            {/* Search bar on top */}
+                            <div className="mb-6">
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400"
+                                    placeholder="Tìm kiếm theo tên kho bãi..."
+                                    value={storageSearch}
+                                    onChange={e => {
+                                        setStorageSearch(e.target.value);
+                                        setStoragePage(1);
+                                    }}
+                                />
+                            </div>
+                            <div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {getPaginatedData(filteredStorages, storagePage).map((storage) => (
+                                        <ServiceCard
+                                            key={storage.storageId}
+                                            service={storage}
+                                            type="storage"
+                                            onClick={handleServiceClick}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            {/* Pagination controls */}
+                            {getTotalPages(filteredStorages) > 1 && (
+                                <div className="flex justify-center mt-8 gap-2">
+                                    <button
+                                        className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                        onClick={() => setStoragePage((p) => Math.max(1, p - 1))}
+                                        disabled={storagePage === 1}
+                                    >
+                                        Trước
+                                    </button>
+                                    {Array.from({ length: getTotalPages(filteredStorages) }, (_, i) => (
+                                        <button
+                                            key={i}
+                                            className={`px-3 py-1 rounded-lg border ${storagePage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                                            onClick={() => setStoragePage(i + 1)}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                        onClick={() => setStoragePage((p) => Math.min(getTotalPages(filteredStorages), p + 1))}
+                                        disabled={storagePage === getTotalPages(filteredStorages)}
+                                    >
+                                        Sau
+                                    </button>
+                                </div>
+                            )}
+                            {/* Tổng số kho bãi */}
+                            <div className="text-center text-gray-600 mt-4">
+                                Tổng số kho bãi: {filteredStorages.length}
                             </div>
                         </div>
                     )}
@@ -490,81 +602,67 @@ const C_Feedback = ({ hideNavbar }) => {
                                     <span>Tất Cả Đơn Vị Vận Chuyển</span>
                                 </div>
                             </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {allTransports.map((transport) => (
-                                    <ServiceCard
-                                        key={transport.transportId}
-                                        service={transport}
-                                        type="transport"
-                                        onClick={handleServiceClick}
-                                    />
-                                ))}
+                            {/* Search bar on top */}
+                            <div className="mb-6">
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400"
+                                    placeholder="Tìm kiếm theo tên vận chuyển..."
+                                    value={transportSearch}
+                                    onChange={e => {
+                                        setTransportSearch(e.target.value);
+                                        setTransportPage(1);
+                                    }}
+                                />
+                            </div>
+                            <div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {getPaginatedData(filteredTransports, transportPage).map((transport) => (
+                                        <ServiceCard
+                                            key={transport.transportId}
+                                            service={transport}
+                                            type="transport"
+                                            onClick={handleServiceClick}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            {/* Pagination controls */}
+                            {getTotalPages(filteredTransports) > 1 && (
+                                <div className="flex justify-center mt-8 gap-2">
+                                    <button
+                                        className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                        onClick={() => setTransportPage((p) => Math.max(1, p - 1))}
+                                        disabled={transportPage === 1}
+                                    >
+                                        Trước
+                                    </button>
+                                    {Array.from({ length: getTotalPages(filteredTransports) }, (_, i) => (
+                                        <button
+                                            key={i}
+                                            className={`px-3 py-1 rounded-lg border ${transportPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                                            onClick={() => setTransportPage(i + 1)}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                        onClick={() => setTransportPage((p) => Math.min(getTotalPages(filteredTransports), p + 1))}
+                                        disabled={transportPage === getTotalPages(filteredTransports)}
+                                    >
+                                        Sau
+                                    </button>
+                                </div>
+                            )}
+                            {/* Tổng số vận chuyển */}
+                            <div className="text-center text-gray-600 mt-4">
+                                Tổng số đơn vị vận chuyển: {filteredTransports.length}
                             </div>
                         </div>
                     )}
                 </div>
             </section>
-
-            {/* Call to Action */}
-            <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl font-bold mb-4">
-                        Chia Sẻ Trải Nghiệm Của Bạn
-                    </h2>
-                    <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-                        Đánh giá của bạn rất quan trọng để chúng tôi cải thiện dịch vụ
-                    </p>
-                    <Link to="/C_HomePage">
-                        <button className="px-8 py-4 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors font-semibold text-lg">
-                            Đặt Dịch Vụ Ngay
-                        </button>
-                    </Link>
-                </div>
-            </section>
-
-            {/* Footer */}
-            <footer className="bg-gray-800 text-white py-12">
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                        <div>
-                            <h3 className="text-xl font-bold mb-4">Vận Chuyển Nhà</h3>
-                            <p className="text-gray-300">
-                                Dịch vụ vận chuyển chuyên nghiệp, an toàn và đáng tin cậy.
-                            </p>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-4">Dịch Vụ</h4>
-                            <ul className="space-y-2 text-gray-300">
-                                <li>Vận chuyển nhà</li>
-                                <li>Kho bãi lưu trữ</li>
-                                <li>Đóng gói đồ đạc</li>
-                                <li>Bảo hiểm hàng hóa</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-4">Hỗ Trợ</h4>
-                            <ul className="space-y-2 text-gray-300">
-                                <li>Trung tâm trợ giúp</li>
-                                <li>Liên hệ</li>
-                                <li>FAQ</li>
-                                <li>Chính sách</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="font-semibold mb-4">Liên Hệ</h4>
-                            <div className="space-y-2 text-gray-300">
-                                <p>Hotline: 1900-1234</p>
-                                <p>Email: info@vanchuyen.com</p>
-                                <p>Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
-                        <p>&copy; 2025 Vận Chuyển Nhà. Tất cả quyền được bảo lưu.</p>
-                    </div>
-                </div>
-            </footer>
-
             {/* Feedback Modal */}
             <FeedbackModal
                 isOpen={showModal}

@@ -181,14 +181,14 @@ export async function getFeedbacksByTransportId(transportId) {
 
 // Like feedback
 export async function likeFeedback(feedbackId) {
-    const response = await apiCall(`/api/customer/feedback/${feedbackId}/like`, { auth: true });
+    const response = await apiCall(`/api/customer/feedback/${feedbackId}/like`, { method: 'PATCH' }, { auth: true });
     if (!response.ok) throw new Error('Lỗi like feedback');
     return await response.json();
 }
 
 // Dislike feedback
 export async function dislikeFeedback(feedbackId) {
-    const response = await apiCall(`/api/customer/feedback/${feedbackId}/dislike`, { auth: true });
+    const response = await apiCall(`/api/customer/feedback/${feedbackId}/dislike`, { method: 'PATCH'}, { auth: true });
     if (!response.ok) throw new Error('Lỗi dislike feedback');
     return await response.json();
 } 

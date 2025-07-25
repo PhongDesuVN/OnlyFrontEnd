@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Search, Plus, Edit, Trash2, Eye, UserCheck, UserX,
@@ -16,6 +16,7 @@ function getCookie(name) {
 
 // Header Component
 const Header = () => {
+    const navigate = useNavigate();
     return (
         <header className="fixed w-full top-0 bg-white shadow-lg z-40">
             <div className="container mx-auto px-4 py-4">
@@ -30,6 +31,13 @@ const Header = () => {
                                 Trang Chủ
                             </button>
                         </Link>
+                        {/* Nút quay về staff dùng hàm navigate */}
+                        <button
+                            className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all ml-2"
+                            onClick={() => navigate('/staff')}
+                        >
+                            Quay về trang Staff
+                        </button>
                     </div>
                 </div>
             </div>
@@ -43,7 +51,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
         overview: 'Tổng Quan',
         list: 'Danh Sách User',
         search: 'Tìm Kiếm User',
-        add: 'Thêm User Mới'
+        // add: 'Thêm User Mới' // Bỏ chức năng thêm user
     };
 
     return (
@@ -51,13 +59,11 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             transition={{ duration: 0.5 }}
-            className="w-64 bg-gradient-to-b from-blue-900 to-purple-600 text-white p-6 h-screen shadow-2xl fixed z-30"
+            className="w-64 mt-16 bg-gradient-to-b from-blue-900 to-purple-600 text-white p-6 h-screen shadow-2xl fixed z-30"
         >
-            <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
-                <Users className="mr-2" /> Quản Lý User
-            </h1>
             <nav>
-                {['overview', 'list', 'search', 'add', 'settings'].map(page => (
+                {/* Bỏ 'add' khỏi danh sách */}
+                {['overview', 'list', 'search', 'settings'].map(page => (
                     <motion.button
                         key={page}
                         whileHover={{ scale: 1.05 }}
@@ -70,7 +76,7 @@ const Sidebar = ({ currentPage, setCurrentPage }) => {
                         {page === 'overview' && <BarChart className="mr-2" size={20} />}
                         {page === 'list' && <List className="mr-2" size={20} />}
                         {page === 'search' && <Search className="mr-2" size={20} />}
-                        {page === 'add' && <Plus className="mr-2" size={20} />}
+                        {/* {page === 'add' && <Plus className="mr-2" size={20} />} */}
                         {pageLabels[page]}
                     </motion.button>
                 ))}
@@ -87,7 +93,7 @@ const UserOverview = ({ users }) => (
         transition={{ duration: 0.5 }}
     >
         <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <BarChart className="mr-2" /> Tổng Quan User
+            <BarChart className="mr-2" /> Tổng Quan Khách Hàng
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -182,105 +188,147 @@ const UserOverview = ({ users }) => (
 );
 
 // User List Component
-const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-    >
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <List className="mr-2" /> Danh Sách User
-        </h2>
-        <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
-            <table className="w-full border-collapse">
-                <thead>
-                <tr className="bg-gray-100">
-                    <th className="border p-3 text-left text-gray-700">ID</th>
-                    <th className="border p-3 text-left text-gray-700">Họ Tên</th>
-                    <th className="border p-3 text-left text-gray-700">Username</th>
-                    <th className="border p-3 text-left text-gray-700">Email</th>
-                    <th className="border p-3 text-left text-gray-700">Vai Trò</th>
-                    <th className="border p-3 text-left text-gray-700">Số Điện Thoại</th>
-                    <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
-                    <th className="border p-3 text-left text-gray-700">Ngày Tạo</th>
-                    <th className="border p-3 text-left text-gray-700">Hành Động</th>
-                </tr>
-                </thead>
-                <tbody>
-                {users.map(user => (
-                    <motion.tr
-                        key={user.id}
-                        whileHover={{ backgroundColor: '#f3f4f6' }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <td className="border p-3">{user.id}</td>
-                        <td className="border p-3">
-                            <div className="flex items-center">
-                                <User className="w-4 h-4 mr-2 text-gray-500" />
-                                {user.fullName}
-                            </div>
-                        </td>
-                        <td className="border p-3 text-gray-600">{user.username}</td>
-                        <td className="border p-3">{user.email}</td>
-                        <td className="border p-3">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    user.role === 'MANAGER'
-                                        ? 'bg-purple-100 text-purple-800'
-                                        : user.role === 'STAFF'
-                                            ? 'bg-blue-100 text-blue-800'
-                                            : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                    {user.role === 'MANAGER' ? 'Quản lý' :
-                                        user.role === 'STAFF' ? 'Nhân viên' : 'Khách hàng'}
-                                </span>
-                        </td>
-                        <td className="border p-3">{user.phone}</td>
-                        <td className="border p-3">
-                                <span className={`px-2 py-1 rounded-full text-sm ${
-                                    user.status === 'ACTIVE'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-red-100 text-red-700'
-                                }`}>
-                                    {user.status === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
-                                </span>
-                        </td>
-                        <td className="border p-3">{new Date(user.createdAt).toLocaleDateString()}</td>
-                        <td className="border p-3">
-                            <div className="flex space-x-2">
-                                <button
-                                    onClick={() => onEditUser(user)}
-                                    className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                    title="Chỉnh sửa"
-                                >
-                                    <Edit size={16} />
-                                </button>
-                                <button
-                                    onClick={() => onToggleStatus(user.id)}
-                                    className={`p-2 text-white rounded transition-colors ${
+const UserList = ({ users, onEditUser, onDeleteUser, onToggleStatus }) => {
+    // Thêm state cho phân trang
+    const [currentPage, setCurrentPage] = useState(1);
+    const usersPerPage = 10;
+    const totalPages = Math.ceil(users.length / usersPerPage);
+    const startIdx = (currentPage - 1) * usersPerPage;
+    const endIdx = startIdx + usersPerPage;
+    const pagedUsers = users.slice(startIdx, endIdx);
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) setCurrentPage(page);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+        >
+            <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
+                <List className="mr-2" /> Danh Sách User
+            </h2>
+            <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
+                <table className="w-full border-collapse">
+                    <thead>
+                    <tr className="bg-gray-100">
+                        <th className="border p-3 text-left text-gray-700">ID</th>
+                        <th className="border p-3 text-left text-gray-700">Họ Tên</th>
+                        <th className="border p-3 text-left text-gray-700">Username</th>
+                        <th className="border p-3 text-left text-gray-700">Email</th>
+                        <th className="border p-3 text-left text-gray-700">Vai Trò</th>
+                        <th className="border p-3 text-left text-gray-700">Số Điện Thoại</th>
+                        <th className="border p-3 text-left text-gray-700">Trạng Thái</th>
+                        <th className="border p-3 text-left text-gray-700">Ngày Tạo</th>
+                        <th className="border p-3 text-left text-gray-700">Hành Động</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {pagedUsers.map(user => (
+                        <motion.tr
+                            key={user.id}
+                            whileHover={{ backgroundColor: '#f3f4f6' }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <td className="border p-3">{user.id}</td>
+                            <td className="border p-3">
+                                <div className="flex items-center">
+                                    <User className="w-4 h-4 mr-2 text-gray-500" />
+                                    {user.fullName}
+                                </div>
+                            </td>
+                            <td className="border p-3 text-gray-600">{user.username}</td>
+                            <td className="border p-3">{user.email}</td>
+                            <td className="border p-3">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        user.role === 'MANAGER'
+                                            ? 'bg-purple-100 text-purple-800'
+                                            : user.role === 'STAFF'
+                                                ? 'bg-blue-100 text-blue-800'
+                                                : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                        {user.role === 'MANAGER' ? 'Quản lý' :
+                                            user.role === 'STAFF' ? 'Nhân viên' : 'Khách hàng'}
+                                    </span>
+                            </td>
+                            <td className="border p-3">{user.phone}</td>
+                            <td className="border p-3">
+                                    <span className={`px-2 py-1 rounded-full text-sm ${
                                         user.status === 'ACTIVE'
-                                            ? 'bg-orange-500 hover:bg-orange-600'
-                                            : 'bg-green-500 hover:bg-green-600'
-                                    }`}
-                                    title={user.status === 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
-                                >
-                                    {user.status === 'ACTIVE' ? <UserX size={16} /> : <UserCheck size={16} />}
-                                </button>
-                                <button
-                                    onClick={() => onDeleteUser(user.id)}
-                                    className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    title="Xóa"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        </td>
-                    </motion.tr>
-                ))}
-                </tbody>
-            </table>
-        </div>
-    </motion.div>
-);
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'
+                                    }`}>
+                                        {user.status === 'ACTIVE' ? 'Hoạt động' : 'Bị khóa'}
+                                    </span>
+                            </td>
+                            <td className="border p-3">{new Date(user.createdAt).toLocaleDateString()}</td>
+                            <td className="border p-3">
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={() => onEditUser(user)}
+                                        className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                        title="Chỉnh sửa"
+                                    >
+                                        <Edit size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => onToggleStatus(user.id)}
+                                        className={`p-2 text-white rounded transition-colors ${
+                                            user.status === 'ACTIVE'
+                                                ? 'bg-orange-500 hover:bg-orange-600'
+                                                : 'bg-green-500 hover:bg-green-600'
+                                        }`}
+                                        title={user.status === 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+                                    >
+                                        {user.status === 'ACTIVE' ? <UserX size={16} /> : <UserCheck size={16} />}
+                                    </button>
+                                    <button
+                                        onClick={() => onDeleteUser(user.id)}
+                                        className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                        title="Xóa"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            </td>
+                        </motion.tr>
+                    ))}
+                    </tbody>
+                </table>
+                {/* Phân trang */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center mt-6 space-x-2">
+                        <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1 rounded ${currentPage === 1 ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                        >
+                            Trước
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                onClick={() => handlePageChange(page)}
+                                className={`px-3 py-1 rounded ${currentPage === page ? 'bg-blue-700 text-white' : 'bg-gray-200 text-gray-700 hover:bg-blue-100'}`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-1 rounded ${currentPage === totalPages ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                        >
+                            Sau
+                        </button>
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+};
 
 // Search Users Component
 const SearchUsers = ({ users, searchParams, setSearchParams }) => {
@@ -774,10 +822,11 @@ const Dashboard = () => {
         setLoading(true);
         setError(null);
         try {
-            const token = getCookie('authToken');
-            const userData = await userService.getAllUsers({}, token);
+            const userData = await userService.getAllUsers({});
+            // Lọc chỉ lấy khách hàng (role === 'CUSTOMER')
+            const customers = userData.filter(u => u.role === 'CUSTOMER');
             // Sort users by createdAt date (newest first)
-            const sortedUsers = userData.sort((a, b) => {
+            const sortedUsers = customers.sort((a, b) => {
                 const dateA = new Date(a.createdAt);
                 const dateB = new Date(b.createdAt);
                 return dateB - dateA; // Descending order (newest first)
@@ -792,28 +841,13 @@ const Dashboard = () => {
         }
     };
 
-    // Handle user operations
-    const handleAddUser = async (userData) => {
-        setLoading(true);
-        try {
-            const token = getCookie('authToken');
-            const newUser = await userService.createUser(userData, token);
-            setUsers([...users, newUser]);
-            setShowUserForm(false);
-            setCurrentPage('list');
-            setSuccess('User đã được thêm thành công');
-        } catch (err) {
-            setError('Không thể tạo user mới');
-            console.error('Error creating user:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Bỏ hoàn toàn chức năng thêm user mới
+    // const handleAddUser = async (userData) => { ... } // XÓA
 
     const handleEditUser = (user) => {
         setEditingUser(user);
         setShowUserForm(true);
-        setCurrentPage('add');
+        // setCurrentPage('add'); // Không chuyển sang trang add nữa
     };
 
     const handleUpdateUser = async (userData) => {
@@ -835,8 +869,7 @@ const Dashboard = () => {
 
             console.log('Filtered update data:', updateData);
 
-            const token = getCookie('authToken');
-            const updatedUser = await userService.updateUser(editingUser.id, updateData, token);
+            const updatedUser = await userService.updateUser(editingUser.id, updateData);
 
             console.log('Update successful, received:', updatedUser);
 
@@ -865,8 +898,7 @@ const Dashboard = () => {
         if (window.confirm('Bạn có chắc chắn muốn xóa user này?')) {
             setLoading(true);
             try {
-                const token = getCookie('authToken');
-                await userService.deleteUser(userId, token);
+                await userService.deleteUser(userId);
                 setUsers(users.filter(user => user.id !== userId));
                 setSuccess('User đã được xóa thành công');
             } catch (err) {
@@ -881,8 +913,7 @@ const Dashboard = () => {
     const handleToggleStatus = async (userId) => {
         setLoading(true);
         try {
-            const token = getCookie('authToken');
-            await userService.changeUserStatus(userId, token);
+            await userService.changeUserStatus(userId);
             setUsers(users.map(user =>
                 user.id === userId
                     ? { ...user, status: user.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE' }
@@ -898,12 +929,13 @@ const Dashboard = () => {
     };
 
     const renderPage = () => {
-        if (currentPage === 'add' || showUserForm) {
+        // Không cho phép hiển thị form thêm mới, chỉ cho phép chỉnh sửa
+        if (showUserForm && editingUser) {
             return (
                 <UserForm
                     user={editingUser}
-                    isEdit={!!editingUser}
-                    onSave={editingUser ? handleUpdateUser : handleAddUser}
+                    isEdit={true}
+                    onSave={handleUpdateUser}
                     onCancel={() => {
                         setShowUserForm(false);
                         setEditingUser(null);
@@ -912,7 +944,6 @@ const Dashboard = () => {
                 />
             );
         }
-
         switch (currentPage) {
             case 'overview':
                 return <UserOverview users={users} />;
@@ -1005,4 +1036,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard; 
+export default Dashboard;

@@ -1172,12 +1172,7 @@ const Dashboard = () => {
                 </div>
             </div>
             <div className="flex flex-col items-center gap-2 mt-8 p-4 bg-blue-50 rounded-xl">
-                <button
-                    className="w-full px-4 py-2 rounded-lg bg-white text-blue-600 font-semibold hover:bg-blue-100 transition"
-                    onClick={() => navigate("/profile")}
-                >
-                    View Profile
-                </button>
+
                 <button
                     className="w-full px-4 py-2 rounded-lg bg-white text-red-600 font-semibold hover:bg-red-100 transition"
                     onClick={() => {

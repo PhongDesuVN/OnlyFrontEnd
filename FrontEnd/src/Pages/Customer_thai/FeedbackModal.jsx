@@ -47,41 +47,6 @@ const FeedbackModal = ({ isOpen, onClose, bookingId, storageId, transportId }) =
             return;
         }
 
-        // Kiểm tra trạng thái booking
-        try {
-            const bookingResponse = await apiCall(`/api/customer/bookings/${bookingId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                auth: true
-            });
-            if (!bookingResponse.ok) {
-                const errorData = await bookingResponse.text();
-                console.error('Error fetching booking:', errorData);
-                setError(`Không thể lấy thông tin đơn hàng: ${errorData || 'Lỗi không xác định'}`);
-                setSubmitting(false);
-                return;
-            }
-            const bookingData = await bookingResponse.json();
-            if (bookingData.status !== 'COMPLETED') {
-                setError('Đơn hàng chưa hoàn thành, không thể gửi đánh giá');
-                setSubmitting(false);
-                return;
-            }
-            // Giả định customerId từ token là 9 (có thể lấy từ API /api/customer/profile nếu cần)
-            if (bookingData.customerId !== 9) {
-                setError('Đơn hàng không thuộc về bạn');
-                setSubmitting(false);
-                return;
-            }
-        } catch (error) {
-            console.error('Error checking booking:', error);
-            setError('Lỗi khi kiểm tra thông tin đơn hàng');
-            setSubmitting(false);
-            return;
-        }
 
         // Kiểm tra các trường bắt buộc
         if (!feedbackType) {
@@ -116,37 +81,40 @@ const FeedbackModal = ({ isOpen, onClose, bookingId, storageId, transportId }) =
         }
 
         // Chuẩn bị dữ liệu feedback
-        const feedbackData = {
+        let feedbackData = {
             bookingId: parseInt(bookingId),
             content: content.trim(),
-            star,
-            ...(feedbackType === 'STORAGE' ? { storageId: parseInt(storageId), transportId: 0 } : { transportId: parseInt(transportId), storageId: 0 })
         };
+        if (star) feedbackData.star = star;
+        let endpoint = '';
+        if (feedbackType === 'STORAGE') {
+            feedbackData.storageId = parseInt(storageId);
+            endpoint = '/api/customer/feedback/storage';
+        } else if (feedbackType === 'TRANSPORTATION') {
+            feedbackData.transportId = parseInt(transportId);
+            endpoint = '/api/customer/feedback/transport';
+        }
 
         try {
             console.log('Submitting feedback:', feedbackData);
-            const endpoint = feedbackType === 'STORAGE' ? '/api/customer/feedback/storage' : '/api/customer/feedback/transport';
             const response = await apiCall(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Thêm header Authorization rõ ràng
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(feedbackData),
                 auth: true
             });
 
-            console.log('Response:', { status: response.status, headers: Object.fromEntries(response.headers.entries()) });
             if (response.ok) {
                 alert('Gửi đánh giá thành công!');
                 handleClose();
             } else {
                 const errorData = await response.text();
-                console.error('Error response:', errorData || 'No error message provided');
                 setError(errorData || `Không thể gửi đánh giá (Status: ${response.status})`);
             }
         } catch (error) {
-            console.error('Error submitting feedback:', error);
             setError('Có lỗi xảy ra khi gửi đánh giá');
         } finally {
             setSubmitting(false);
@@ -194,11 +162,7 @@ const FeedbackModal = ({ isOpen, onClose, bookingId, storageId, transportId }) =
                                 {storageId && <option value="STORAGE">Kho hàng</option>}
                                 {transportId && <option value="TRANSPORTATION">Vận chuyển</option>}
                             </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
+
                         </div>
                     </div>
 

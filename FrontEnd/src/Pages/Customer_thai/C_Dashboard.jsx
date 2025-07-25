@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-    User, 
-    History, 
-    Edit, 
-    MessageSquare, 
-    LogOut, 
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
+
+import {
+    User,
+    History,
+    Edit,
+    MessageSquare,
+    LogOut,
     ArrowLeft,
     Package,
     Calendar,
@@ -29,14 +32,14 @@ import {
 import NotificationBell from '../../Components/NotificationBell';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Title
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    ArcElement,
+    Tooltip,
+    Legend,
+    Title
 } from 'chart.js';
 import { apiCall } from '../../utils/api';
 import C_Booking from './C_Booking';
@@ -48,10 +51,31 @@ import RequireAuth from '../../Components/RequireAuth';
 import FeedbackModal from './FeedbackModal.jsx';
 import { getAllBookingsOfCustomer } from './feedbackDataService';
 
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend, Title);
 
+
 const C_Dashboard = () => {
-    const [activeComponent, setActiveComponent] = useState('dashboard');
+
+    const prevOrderStatusRef = useRef({});
+    const location = useLocation();
+    // Ưu tiên state.activeTab nếu có khi khởi tạo
+    const [activeComponent, setActiveComponent] = useState(() => {
+        if (location.state && location.state.activeTab) {
+            return location.state.activeTab;
+        }
+        return 'dashboard';
+    });
+
+    // Nếu state.activeTab thay đổi (ví dụ: quay lại từ chi tiết đơn hàng), tự động chuyển tab
+    useEffect(() => {
+        if (location.state && location.state.activeTab && location.state.activeTab !== activeComponent) {
+            setActiveComponent(location.state.activeTab);
+        }
+    }, [location.state]);
+
+
+
     const [userInfo, setUserInfo] = useState({
         name: 'Nguyễn Văn An',
         email: 'nguyenvanan@email.com',
@@ -60,7 +84,7 @@ const C_Dashboard = () => {
         avatar: null
     });
     const [orderHistory, setOrderHistory] = useState([]);
-    const [complaints, setComplaints] = useState([]);
+    // const [complaints, setComplaints] = useState([]);
     const [customerStats, setCustomerStats] = useState({
         totalOrders: 0,
         completedOrders: 0,
@@ -77,19 +101,32 @@ const C_Dashboard = () => {
     });
     const [forceUpdate, setForceUpdate] = useState(0);
     const intervalRef = useRef();
+    // Thay đổi state filter
     const [filter, setFilter] = useState({
         from: '',
         to: '',
-        exclude: {
-            COMPLETED: false,
-            CANCELLED: false,
-            PENDING: false
-        }
+        statuses: ['PENDING', 'SHIPPING', 'COMPLETED', 'CANCELLED'], // Mặc định chọn hết
     });
     const [promotions, setPromotions] = useState([]);
     const [isCustomer, setIsCustomer] = useState(false);
     const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
     const [selectedBookingForFeedback, setSelectedBookingForFeedback] = useState(null);
+
+    // Pagination state for order history
+    const [orderPage, setOrderPage] = useState(1);
+    const ORDERS_PER_PAGE = 4;
+    const getOrderPaginatedData = (data, page) => {
+        const start = (page - 1) * ORDERS_PER_PAGE;
+        return data.slice(start, start + ORDERS_PER_PAGE);
+    };
+    const getOrderTotalPages = (data) => Math.ceil(data.length / ORDERS_PER_PAGE);
+
+    // Luôn reset về trang 1 khi filter thay đổi
+    useEffect(() => {
+        setOrderPage(1);
+    }, [filter]);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchCustomerData();
@@ -142,7 +179,11 @@ const C_Dashboard = () => {
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
         try {
-            const response = await apiCall('/api/customer/profile', { auth: true });
+            const response = await apiCall('/api/customer/profile', {
+                method: 'PUT',
+                auth: true,
+                body: JSON.stringify(editFormData)
+            });
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -175,25 +216,105 @@ const C_Dashboard = () => {
             }
 
             // Fetch bookings bằng API mới
-            const bookings = await getAllBookingsOfCustomer();
+            let bookings = await getAllBookingsOfCustomer();
+
+            // --- BẮT ĐẦU: Kiểm tra và xóa các booking chưa thanh toán quá 2 ngày ---
+            const now = new Date();
+            const incompletedToDelete = bookings.filter(order => {
+                if (order.paymentStatus !== 'INCOMPLETED') return false;
+                const created = new Date(order.createdAt);
+                const diffMs = now - created;
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                return diffDays > 2;
+            });
+            // Hủy các booking này (gọi API PATCH /cancel)
+            for (const order of incompletedToDelete) {
+                try {
+                    await apiCall(`/api/customer/bookings/${order.bookingId}/cancel`, { method: 'PATCH', auth: true });
+                } catch ( e) {
+                    // Có thể log lỗi nếu cần
+                }
+            }
+            // Lọc lại danh sách booking sau khi xoá
+            if (incompletedToDelete.length > 0) {
+                bookings = await getAllBookingsOfCustomer();
+            }
+            // --- KẾT THÚC ---
+
             setOrderHistory(bookings);
-                // Calculate statistics
+
+
+            // Calculate statistics
             const completedPayments = bookings.filter(order => order.paymentStatus === 'COMPLETED');
-                const stats = {
+            const stats = {
                 totalOrders: bookings.length,
                 completedOrders: bookings.filter(order => order.status === 'COMPLETED').length,
                 pendingOrders: bookings.filter(order => order.status === 'PENDING').length,
                 shippingOrders: bookings.filter(order => order.status === 'SHIPPING').length,
                 totalSpent: completedPayments.reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0),
                 averageRating: bookings.length > 0 ? bookings.reduce((sum, order) => sum + (order.rating || 0), 0) / bookings.length : 0
-                };
-                setCustomerStats(stats);
+            };
+            setCustomerStats(stats);
         } catch (error) {
             console.error('Error fetching customer data:', error);
         } finally {
             // setLoading(false); // Xóa
         }
     };
+    const [qrUrls, setQrUrls] = useState({});
+
+    const fetchQrUrl = async (bookingId) => {
+        try {
+            const response = await apiCall('/api/payment', {
+                method: 'POST',
+                auth: true,
+                body: JSON.stringify({ bookingId })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data.qrUrl;
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy QR:', error);
+        }
+        return null;
+    };
+    useEffect(() => {
+        const loadQrUrls = async () => {
+            const incompletedOrders = orderHistory.filter(o => o.paymentStatus === "INCOMPLETED");
+            const urls = {};
+            for (const order of incompletedOrders) {
+                const qr = await fetchQrUrl(order.bookingId);
+                if (qr) {
+                    urls[order.bookingId] = qr;
+                }
+            }
+            setQrUrls(urls);
+        };
+
+        if (orderHistory.length > 0) {
+            loadQrUrls();
+        }
+    }, [orderHistory]);
+
+    useEffect(() => {
+        const prevStatuses = prevOrderStatusRef.current;
+        const newStatuses = {};
+
+        orderHistory.forEach(order => {
+            const prevStatus = prevStatuses[order.bookingId];
+            const newStatus = order.paymentStatus;
+            newStatuses[order.bookingId] = newStatus;
+
+            if (prevStatus === 'INCOMPLETED' && newStatus === 'COMPLETED') {
+                //  Hiển thị thông báo khi chuyển từ INCOMPLETED → COMPLETED
+                alert(`🎉 Thanh toán thành công cho đơn hàng #${order.bookingId}`);
+            }
+        });
+
+        // Cập nhật trạng thái cũ cho lần render tiếp theo
+        prevOrderStatusRef.current = newStatuses;
+    }, [orderHistory]);
 
     // Lấy tất cả booking của customer đang đăng nhập (API mới)
     const fetchAllCustomerBookings = async () => {
@@ -211,7 +332,7 @@ const C_Dashboard = () => {
         }
 
         try {
-            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { auth: true });
+            const response = await apiCall(`/api/customer/bookings/${bookingId}`, { method: 'DELETE', auth: true });
 
             if (response.ok) {
                 alert('Hủy đơn hàng thành công!');
@@ -309,7 +430,7 @@ const C_Dashboard = () => {
                 const date = new Date(order.createdAt);
                 const monthIndex = date.getMonth(); // 0-11
                 data[monthIndex]++;
-        }
+            }
         });
 
         return {
@@ -377,16 +498,40 @@ const C_Dashboard = () => {
         };
     };
 
+    // Hàm lọc dữ liệu
+    const getFilteredOrderHistory = () => {
+        return orderHistory.filter(order => {
+            // Lọc theo ngày tạo
+            let passDate = true;
+            if (filter.from) {
+                passDate = passDate && new Date(order.createdAt) >= new Date(filter.from);
+            }
+            if (filter.to) {
+                // Để bao gồm cả ngày to, cộng thêm 1 ngày
+                const toDate = new Date(filter.to);
+                toDate.setDate(toDate.getDate() + 1);
+                passDate = passDate && new Date(order.createdAt) < toDate;
+            }
+            // Lọc theo trạng thái
+            // Nếu không chọn trạng thái nào, hiển thị tất cả
+            if (!filter.statuses || filter.statuses.length === 0) return passDate;
+            let passStatus = filter.statuses.includes(order.status);
+            return passDate && passStatus;
+        });
+    };
+
     const handleFilterChange = (e) => {
         const { name, value, type, checked } = e.target;
-        if (type === 'checkbox') {
-            setFilter(prev => ({
-                ...prev,
-                exclude: {
-                    ...prev.exclude,
-                    [name]: checked
+        if (name === 'statuses') {
+            setFilter(prev => {
+                let newStatuses = [...prev.statuses];
+                if (checked) {
+                    if (!newStatuses.includes(value)) newStatuses.push(value);
+                } else {
+                    newStatuses = newStatuses.filter(s => s !== value);
                 }
-            }));
+                return { ...prev, statuses: newStatuses };
+            });
         } else {
             setFilter(prev => ({
                 ...prev,
@@ -535,30 +680,27 @@ const C_Dashboard = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Loại trừ trạng thái</label>
-                        <div className="flex space-x-4">
-                            {Object.entries(filter.exclude).map(([status, excluded]) => (
-                                <label key={status} className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        name={status}
-                                        checked={excluded}
-                                        onChange={handleFilterChange}
-                                        className="mr-2"
-                                    />
-                                    <span className="text-sm text-gray-700">{getStatusText(status)}</span>
-                                </label>
-                            ))}
-                        </div>
+                    <div className="col-span-2 flex items-center space-x-6">
+                        {['PENDING', 'SHIPPING', 'COMPLETED', 'CANCELLED'].map(status => (
+                            <label key={status} className="flex items-center space-x-2 text-lg">
+                                <input
+                                    type="checkbox"
+                                    name="statuses"
+                                    value={status}
+                                    checked={filter.statuses.includes(status)}
+                                    onChange={handleFilterChange}
+                                    className="w-5 h-5"
+                                />
+                                <span className="text-sm text-gray-700 font-semibold">{getStatusText(status)}</span>
+                            </label>
+                        ))}
                     </div>
                 </div>
             </div>
-
             {/* Orders List */}
             <div className="space-y-4">
-                {orderHistory.length > 0 ? (
-                    orderHistory.map((order) => (
+                {getFilteredOrderHistory().length > 0 ? (
+                    getOrderPaginatedData(getFilteredOrderHistory(), orderPage).map((order) => (
                         <div key={order.bookingId} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center space-x-4">
@@ -581,6 +723,22 @@ const C_Dashboard = () => {
                                     </span>
                                 </div>
                             </div>
+                            {/* Hiển thị cảnh báo nếu đơn chưa thanh toán và chưa quá 2 ngày */}
+                            {order.paymentStatus === 'INCOMPLETED' && (() => {
+                                const created = new Date(order.createdAt);
+                                const now = new Date();
+                                const diffMs = now - created;
+                                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                                if (diffDays <= 2) {
+                                    return (
+                                        <div className="mb-2 p-2 bg-yellow-100 text-yellow-800 rounded flex items-center">
+                                            <AlertCircle className="w-5 h-5 mr-2" />
+                                            <span>Đơn hàng này chưa được thanh toán. Nếu không thanh toán trong 2 ngày kể từ khi tạo, đơn sẽ tự động bị hủy.</span>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
@@ -595,6 +753,17 @@ const C_Dashboard = () => {
 
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
+                                    {order.paymentStatus === "INCOMPLETED" && qrUrls[order.bookingId] && (
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-600">Mã QR thanh toán</p>
+                                            <img
+                                                src={qrUrls[order.bookingId]}
+                                                alt="QR Thanh toán"
+                                                className="w-40 h-40 object-contain border rounded-xl shadow"
+                                            />
+                                        </div>
+                                    )}
+
                                     {order.status === 'COMPLETED' && !order.rating && (
                                         <button
                                             onClick={() => openFeedbackModal(order)}
@@ -612,7 +781,7 @@ const C_Dashboard = () => {
                                         </button>
                                     )}
                                     <button
-                                        onClick={() => window.location.href = `/customer/booking/${order.bookingId}`}
+                                        onClick={() => navigate(`/customer/booking/${order.bookingId}`, { state: { fromOrderHistory: true } })}
                                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                     >
                                         Xem
@@ -636,6 +805,34 @@ const C_Dashboard = () => {
                     </div>
                 )}
             </div>
+            {/* Pagination controls */}
+            {getOrderTotalPages(orderHistory) > 1 && (
+                <div className="flex justify-center mt-8 gap-2">
+                    <button
+                        className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                        onClick={() => setOrderPage((p) => Math.max(1, p - 1))}
+                        disabled={orderPage === 1}
+                    >
+                        Trước
+                    </button>
+                    {Array.from({ length: getOrderTotalPages(orderHistory) }, (_, i) => (
+                        <button
+                            key={i}
+                            className={`px-3 py-1 rounded-lg border ${orderPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                            onClick={() => setOrderPage(i + 1)}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+                    <button
+                        className="px-3 py-1 rounded-lg border bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                        onClick={() => setOrderPage((p) => Math.min(getOrderTotalPages(orderHistory), p + 1))}
+                        disabled={orderPage === getOrderTotalPages(orderHistory)}
+                    >
+                        Sau
+                    </button>
+                </div>
+            )}
         </div>
     );
 
@@ -643,7 +840,7 @@ const C_Dashboard = () => {
         <div className="max-w-2xl mx-auto">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-6">Chỉnh sửa thông tin cá nhân</h3>
-                
+
                 <form onSubmit={handleProfileUpdate} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Họ và tên</label>
@@ -713,7 +910,7 @@ const C_Dashboard = () => {
                 <p className="text-gray-600 mb-6">
                     Nếu bạn có bất kỳ khiếu nại hoặc phản hồi nào, vui lòng liên hệ với chúng tôi.
                 </p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="p-4 bg-blue-50 rounded-lg">
                         <div className="flex items-center space-x-3 mb-3">
@@ -723,7 +920,7 @@ const C_Dashboard = () => {
                         <p className="text-gray-600">1900-1234</p>
                         <p className="text-sm text-gray-500">Hỗ trợ 24/7</p>
                     </div>
-                    
+
                     <div className="p-4 bg-green-50 rounded-lg">
                         <div className="flex items-center space-x-3 mb-3">
                             <Mail className="w-6 h-6 text-green-600" />
@@ -740,8 +937,8 @@ const C_Dashboard = () => {
     const renderPromotions = () => (
         <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Khuyến mãi hiện tại</h3>
-                
+                <h1 className="text-4xl text-center font-semibold text-gray-800 mb-4">Khuyến mãi hiện tại</h1>
+
                 {promotions.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {promotions.map((promotion) => (
@@ -754,10 +951,10 @@ const C_Dashboard = () => {
                                         {promotion.discountPercentage}% OFF
                                     </span>
                                 </div>
-                                
+
                                 <h4 className="text-lg font-bold mb-2">{promotion.name}</h4>
                                 <p className="text-sm opacity-90 mb-4">{promotion.description}</p>
-                                
+
                                 <div className="flex items-center justify-between text-sm">
                                     <span>Mã: {promotion.code}</span>
                                     <span>Hết hạn: {new Date(promotion.endDate).toLocaleDateString('vi-VN')}</span>
@@ -802,7 +999,7 @@ const C_Dashboard = () => {
         <RequireAuth allowedRoles={["CUSTOMER"]}>
             <div className="min-h-screen bg-gray-50">
                 {/* Header */}
-                <header className="bg-white shadow-sm border-b border-gray-200">
+                <header className="bg-purple-100 shadow-sm border-b border-gray-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center py-4">
                             <div className="flex items-center space-x-4">
@@ -811,7 +1008,7 @@ const C_Dashboard = () => {
                                 </div>
                                 <h1 className="text-xl font-bold text-gray-800">Vận Chuyển Nhà</h1>
                             </div>
-                            
+
                             <div className="flex items-center space-x-4">
                                 <NotificationBell />
                                 <div className="flex items-center space-x-3">
@@ -836,15 +1033,14 @@ const C_Dashboard = () => {
 
                 <div className="flex">
                     {/* Sidebar */}
-                    <aside className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
+                    <aside className="w-64 bg-blue-50 shadow-sm border-r border-gray-200 min-h-screen sticky top-0 h-screen">
                         <nav className="p-4 space-y-2">
                             <button
                                 onClick={() => setActiveComponent('dashboard')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'dashboard' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'dashboard'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <BarChart3 className="w-5 h-5" />
                                 <span>Tổng quan</span>
@@ -852,11 +1048,10 @@ const C_Dashboard = () => {
 
                             <button
                                 onClick={() => setActiveComponent('booking')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'booking' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'booking'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <Plus className="w-5 h-5" />
                                 <span>Tạo đơn hàng</span>
@@ -864,11 +1059,10 @@ const C_Dashboard = () => {
 
                             <button
                                 onClick={() => setActiveComponent('promotions')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'promotions' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'promotions'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <Gift className="w-5 h-5" />
                                 <span>Khuyến mãi</span>
@@ -876,11 +1070,10 @@ const C_Dashboard = () => {
 
                             <button
                                 onClick={() => setActiveComponent('feedback')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'feedback' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'feedback'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <Package className="w-5 h-5" />
                                 <span>Kho và vận chuyển</span>
@@ -889,11 +1082,10 @@ const C_Dashboard = () => {
                             {/* Thêm nút Nhật kí hoạt động */}
                             <button
                                 onClick={() => setActiveComponent('historycmt')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'historycmt' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'historycmt'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <History className="w-5 h-5" />
                                 <span>Nhật kí hoạt động</span>
@@ -901,11 +1093,10 @@ const C_Dashboard = () => {
 
                             <button
                                 onClick={() => setActiveComponent('orderHistory')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'orderHistory' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'orderHistory'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <History className="w-5 h-5" />
                                 <span>Lịch sử đơn hàng</span>
@@ -913,11 +1104,10 @@ const C_Dashboard = () => {
 
                             <button
                                 onClick={() => setActiveComponent('editInfo')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'editInfo' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'editInfo'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <Edit className="w-5 h-5" />
                                 <span>Chỉnh sửa thông tin</span>
@@ -925,11 +1115,10 @@ const C_Dashboard = () => {
 
                             <button
                                 onClick={() => setActiveComponent('complaints')}
-                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                                    activeComponent === 'complaints' 
-                                        ? 'bg-blue-100 text-blue-700' 
+                                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${activeComponent === 'complaints'
+                                        ? 'bg-blue-100 text-blue-700'
                                         : 'text-gray-700 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <MessageSquare className="w-5 h-5" />
                                 <span>Khiếu nại</span>
