@@ -74,6 +74,12 @@ const C_Dashboard = () => {
         }
     }, [location.state]);
 
+    useEffect(() => {
+        if (activeComponent === 'orderHistory') {
+            fetchCustomerData();
+        }
+        // eslint-disable-next-line
+    }, [activeComponent]);
 
 
     const [userInfo, setUserInfo] = useState({

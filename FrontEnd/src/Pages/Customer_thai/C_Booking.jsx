@@ -5,7 +5,8 @@ import L from 'leaflet';
 import FurnitureSelector from './FurnitureSelector.jsx';
 import { Home, Users } from 'lucide-react';
 import { apiCall } from '../../utils/api';
-const C_Booking = ({ isLoggedIn }) => {
+import RequireAuth from '../../Components/RequireAuth';
+const C_BookingContent = ({ isLoggedIn }) => {
     const [selectedService, setSelectedService] = useState(null);
     const [bookingData, setBookingData] = useState({
         pickupLocation: '',
@@ -1232,12 +1233,12 @@ const C_Booking = ({ isLoggedIn }) => {
                                 />
 
                                 <CustomSelect
-                                    label="Thuê kho (tùy chọn)"
+                                    label="Thuê kho"
                                     type="storage"
                                     options={storageUnits}
                                     selectedId={bookingData.storageId}
                                     placeholder="Không thuê kho"
-                                    isRequired={false}
+                                    isRequired={true}
                                 />
 
                                 <CustomSelect
@@ -1422,5 +1423,11 @@ const C_Booking = ({ isLoggedIn }) => {
         </section>
     );
 };
+
+const C_Booking = (props) => (
+    <RequireAuth allowedRoles={["CUSTOMER"]}>
+        <C_BookingContent {...props} />
+    </RequireAuth>
+);
 
 export default C_Booking;
