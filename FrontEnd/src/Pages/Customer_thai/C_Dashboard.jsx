@@ -1014,7 +1014,11 @@ const C_Dashboard = () => {
                                         <Gift className="w-6 h-6" />
                                     </div>
                                     <span className="text-sm bg-white bg-opacity-20 px-2 py-1 rounded-full">
-                                        {promotion.discountPercentage}% OFF
+                                        {promotion.discountType === 'PERCENTAGE'
+                                            ? `${promotion.discountValue}% OFF`
+                                            : promotion.discountType === 'AMOUNT'
+                                                ? `${promotion.discountValue.toLocaleString()} VNĐ OFF`
+                                                : ''}
                                     </span>
                                 </div>
 
@@ -1022,7 +1026,14 @@ const C_Dashboard = () => {
                                 <p className="text-sm opacity-90 mb-4">{promotion.description}</p>
 
                                 <div className="flex items-center justify-between text-sm">
-                                    <span>Mã: {promotion.code}</span>
+                                    {/* Bỏ hiển thị mã code, thay bằng discountValue/discountType */}
+                                    <span>
+                                        {promotion.discountType === 'PERCENTAGE'
+                                            ? `Giảm ${promotion.discountValue}%`
+                                            : promotion.discountType === 'AMOUNT'
+                                                ? `Giảm ${promotion.discountValue.toLocaleString()} VNĐ`
+                                                : ''}
+                                    </span>
                                     <span>Hết hạn: {new Date(promotion.endDate).toLocaleDateString('vi-VN')}</span>
                                 </div>
                             </div>
