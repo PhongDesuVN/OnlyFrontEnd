@@ -84,7 +84,7 @@ class ShiftService {
     }
 
     /**
-     * Delete a shift (soft delete - set inactive)
+     * Delete a shift (hard delete - remove from database)
      */
     async deleteShift(shiftId) {
         try {

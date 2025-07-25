@@ -40,12 +40,12 @@ const { Option } = Select;
  * Includes time validation, conflict checking, and operator multi-select with search
  */
 const ShiftForm = ({
-  visible,
-  onCancel,
-  onSuccess,
-  editingShift = null,
-  operators = []
-}) => {
+                     visible,
+                     onCancel,
+                     onSuccess,
+                     editingShift = null,
+                     operators = []
+                   }) => {
   const [form] = Form.useForm();
   const [validationErrors, setValidationErrors] = useState([]);
   const [timeConflicts, setTimeConflicts] = useState([]);
@@ -89,26 +89,26 @@ const ShiftForm = ({
   // Load available operators
   const loadAvailableOperators = useCallback(async () => {
     await executeWithErrorHandling(
-      async () => {
-        const response = await userService.getAllStaff();
-        // Map staff data to match expected format for operators
-        const operatorStaff = Array.isArray(response)
-          ? response.map(staff => ({
-              operatorId: staff.id,
-              userId: staff.id,
-              operatorName: staff.fullName,
-              fullname: staff.fullName,
-              email: staff.email,
-              role: staff.role
-            }))
-          : [];
-        setAvailableOperators(operatorStaff);
-      },
-      {
-        context: { operation: 'loadAvailableOperators' },
-        onError: () => setAvailableOperators(operators),
-        showNotification: false
-      }
+        async () => {
+          const response = await userService.getAllStaff();
+          // Map staff data to match expected format for operators
+          const operatorStaff = Array.isArray(response)
+              ? response.map(staff => ({
+                operatorId: staff.id,
+                userId: staff.id,
+                operatorName: staff.fullName,
+                fullname: staff.fullName,
+                email: staff.email,
+                role: staff.role
+              }))
+              : [];
+          setAvailableOperators(operatorStaff);
+        },
+        {
+          context: { operation: 'loadAvailableOperators' },
+          onError: () => setAvailableOperators(operators),
+          showNotification: false
+        }
     );
   }, [operators, executeWithErrorHandling]);
 
@@ -155,8 +155,8 @@ const ShiftForm = ({
 
         // Check for time overlap
         const hasOverlap = (
-          (startTime.isBefore(shiftEnd) && endTime.isAfter(shiftStart)) ||
-          (startTime.isSame(shiftStart) || endTime.isSame(shiftEnd))
+            (startTime.isBefore(shiftEnd) && endTime.isAfter(shiftStart)) ||
+            (startTime.isSame(shiftStart) || endTime.isSame(shiftEnd))
         );
 
         if (hasOverlap) {
@@ -203,9 +203,9 @@ const ShiftForm = ({
       // Check conflicts if times are valid
       if (errors.length === 0) {
         const conflicts = await checkTimeConflicts(
-          startTime,
-          endTime,
-          isEditing ? editingShift.shiftId : null
+            startTime,
+            endTime,
+            isEditing ? editingShift.shiftId : null
         );
         setTimeConflicts(conflicts);
 
@@ -225,94 +225,94 @@ const ShiftForm = ({
   // Handle form submission
   const handleSubmit = useCallback(async () => {
     await executeWithErrorHandling(
-      async () => {
-        const values = await form.validateFields();
+        async () => {
+          const values = await form.validateFields();
 
-        // Final validation
-        const timeErrors = validateShiftTimes(values.startTime, values.endTime);
-        if (timeErrors.length > 0) {
-          setValidationErrors(timeErrors);
-          return;
-        }
+          // Final validation
+          const timeErrors = validateShiftTimes(values.startTime, values.endTime);
+          if (timeErrors.length > 0) {
+            setValidationErrors(timeErrors);
+            return;
+          }
 
-        // Check conflicts one more time
-        const conflicts = await checkTimeConflicts(
-          values.startTime,
-          values.endTime,
-          isEditing ? editingShift.shiftId : null
-        );
+          // Check conflicts one more time
+          const conflicts = await checkTimeConflicts(
+              values.startTime,
+              values.endTime,
+              isEditing ? editingShift.shiftId : null
+          );
 
-        // Warn about conflicts but allow creation
-        if (conflicts.length > 0) {
-          const confirmed = await new Promise((resolve) => {
-            Modal.confirm({
-              title: 'Phát hiện xung đột thời gian',
-              content: (
-                <div>
-                  <p>Ca làm việc này có thời gian trùng với:</p>
-                  <ul>
-                    {conflicts.map((conflict, index) => (
-                      <li key={index}>
-                        <strong>{conflict.shiftName}</strong> ({conflict.timeRange})
-                      </li>
-                    ))}
-                  </ul>
-                  <p>Bạn có muốn tiếp tục tạo ca làm việc này không?</p>
-                </div>
-              ),
-              onOk: () => resolve(true),
-              onCancel: () => resolve(false),
-              okText: 'Tiếp tục',
-              cancelText: 'Hủy'
+          // Warn about conflicts but allow creation
+          if (conflicts.length > 0) {
+            const confirmed = await new Promise((resolve) => {
+              Modal.confirm({
+                title: 'Phát hiện xung đột thời gian',
+                content: (
+                    <div>
+                      <p>Ca làm việc này có thời gian trùng với:</p>
+                      <ul>
+                        {conflicts.map((conflict, index) => (
+                            <li key={index}>
+                              <strong>{conflict.shiftName}</strong> ({conflict.timeRange})
+                            </li>
+                        ))}
+                      </ul>
+                      <p>Bạn có muốn tiếp tục tạo ca làm việc này không?</p>
+                    </div>
+                ),
+                onOk: () => resolve(true),
+                onCancel: () => resolve(false),
+                okText: 'Tiếp tục',
+                cancelText: 'Hủy'
+              });
             });
-          });
 
-          if (!confirmed) return;
-        }
+            if (!confirmed) return;
+          }
 
-        // Prepare shift data
-        const shiftData = {
-          shiftName: values.shiftName.trim(),
-          startTime: values.startTime.format('HH:mm'),
-          endTime: values.endTime.format('HH:mm'),
-          description: values.description?.trim() || '',
-          isActive: values.isActive !== false
-        };
+          // Prepare shift data
+          const shiftData = {
+            shiftName: values.shiftName.trim(),
+            startTime: values.startTime.format('HH:mm'),
+            endTime: values.endTime.format('HH:mm'),
+            description: values.description?.trim() || '',
+            isActive: values.isActive !== false
+          };
 
-        // Create or update shift
-        let response;
-        if (isEditing) {
-          response = await shiftService.updateShift(editingShift.shiftId, shiftData);
-          notification.showSuccess('Đã cập nhật ca làm việc thành công');
-        } else {
-          response = await shiftService.createShift(shiftData);
-          notification.showSuccess('Đã tạo ca làm việc thành công');
-        }
+          // Create or update shift
+          let response;
+          if (isEditing) {
+            response = await shiftService.updateShift(editingShift.shiftId, shiftData);
+            notification.showSuccess('Đã cập nhật ca làm việc thành công');
+          } else {
+            response = await shiftService.createShift(shiftData);
+            notification.showSuccess('Đã tạo ca làm việc thành công');
+          }
 
-        // Handle operator assignments for new shifts
-        if (!isEditing && selectedOperators.length > 0) {
-          try {
-            await shiftService.assignOperatorsToShift({
-              shiftId: response.shiftId,
-              operatorIds: selectedOperators,
-              assignmentDate: dayjs().format('YYYY-MM-DD')
-            });
-            notification.showSuccess('Đã phân công nhân viên thành công');
-          } catch (assignError) {
-            notification.showWarning('Ca làm việc đã được tạo nhưng không thể phân công nhân viên');
+          // Handle operator assignments for new shifts
+          if (!isEditing && selectedOperators.length > 0) {
+            try {
+              await shiftService.assignOperatorsToShift({
+                shiftId: response.shiftId,
+                operatorIds: selectedOperators,
+                assignmentDate: dayjs().format('YYYY-MM-DD')
+              });
+              notification.showSuccess('Đã phân công nhân viên thành công');
+            } catch (assignError) {
+              notification.showWarning('Ca làm việc đã được tạo nhưng không thể phân công nhân viên');
+            }
+          }
+
+          // Close modal and refresh data
+          onSuccess();
+          handleCancel();
+        },
+        {
+          context: {
+            operation: isEditing ? 'updateShift' : 'createShift',
+            shiftId: isEditing ? editingShift.shiftId : null
           }
         }
-
-        // Close modal and refresh data
-        onSuccess();
-        handleCancel();
-      },
-      {
-        context: {
-          operation: isEditing ? 'updateShift' : 'createShift',
-          shiftId: isEditing ? editingShift.shiftId : null
-        }
-      }
     );
   }, [form, validateShiftTimes, checkTimeConflicts, isEditing, editingShift, selectedOperators, onSuccess, executeWithErrorHandling, notification]);
 
@@ -331,45 +331,45 @@ const ShiftForm = ({
     if (validationErrors.length === 0 && timeConflicts.length === 0) return null;
 
     return (
-      <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
-        {validationErrors.length > 0 && (
-          <Alert
-            type="error"
-            icon={<ExclamationCircleOutlined />}
-            message="Lỗi xác thực"
-            description={
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {validationErrors.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-              </ul>
-            }
-          />
-        )}
+        <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+          {validationErrors.length > 0 && (
+              <Alert
+                  type="error"
+                  icon={<ExclamationCircleOutlined />}
+                  message="Lỗi xác thực"
+                  description={
+                    <ul style={{ margin: 0, paddingLeft: 20 }}>
+                      {validationErrors.map((error, index) => (
+                          <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  }
+              />
+          )}
 
-        {timeConflicts.length > 0 && (
-          <Alert
-            type="warning"
-            icon={<InfoCircleOutlined />}
-            message="Cảnh báo xung đột thời gian"
-            description={
-              <div>
-                <p>Ca làm việc này có thời gian trùng với:</p>
-                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                  {timeConflicts.map((conflict, index) => (
-                    <li key={index}>
-                      <strong>{conflict.shiftName}</strong> ({conflict.timeRange})
-                    </li>
-                  ))}
-                </ul>
-                <p style={{ margin: '8px 0 0 0', fontSize: '12px' }}>
-                  Bạn vẫn có thể tạo ca làm việc này nhưng cần lưu ý khi phân công nhân viên.
-                </p>
-              </div>
-            }
-          />
-        )}
-      </Space>
+          {timeConflicts.length > 0 && (
+              <Alert
+                  type="warning"
+                  icon={<InfoCircleOutlined />}
+                  message="Cảnh báo xung đột thời gian"
+                  description={
+                    <div>
+                      <p>Ca làm việc này có thời gian trùng với:</p>
+                      <ul style={{ margin: 0, paddingLeft: 20 }}>
+                        {timeConflicts.map((conflict, index) => (
+                            <li key={index}>
+                              <strong>{conflict.shiftName}</strong> ({conflict.timeRange})
+                            </li>
+                        ))}
+                      </ul>
+                      <p style={{ margin: '8px 0 0 0', fontSize: '12px' }}>
+                        Bạn vẫn có thể tạo ca làm việc này nhưng cần lưu ý khi phân công nhân viên.
+                      </p>
+                    </div>
+                  }
+              />
+          )}
+        </Space>
     );
   };
 
@@ -378,114 +378,114 @@ const ShiftForm = ({
     if (!previewData) return null;
 
     return (
-      <div style={{
-        padding: 16,
-        backgroundColor: '#f5f5f5',
-        borderRadius: 6,
-        marginBottom: 16
-      }}>
-        <Title level={5}>
-          <CheckCircleOutlined className="mr-2" />
-          Xem trước ca làm việc
-        </Title>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Text strong>Thời gian:</Text>
-            <div>{previewData.timeRange}</div>
-          </Col>
-          <Col span={12}>
-            <Text strong>Thời lượng:</Text>
-            <div>{previewData.duration} giờ</div>
-          </Col>
-        </Row>
-        {selectedOperators.length > 0 && (
-          <div style={{ marginTop: 8 }}>
-            <Text strong>Nhân viên được chọn:</Text>
-            <div style={{ marginTop: 4 }}>
-              {selectedOperators.map(operatorId => {
-                const operator = availableOperators.find(op =>
-                  (op.operatorId || op.userId) === operatorId
-                );
-                return operator ? (
-                  <Tag key={operatorId} color="blue">
-                    {operator.operatorName || operator.fullname}
-                  </Tag>
-                ) : (
-                  <Tag key={operatorId} color="red">
-                    Không tìm thấy nhân viên
-                  </Tag>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+        <div style={{
+          padding: 16,
+          backgroundColor: '#f5f5f5',
+          borderRadius: 6,
+          marginBottom: 16
+        }}>
+          <Title level={5}>
+            <CheckCircleOutlined className="mr-2" />
+            Xem trước ca làm việc
+          </Title>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Text strong>Thời gian:</Text>
+              <div>{previewData.timeRange}</div>
+            </Col>
+            <Col span={12}>
+              <Text strong>Thời lượng:</Text>
+              <div>{previewData.duration} giờ</div>
+            </Col>
+          </Row>
+          {selectedOperators.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <Text strong>Nhân viên được chọn:</Text>
+                <div style={{ marginTop: 4 }}>
+                  {selectedOperators.map(operatorId => {
+                    const operator = availableOperators.find(op =>
+                        (op.operatorId || op.userId) === operatorId
+                    );
+                    return operator ? (
+                        <Tag key={operatorId} color="blue">
+                          {operator.operatorName || operator.fullname}
+                        </Tag>
+                    ) : (
+                        <Tag key={operatorId} color="red">
+                          Không tìm thấy nhân viên
+                        </Tag>
+                    );
+                  })}
+                </div>
+              </div>
+          )}
+        </div>
     );
   };
 
   return (
       <Modal
-        title={
-          <Space>
-            <ClockCircleOutlined />
-            {isEditing ? 'Chỉnh sửa ca làm việc' : 'Tạo ca làm việc mới'}
-          </Space>
-        }
-        open={visible}
-        onCancel={handleCancel}
-        footer={[
-          <Button key="cancel" onClick={handleCancel}>
-            Hủy
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            loading={isLoading}
-            onClick={handleSubmit}
-            disabled={validationErrors.length > 0}
-          >
-            {isEditing ? 'Cập nhật' : 'Tạo ca làm việc'}
-          </Button>
-        ]}
-        width={700}
-        destroyOnClose
+          title={
+            <Space>
+              <ClockCircleOutlined />
+              {isEditing ? 'Chỉnh sửa ca làm việc' : 'Tạo ca làm việc mới'}
+            </Space>
+          }
+          open={visible}
+          onCancel={handleCancel}
+          footer={[
+            <Button key="cancel" onClick={handleCancel}>
+              Hủy
+            </Button>,
+            <Button
+                key="submit"
+                type="primary"
+                loading={isLoading}
+                onClick={handleSubmit}
+                disabled={validationErrors.length > 0}
+            >
+              {isEditing ? 'Cập nhật' : 'Tạo ca làm việc'}
+            </Button>
+          ]}
+          width={700}
+          destroyOnClose
       >
         {error && (
-          <Alert
-            type="error"
-            icon={<ExclamationCircleOutlined />}
-            message="Lỗi khi xử lý dữ liệu"
-            description={error.message}
-            showIcon
-            closable
-            onClose={clearError}
-            className="mb-4"
-          />
+            <Alert
+                type="error"
+                icon={<ExclamationCircleOutlined />}
+                message="Lỗi khi xử lý dữ liệu"
+                description={error.message}
+                showIcon
+                closable
+                onClose={clearError}
+                className="mb-4"
+            />
         )}
         {renderValidationAlerts()}
         {renderShiftPreview()}
 
         <Form
-          form={form}
-          layout="vertical"
-          onValuesChange={handleFormChange}
-          requiredMark="optional"
+            form={form}
+            layout="vertical"
+            onValuesChange={handleFormChange}
+            requiredMark="optional"
         >
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
-                name="shiftName"
-                label="Tên ca làm việc"
-                rules={[
-                  { required: true, message: 'Vui lòng nhập tên ca làm việc' },
-                  { max: ValidationRules.shiftName.maxLength, message: `Tên ca không được vượt quá ${ValidationRules.shiftName.maxLength} ký tự` },
-                  { pattern: ValidationRules.shiftName.pattern, message: 'Tên ca chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới' }
-                ]}
+                  name="shiftName"
+                  label="Tên ca làm việc"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập tên ca làm việc' },
+                    { max: ValidationRules.shiftName.maxLength, message: `Tên ca không được vượt quá ${ValidationRules.shiftName.maxLength} ký tự` },
+                    { pattern: ValidationRules.shiftName.pattern, message: 'Tên ca chỉ được chứa chữ cái, số, dấu gạch ngang và gạch dưới' }
+                  ]}
               >
                 <Input
-                  placeholder="Ví dụ: Ca sáng, Ca chiều, Ca đêm..."
-                  maxLength={ValidationRules.shiftName.maxLength}
-                  showCount
+                    placeholder="Ví dụ: Ca sáng, Ca chiều, Ca đêm..."
+                    maxLength={ValidationRules.shiftName.maxLength}
+                    showCount
                 />
               </Form.Item>
             </Col>
@@ -494,117 +494,58 @@ const ShiftForm = ({
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="startTime"
-                label="Thời gian bắt đầu"
-                rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }]}
+                  name="startTime"
+                  label="Thời gian bắt đầu"
+                  rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }]}
               >
                 <TimePicker
-                  format="HH:mm"
-                  placeholder="Chọn giờ bắt đầu"
-                  style={{ width: '100%' }}
-                  minuteStep={15}
+                    format="HH:mm"
+                    placeholder="Chọn giờ bắt đầu"
+                    style={{ width: '100%' }}
+                    minuteStep={15}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name="endTime"
-                label="Thời gian kết thúc"
-                rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc' }]}
+                  name="endTime"
+                  label="Thời gian kết thúc"
+                  rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc' }]}
               >
                 <TimePicker
-                  format="HH:mm"
-                  placeholder="Chọn giờ kết thúc"
-                  style={{ width: '100%' }}
-                  minuteStep={15}
+                    format="HH:mm"
+                    placeholder="Chọn giờ kết thúc"
+                    style={{ width: '100%' }}
+                    minuteStep={15}
                 />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
-            name="description"
-            label="Mô tả (tùy chọn)"
+              name="description"
+              label="Mô tả (tùy chọn)"
           >
             <TextArea
-              placeholder="Mô tả chi tiết về ca làm việc..."
-              rows={3}
-              maxLength={500}
-              showCount
+                placeholder="Mô tả chi tiết về ca làm việc..."
+                rows={3}
+                maxLength={500}
+                showCount
             />
           </Form.Item>
-
-          {!isEditing && (
-            <>
-              <Divider />
-              <Form.Item
-                label={
-                  <Space>
-                    <TeamOutlined />
-                    <Text>Phân công nhân viên (tùy chọn)</Text>
-                  </Space>
-                }
-              >
-                <Select
-                  mode="multiple"
-                  value={selectedOperators}
-                  onChange={setSelectedOperators}
-                  placeholder="Chọn nhân viên để phân công ngay"
-                  optionFilterProp="children"
-                  showSearch
-                  filterOption={(input, option) =>
-                    option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                  }
-                  style={{ width: '100%' }}
-                  maxTagCount={3}
-                  maxTagTextLength={20}
-                  labelInValue={false}
-                  tagRender={(props) => {
-                    const { value, closable, onClose } = props;
-                    const operator = availableOperators.find(op => op.operatorId === value);
-                    const displayName = operator ? operator.operatorName : `ID: ${value}`;
-                    console.log("operator", operator);
-                    return (
-                      <Tag
-                        closable={closable}
-                        onClose={onClose}
-                        style={{ marginRight: 3 }}
-                      >
-                        {displayName}
-                      </Tag>
-                    );
-                  }}
-                >
-                  {availableOperators.map(operator => {
-                    const operatorId = operator.operatorId;
-                    const operatorName = operator.operatorName;
-                    return (
-                      <Option 
-                        key={operatorId} 
-                        value={operatorId}
-                      >
-                        {operatorName} - {operator.email}
-                      </Option>
-                    );
-                  })}
-                </Select>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  Nhân viên sẽ được phân công cho ngày hôm nay. Bạn có thể phân công thêm sau.
-                </Text>
-              </Form.Item>
-            </>
-          )}
-
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
-                name="isActive"
-                valuePropName="checked"
+                  label="Trạng thái hoạt động"
+                  name="isActive"
+                  valuePropName="checked"
+                  style={{ marginBottom: 16 }}
               >
-                <Space>
-                  <Switch />
-                  <Text>Kích hoạt ca làm việc</Text>
-                </Space>
+                <Switch
+                    checkedChildren="Hoạt động"
+                    unCheckedChildren="Không hoạt động"
+                    defaultChecked={true}
+                />
               </Form.Item>
             </Col>
           </Row>

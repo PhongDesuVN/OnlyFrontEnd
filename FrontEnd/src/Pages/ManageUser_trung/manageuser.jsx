@@ -104,18 +104,6 @@ const UserOverview = ({ users }) => (
                     icon: Users
                 },
                 {
-                    label: 'Quản lý',
-                    value: users.filter(u => u.role === 'MANAGER').length,
-                    color: 'purple',
-                    icon: Shield
-                },
-                {
-                    label: 'Nhân viên',
-                    value: users.filter(u => u.role === 'STAFF').length,
-                    color: 'blue',
-                    icon: User
-                },
-                {
                     label: 'Khách hàng',
                     value: users.filter(u => u.role === 'CUSTOMER').length,
                     color: 'green',
