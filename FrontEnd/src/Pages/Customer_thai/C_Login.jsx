@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/FormLogin_yen/Header.jsx';
 import Footer from '../../Components/FormLogin_yen/Footer.jsx';
 import { apiCall } from '../../utils/api';
+import Cookies from 'js-cookie';
 
 const C_Login = () => {
     const [formData, setFormData] = useState({
@@ -33,16 +34,21 @@ const C_Login = () => {
                 try {
                     const errorData = JSON.parse(text);
                     message = errorData.message || message;
-                } catch (_) {}
+                } catch (err) {
+                    // Ignore parse error
+                }
                 throw new Error(message);
             }
 
             const data = JSON.parse(text);
             console.log('Đăng nhập thành công:', data);
             setErrorMessage('');
-            localStorage.setItem("isLoggedIn", "true");
-            localStorage.setItem("token", data.accessToken);
-            navigate('/c_homepage');
+            sessionStorage.setItem("isLoggedIn", "true");
+            // Lưu token vào cookie, sessionStorage, localStorage
+            Cookies.set("authToken", data.accessToken, { expires: 7 });
+            sessionStorage.setItem("authToken", data.accessToken);
+            localStorage.setItem("authToken", data.accessToken);
+            navigate('/c_dashboard');
         } catch (error) {
             console.error('Đăng nhập thất bại:', error.message);
             setErrorMessage(error.message);
@@ -56,7 +62,7 @@ const C_Login = () => {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <Header />
+            <Header backgroundClass="bg-gray-900 text-white" />
 
             <div
                 className="absolute inset-0 bg-cover bg-center z-[-1]"

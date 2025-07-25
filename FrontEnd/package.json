@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ant-design/charts": "^2.4.0",
+    "@ant-design/icons": "^6.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
@@ -21,6 +22,7 @@
     "axios": "^1.10.0",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.16.0",
     "install": "^0.13.0",
     "js-cookie": "^3.0.5",
@@ -38,11 +40,12 @@
     "react-router-dom": "^7.6.2",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.3",
-    "styled-components": "^6.1.18"
+    "styled-components": "^6.1.18",
+    "use-debounce": "^10.0.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
-    "@rollup/rollup-win32-x64-msvc": "^4.43.0",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",

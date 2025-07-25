@@ -11,11 +11,7 @@ function useNotifications() {
 
     const fetchNotifications = useCallback(async () => {
         try {
-            const response = await apiCall('/api/customer/notifications', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            const response = await apiCall('/api/customer/notifications', { auth: true });
             
             if (response.ok) {
                 const data = await response.json();
@@ -58,12 +54,7 @@ function useNotifications() {
 
     const markAsRead = useCallback(async (notificationId) => {
         try {
-            const response = await apiCall(`/api/customer/notifications/${notificationId}/read`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
+            const response = await apiCall(`/api/customer/notifications/${notificationId}/read`, { method: 'PATCH', auth: true });
 
             if (response.ok) {
                 setNotifications((prev) =>

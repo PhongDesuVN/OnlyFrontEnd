@@ -40,6 +40,7 @@ const Login = () => {
             const response = await apiCall("/api/auth/login", {
                 method: "POST",
                 body: JSON.stringify(formData),
+                credentials: "include",
             })
             const message = await response.text()
             if (response.ok) {

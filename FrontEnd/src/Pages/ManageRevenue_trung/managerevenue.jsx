@@ -1,615 +1,422 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useNavigate, NavLink } from "react-router-dom";
+import Cookies from "js-cookie";
+import RequireAuth from "../../Components/RequireAuth";
+import Header from "../../Components/FormLogin_yen/Header";
+import Footer from "../../Components/FormLogin_yen/Footer";
 import {
-    BarChart2, Search, Download, Edit, Trash2, Eye,
-    DollarSign, Calendar, Filter, AlertCircle, X, Save,
-    TrendingUp, FileText, List, Settings, CheckCircle
-} from 'lucide-react';
+    Users, Package, TrendingUp, List, Calendar, Filter, ChevronDown, XCircle, CheckCircle, DollarSign, Download, FileText, ArrowLeft
+} from "lucide-react";
+import { getPagedRevenues, exportExcelV2 } from '../../Services/revenueService';
 import revenueService from '../../Services/revenueService';
-import { Card, Row, Col } from 'antd';
-import { Bar, Pie, Line } from '@ant-design/charts';
+import { jwtDecode } from 'jwt-decode';
+import {
+    XAxis, YAxis, CartesianGrid, Tooltip,
+    ResponsiveContainer, LineChart, Line
+} from "recharts";
+import dayjs from "dayjs";
 
-// Add this at the top of the file (after imports)
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? match[2] : null;
-}
-
-// Header Component
-const Header = () => {
-    return (
-        <header className="fixed w-full top-0 bg-white shadow-lg z-40">
-            <div className="container mx-auto px-4 py-4">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                        <DollarSign className="w-8 h-8 text-blue-600" />
-                        <h1 className="text-xl font-bold text-black">Quản Lý Doanh Thu</h1>
-                    </div>
-                    <div className="flex space-x-3">
-                        <Link to="/">
-                            <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                                Trang Chủ
-                            </button>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
-};
-
-// Sidebar Component
-const Sidebar = ({ currentPage, setCurrentPage }) => {
-    const pageLabels = {
-        overview: 'Tổng Quan',
-        list: 'Danh Sách Doanh Thu',
-        search: 'Tìm Kiếm',
-        export: 'Xuất Báo Cáo'
+const ActionBtn = ({ color, children, onClick, disabled = false }) => {
+    const base = "px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none";
+    const map = {
+        blue: "bg-blue-300 text-white hover:bg-blue-400 shadow-blue-100",
+        green: "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 shadow-green-200",
+        purple: "bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-purple-200",
+        orange: "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-orange-200",
+        pink: "bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:from-pink-600 hover:to-pink-700 shadow-pink-200",
+        gray: "bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700 shadow-gray-200",
+        red: "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-red-200",
     };
-
     return (
-        <motion.div
-            initial={{ x: -300 }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-64 bg-gradient-to-b from-blue-900 to-purple-600 text-white p-6 h-screen shadow-2xl fixed z-30"
-        >
-            <h1 className="text-2xl font-extrabold mb-8 flex items-center tracking-tight">
-                <DollarSign className="mr-2" /> Quản Lý Doanh Thu
-            </h1>
-            <nav>
-                {['overview', 'list', 'search', 'export'].map(page => (
-                    <motion.button
-                        key={page}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`flex items-center w-full text-left py-3 px-4 mb-3 rounded-lg transition-all duration-300 ${
-                            currentPage === page ? 'bg-blue-500 shadow-lg' : 'hover:bg-blue-600'
-                        }`}
-                        onClick={() => setCurrentPage(page)}
-                    >
-                        {page === 'overview' && <BarChart2 className="mr-2" size={20} />}
-                        {page === 'list' && <List className="mr-2" size={20} />}
-                        {page === 'search' && <Search className="mr-2" size={20} />}
-                        {page === 'export' && <Download className="mr-2" size={20} />}
-                        {pageLabels[page]}
-                    </motion.button>
-                ))}
-            </nav>
-        </motion.div>
+        <button onClick={onClick} disabled={disabled} className={`${base} ${map[color]}`}>
+            {children}
+        </button>
     );
 };
 
-// Revenue Overview Component
-const RevenueOverview = ({ revenues }) => {
-    // Đảm bảo revenues là mảng
-    const safeRevenues = Array.isArray(revenues) ? revenues : [];
-
-    const totalRevenue = safeRevenues.reduce((sum, rev) => sum + (typeof rev.amount === 'number' ? rev.amount : 0), 0);
-    const averageRevenue = safeRevenues.length > 0 ? totalRevenue / safeRevenues.length : 0;
-    const todayRevenue = safeRevenues.filter(rev => 
-        rev.date && new Date(rev.date).toDateString() === new Date().toDateString()
-    ).reduce((sum, rev) => sum + (typeof rev.amount === 'number' ? rev.amount : 0), 0);
-
-    // Chart: Revenue by Day (Line)
-    const revenueByDay = safeRevenues.reduce((acc, rev) => {
-        if (rev.date) {
-            const date = new Date(rev.date).toLocaleDateString();
-            acc[date] = (acc[date] || 0) + (typeof rev.amount === 'number' ? rev.amount : 0);
-        }
-        return acc;
-    }, {});
-    const lineData = Object.entries(revenueByDay)
-        .filter(([date]) => date)
-        .map(([date, amount]) => ({ date, amount }));
-
-    // Chart: Revenue by Source Type (Pie)
-    const revenueBySource = safeRevenues.reduce((acc, rev) => {
-        if (rev.sourceType) {
-            acc[rev.sourceType] = (acc[rev.sourceType] || 0) + (typeof rev.amount === 'number' ? rev.amount : 0);
-        }
-        return acc;
-    }, {});
-    const pieData = Object.entries(revenueBySource).map(([type, value]) => ({ type, value }));
-
-    // Chart: Revenue by Beneficiary Type (Bar)
-    const revenueByBeneficiary = safeRevenues.reduce((acc, rev) => {
-        if (rev.beneficiaryType) {
-            acc[rev.beneficiaryType] = (acc[rev.beneficiaryType] || 0) + (typeof rev.amount === 'number' ? rev.amount : 0);
-        }
-        return acc;
-    }, {});
-    const barData = Object.entries(revenueByBeneficiary).map(([type, value]) => ({ type, value }));
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-        >
-            <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-                <BarChart2 className="mr-2" /> Tổng Quan Doanh Thu
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {[
-                    { 
-                        label: 'Tổng Doanh Thu', 
-                        value: `$${totalRevenue.toFixed(2)}`,
-                        color: 'green',
-                        icon: DollarSign
-                    },
-                    { 
-                        label: 'Doanh Thu Hôm Nay', 
-                        value: `$${todayRevenue.toFixed(2)}`,
-                        color: 'blue',
-                        icon: TrendingUp
-                    },
-                    { 
-                        label: 'Trung Bình/Đơn', 
-                        value: `$${averageRevenue.toFixed(2)}`,
-                        color: 'purple',
-                        icon: BarChart2
-                    },
-                    { 
-                        label: 'Tổng Số Đơn', 
-                        value: safeRevenues.length,
-                        color: 'blue',
-                        icon: FileText
-                    }
-                ].map((item, idx) => {
-                    const IconComponent = item.icon;
-                    return (
-                        <motion.div
-                            key={idx}
-                            whileHover={{ scale: 1.05 }}
-                            className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600">{item.label}</p>
-                                    <p className={`text-3xl font-bold text-${item.color}-600`}>{item.value}</p>
-                                </div>
-                                <IconComponent className={`w-10 h-10 text-${item.color}-500`} />
-                            </div>
-                        </motion.div>
-                    );
-                })}
-            </div>
-            {/* Biểu đồ tổng quan bằng antd charts */}
-            <Row gutter={[24, 24]}>
-                <Col xs={24} lg={12}>
-                    <Card title="Doanh Thu Theo Ngày" bordered={false}>
-                        <Line
-                            data={lineData}
-                            xField="date"
-                            yField="amount"
-                            point={{ size: 5, shape: 'diamond' }}
-                            color="#1677ff"
-                            height={260}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} lg={6}>
-                    <Card title="Tỉ Lệ Nguồn Thu" bordered={false}>
-                        <Pie
-                            data={pieData}
-                            angleField="value"
-                            colorField="type"
-                            radius={0.9}
-                            label={{ type: 'outer', content: '{name} {percentage}' }}
-                            height={260}
-                        />
-                    </Card>
-                </Col>
-                <Col xs={24} lg={6}>
-                    <Card title="Doanh Thu Theo Loại Người Hưởng" bordered={false}>
-                        <Bar
-                            data={barData}
-                            xField="type"
-                            yField="value"
-                            color="#52c41a"
-                            height={260}
-                        />
-                    </Card>
-                </Col>
-            </Row>
-        </motion.div>
-    );
-};
-
-// Revenue List Component
-const RevenueList = ({ revenues, onExport }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-    >
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <List className="mr-2" /> Danh Sách Doanh Thu
-        </h2>
-        <div className="bg-white p-6 rounded-xl shadow-lg overflow-x-auto border border-gray-100">
-            <table className="w-full border-collapse">
-                <thead>
-                    <tr className="bg-gray-100">
-                        <th className="border p-3 text-left text-gray-700">ID</th>
-                        <th className="border p-3 text-left text-gray-700">Loại Người Hưởng</th>
-                        <th className="border p-3 text-left text-gray-700">ID Người Hưởng</th>
-                        <th className="border p-3 text-left text-gray-700">Loại Nguồn</th>
-                        <th className="border p-3 text-left text-gray-700">ID Nguồn</th>
-                        <th className="border p-3 text-left text-gray-700">Số Tiền</th>
-                        <th className="border p-3 text-left text-gray-700">Ngày</th>
-                        <th className="border p-3 text-left text-gray-700">Mô Tả</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {revenues.map(revenue => (
-                        <motion.tr
-                            key={revenue.revenueId}
-                            whileHover={{ backgroundColor: '#f3f4f6' }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <td className="border p-3">{revenue.revenueId}</td>
-                            <td className="border p-3">{revenue.beneficiaryType}</td>
-                            <td className="border p-3">{revenue.beneficiaryId}</td>
-                            <td className="border p-3">{revenue.sourceType}</td>
-                            <td className="border p-3">{revenue.sourceId}</td>
-                            <td className="border p-3 text-green-600 font-medium">
-                                ${revenue.amount.toFixed(2)}
-                            </td>
-                            <td className="border p-3">
-                                {new Date(revenue.date).toLocaleDateString()}
-                            </td>
-                            <td className="border p-3">{revenue.description}</td>
-                        </motion.tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </motion.div>
+const Label = ({ children }) => (
+    <label className="text-xs font-semibold text-blue-700 uppercase tracking-wider">{children}</label>
 );
 
-// Search Revenue Component
-const SearchRevenue = ({ revenues, searchParams, setSearchParams }) => {
-    const [filteredRevenues, setFilteredRevenues] = useState(revenues);
-
-    useEffect(() => {
-        const filtered = revenues.filter(revenue => {
-            return (
-                (!searchParams.startDate || new Date(revenue.date) >= new Date(searchParams.startDate)) &&
-                (!searchParams.endDate || new Date(revenue.date) <= new Date(searchParams.endDate)) &&
-                (!searchParams.beneficiaryType || revenue.beneficiaryType === searchParams.beneficiaryType) &&
-                (!searchParams.sourceType || revenue.sourceType === searchParams.sourceType) &&
-                (!searchParams.minAmount || revenue.amount >= searchParams.minAmount) &&
-                (!searchParams.maxAmount || revenue.amount <= searchParams.maxAmount)
-            );
-        });
-        setFilteredRevenues(filtered);
-    }, [revenues, searchParams]);
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-        >
-            <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-                <Search className="mr-2" /> Tìm Kiếm Doanh Thu
-            </h2>
-            
-            {/* Search Form */}
-            <div className="bg-white p-6 rounded-xl shadow-lg mb-6 border border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Từ Ngày</label>
-                        <input
-                            type="date"
-                            value={searchParams.startDate || ''}
-                            onChange={(e) => setSearchParams({...searchParams, startDate: e.target.value})}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Đến Ngày</label>
-                        <input
-                            type="date"
-                            value={searchParams.endDate || ''}
-                            onChange={(e) => setSearchParams({...searchParams, endDate: e.target.value})}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Loại Người Hưởng</label>
-                        <select
-                            value={searchParams.beneficiaryType || ''}
-                            onChange={(e) => setSearchParams({...searchParams, beneficiaryType: e.target.value})}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Tất cả</option>
-                            <option value="DRIVER">Tài xế</option>
-                            <option value="CUSTOMER">Khách hàng</option>
-                            <option value="SYSTEM">Hệ thống</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Loại Nguồn</label>
-                        <select
-                            value={searchParams.sourceType || ''}
-                            onChange={(e) => setSearchParams({...searchParams, sourceType: e.target.value})}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Tất cả</option>
-                            <option value="BOOKING">Đặt xe</option>
-                            <option value="REFUND">Hoàn tiền</option>
-                            <option value="SYSTEM">Hệ thống</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Số Tiền Tối Thiểu</label>
-                        <input
-                            type="number"
-                            value={searchParams.minAmount || ''}
-                            onChange={(e) => setSearchParams({...searchParams, minAmount: parseFloat(e.target.value)})}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="0"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Số Tiền Tối Đa</label>
-                        <input
-                            type="number"
-                            value={searchParams.maxAmount || ''}
-                            onChange={(e) => setSearchParams({...searchParams, maxAmount: parseFloat(e.target.value)})}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="999999"
-                        />
-                    </div>
-                </div>
-                <div className="mt-4">
-                    <button
-                        onClick={() => setSearchParams({
-                            startDate: '',
-                            endDate: '',
-                            beneficiaryType: '',
-                            sourceType: '',
-                            minAmount: '',
-                            maxAmount: ''
-                        })}
-                        className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                    >
-                        Xóa Bộ Lọc
-                    </button>
-                </div>
-            </div>
-
-            {/* Search Results */}
-            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                <h3 className="text-xl font-bold mb-4">Kết Quả Tìm Kiếm ({filteredRevenues.length} kết quả)</h3>
-                {filteredRevenues.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="border p-3 text-left text-gray-700">ID</th>
-                                    <th className="border p-3 text-left text-gray-700">Loại Người Hưởng</th>
-                                    <th className="border p-3 text-left text-gray-700">ID Người Hưởng</th>
-                                    <th className="border p-3 text-left text-gray-700">Loại Nguồn</th>
-                                    <th className="border p-3 text-left text-gray-700">ID Nguồn</th>
-                                    <th className="border p-3 text-left text-gray-700">Số Tiền</th>
-                                    <th className="border p-3 text-left text-gray-700">Ngày</th>
-                                    <th className="border p-3 text-left text-gray-700">Mô Tả</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredRevenues.map(revenue => (
-                                    <tr key={revenue.revenueId} className="hover:bg-gray-50">
-                                        <td className="border p-3">{revenue.revenueId}</td>
-                                        <td className="border p-3">{revenue.beneficiaryType}</td>
-                                        <td className="border p-3">{revenue.beneficiaryId}</td>
-                                        <td className="border p-3">{revenue.sourceType}</td>
-                                        <td className="border p-3">{revenue.sourceId}</td>
-                                        <td className="border p-3 text-green-600 font-medium">
-                                            ${revenue.amount.toFixed(2)}
-                                        </td>
-                                        <td className="border p-3">
-                                            {new Date(revenue.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="border p-3">{revenue.description}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <div className="text-center py-8">
-                        <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">Không tìm thấy kết quả nào phù hợp với tiêu chí tìm kiếm.</p>
-                    </div>
-                )}
-            </div>
-        </motion.div>
-    );
-};
-
-// Export Revenue Component
-const ExportRevenue = ({ onExport }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-    >
-        <h2 className="text-4xl font-bold mb-6 flex items-center text-gray-800">
-            <Download className="mr-2" /> Xuất Báo Cáo Doanh Thu
-        </h2>
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h3 className="text-xl font-semibold mb-4">Xuất Báo Cáo Excel</h3>
-                    <p className="text-gray-600 mb-4">
-                        Xuất báo cáo doanh thu theo khoảng thời gian được chọn. Báo cáo sẽ bao gồm tất cả các thông tin chi tiết về doanh thu trong khoảng thời gian đó.
-                    </p>
-                    <button
-                        onClick={onExport}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                    >
-                        <Download className="w-4 h-4 mr-2" />
-                        Xuất Báo Cáo Excel
-                    </button>
-                </div>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                    <h4 className="font-semibold mb-2">Hướng Dẫn</h4>
-                    <ul className="list-disc list-inside text-gray-600 space-y-2">
-                        <li>Chọn khoảng thời gian cần xuất báo cáo</li>
-                        <li>Nhấn nút "Xuất Báo Cáo Excel"</li>
-                        <li>File Excel sẽ được tải về máy của bạn</li>
-                        <li>Báo cáo bao gồm tất cả thông tin chi tiết về doanh thu</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </motion.div>
-);
-
-// Main Dashboard Component
 const Dashboard = () => {
-    const [currentPage, setCurrentPage] = useState('overview');
     const [revenues, setRevenues] = useState([]);
-    const [searchParams, setSearchParams] = useState({
-        startDate: '',
-        endDate: '',
-        beneficiaryType: '',
-        sourceType: '',
-        minAmount: '',
-        maxAmount: ''
-    });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [filterExpanded, setFilterExpanded] = useState(false);
+    const [filter, setFilter] = useState({
+        startDate: '',
+        endDate: '',
+        sourceType: '',
+        beneficiaryId: '',
+        bookingId: '',
+        minAmount: '',
+        maxAmount: ''
+    });
+    const [page, setPage] = useState(0);
+    const [size, setSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [range, setRange] = useState("month");
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    const navigate = useNavigate();
+    const username = Cookies.get("username");
+
+    // Helper: get start/end date by range
+    const getDateRangeByType = (type) => {
+        const today = dayjs();
+        switch (type) {
+            case "today":
+                return { start: today.format("YYYY-MM-DD"), end: today.format("YYYY-MM-DD") };
+            case "week":
+                return { start: today.startOf("week").format("YYYY-MM-DD"), end: today.endOf("week").format("YYYY-MM-DD") };
+            case "month":
+                return { start: today.startOf("month").format("YYYY-MM-DD"), end: today.endOf("month").format("YYYY-MM-DD") };
+            case "year":
+                return { start: today.startOf("year").format("YYYY-MM-DD"), end: today.endOf("year").format("YYYY-MM-DD") };
+            case "range":
+                return { start: fromDate, end: toDate };
+            default:
+                return { start: "", end: "" };
+        }
+    };
+
+    // Khi chọn range thì cập nhật filter luôn
+    useEffect(() => {
+        if (["today", "week", "month", "year"].includes(range)) {
+            const { start, end } = getDateRangeByType(range);
+            setFromDate(start);
+            setToDate(end);
+            setFilter((prev) => ({ ...prev, startDate: start, endDate: end }));
+        }
+    }, [range]);
 
     useEffect(() => {
         loadRevenues();
-    }, []);
-
-    useEffect(() => {
-        if (success) {
-            const timer = setTimeout(() => {
-                setSuccess(null);
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [success]);
+        // eslint-disable-next-line
+    }, [filter, page, size]);
 
     const loadRevenues = async () => {
         setLoading(true);
         setError(null);
         try {
-            const token = getCookie('authToken');
-            const revenueData = await revenueService.getAllRevenues(token);
-            setRevenues(revenueData);
+            const token = Cookies.get('authToken');
+            const params = {
+                ...filter,
+                page,
+                size
+            };
+            // Xóa các key rỗng/null
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null || params[key] === undefined) delete params[key];
+            });
+            const revenueData = await revenueService.getPagedRevenues(params, token);
+            setRevenues(revenueData.content || []);
+            setTotalPages(revenueData.totalPages || 1);
         } catch (err) {
             setError('Không thể tải danh sách doanh thu. Vui lòng thử lại sau.');
-            console.error('Error loading revenues:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleExport = async () => {
-        setLoading(true);
+    const handleExportExcel = async () => {
         try {
-            await revenueService.exportToExcel(searchParams.startDate, searchParams.endDate);
-            setSuccess('Xuất báo cáo thành công!');
+            setLoading(true);
+            const token = Cookies.get('authToken');
+            const params = { ...filter };
+            Object.keys(params).forEach(key => {
+                if (params[key] === '' || params[key] === null) delete params[key];
+            });
+            await exportExcelV2(params, token);
+            setSuccess('Xuất Excel thành công!');
         } catch (err) {
-            setError('Không thể xuất báo cáo. Vui lòng thử lại sau.');
-            console.error('Error exporting revenue:', err);
+            setError('Xuất Excel thất bại! Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
     };
 
-    const renderPage = () => {
-        switch (currentPage) {
-            case 'overview':
-                return <RevenueOverview revenues={revenues} />;
-            case 'list':
-                return <RevenueList revenues={revenues} onExport={handleExport} />;
-            case 'search':
-                return (
-                    <SearchRevenue
-                        revenues={revenues}
-                        searchParams={searchParams}
-                        setSearchParams={setSearchParams}
-                    />
-                );
-            case 'export':
-                return <ExportRevenue onExport={handleExport} />;
-            default:
-                return <RevenueOverview revenues={revenues} />;
+    const handleExportExcelByRange = async () => {
+        try {
+            setLoading(true);
+            const token = Cookies.get('authToken');
+            if (!fromDate || !toDate) {
+                setError('Vui lòng chọn đủ khoảng ngày!');
+                setLoading(false);
+                return;
+            }
+            await exportExcelV2({ startDate: fromDate, endDate: toDate }, token);
+            setSuccess('Xuất Excel theo khoảng ngày thành công!');
+        } catch (err) {
+            setError('Xuất Excel theo khoảng ngày thất bại! Vui lòng thử lại.');
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilter(prev => ({ ...prev, [name]: value }));
+        setPage(0);
+    };
+
+    const getFilterLabel = () => {
+        switch (range) {
+            case "today": return "Hôm nay";
+            case "week": return "Tuần này";
+            case "month": return "Tháng này";
+            case "year": return "Năm nay";
+            case "range": return fromDate && toDate ? `${fromDate} - ${toDate}` : "Khoảng ngày";
+            default: return "Chọn khoảng thời gian";
+        }
+    };
+
+    // Khi ấn ÁP DỤNG cho range tuỳ chọn
+    const handleApplyCustomRange = () => {
+        setFilter({ ...filter, startDate: fromDate, endDate: toDate });
+        setFilterExpanded(false);
+    };
+
+    // Format currency to VND
+    const formatVND = (amount) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
     };
 
     return (
-        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-            <Header />
-            <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-            <main className="flex-1 ml-64 pt-20 p-8">
-                {/* Error Message */}
-                {error && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                    >
-                        <AlertCircle className="w-5 h-5 mr-2" />
-                        {error}
-                        <button 
-                            onClick={() => setError(null)}
-                            className="ml-auto text-red-700 hover:text-red-900"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </motion.div>
-                )}
-                
-                {/* Loading Indicator */}
-                {loading && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50"
-                    >
-                        <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-3">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                            <span className="text-gray-700">Đang xử lý...</span>
+        <RequireAuth>
+            <div className="flex min-h-screen bg-gray-50">
+                <Header />
+                <div className="flex flex-1 pt-[70px] ">
+                    {/* Sidebar */}
+                    <aside className="w-80 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white pb-[336px] h-full shadow-2xl border-r border-blue-700/30 backdrop-blur-sm z-20 mr-4">
+                        {/* Sidebar content (copy from ManagerDashboard.jsx, adjust active link) */}
+                        <div className="mb-10 p-6 relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-blue-300/5 to-transparent blur-2xl rounded-2xl"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-blue-50 tracking-wide">Hệ Thống Quản Lý</h2>
+                                    </div>
+                                </div>
+                                <div className="w-16 h-1 bg-gradient-to-r from-blue-400 via-blue-300 to-transparent rounded-full"></div>
+                            </div>
                         </div>
-                    </motion.div>
-                )}
-
-                {/* Success Message */}
-                {success && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center"
-                    >
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        {success}
-                        <button 
-                            onClick={() => setSuccess(null)}
-                            className="ml-auto text-green-700 hover:text-green-900"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </motion.div>
-                )}
-
-                <AnimatePresence mode="wait">
-                    {renderPage()}
-                </AnimatePresence>
-            </main>
-        </div>
+                        <nav className="px-4 space-y-2">
+                            <NavLink to="/managerevenue" className={({ isActive }) =>
+                                `group flex items-center gap-3 p-3 rounded-xl text-xs font-medium transition-all duration-300 relative overflow-hidden ${isActive ? "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-600 text-white shadow-xl shadow-blue-900/40 scale-[1.02]" : "text-blue-100 hover:bg-blue-800/60 hover:text-white hover:scale-[1.01]"}`
+                            }>
+                                <div className="p-2 rounded-lg transition-all duration-300 bg-blue-500/40 shadow-lg">
+                                    <DollarSign size={18} className="text-blue-100" />
+                                </div>
+                                <div className="flex-1 relative z-10">
+                                    <span className="font-semibold">Quản Lý Doanh Thu</span>
+                                </div>
+                            </NavLink>
+                            {/* Add other NavLinks as needed, similar to ManagerDashboard.jsx */}
+                        </nav>
+                    </aside>
+                    {/* Main Content */}
+                    <div className="flex-1 pl-[16px] pt-6 pb-8 pr-4 min-w-0 flex flex-col gap-10">
+                        {/* Back to Dashboard Button */}
+                        <div className="mb-4">
+                            <ActionBtn color="blue" onClick={() => navigate('/manager-dashboard')}>
+                                <ArrowLeft className="w-4 h-4 mr-2" />
+                                Quay về Trang Tổng Quan
+                            </ActionBtn>
+                        </div>
+                        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-800 to-blue-600 bg-clip-text text-transparent mt-6">
+                            QUẢN LÝ DOANH THU
+                        </h1>
+                        {/* Filter Section */}
+                        <div className="relative">
+                            <ActionBtn color="blue" onClick={() => setFilterExpanded(!filterExpanded)}>
+                                <Calendar className="w-4 h-4" />
+                                <span className="font-medium">{getFilterLabel()}</span>
+                                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${filterExpanded ? 'rotate-180' : ''}`} />
+                            </ActionBtn>
+                            {filterExpanded && (
+                                <div className="absolute left-0 mt-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-200 p-4 min-w-[320px] z-10">
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Filter className="w-4 h-4 text-blue-600" />
+                                            <h3 className="text-xl font-bold text-blue-900">BỘ LỌC THỜI GIAN</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                { value: "today", label: "HÔM NAY" },
+                                                { value: "week", label: "TUẦN NÀY" },
+                                                { value: "month", label: "THÁNG NÀY" },
+                                                { value: "year", label: "NĂM NAY" },
+                                            ].map((option) => (
+                                                <ActionBtn
+                                                    key={option.value}
+                                                    color={range === option.value ? "blue" : "gray"}
+                                                    onClick={() => setRange(option.value)}
+                                                >
+                                                    {option.label}
+                                                </ActionBtn>
+                                            ))}
+                                        </div>
+                                        <div className="border-t border-blue-200 pt-3">
+                                            <ActionBtn
+                                                color={range === "range" ? "blue" : "gray"}
+                                                onClick={() => setRange("range")}
+                                            >
+                                                KHOẢNG NGÀY TÙY CHỌN
+                                            </ActionBtn>
+                                            {range === "range" && (
+                                                <div className="flex flex-col gap-2 mt-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Label>TỪ:</Label>
+                                                        <input
+                                                            type="date"
+                                                            value={fromDate}
+                                                            onChange={(e) => setFromDate(e.target.value)}
+                                                            className="flex-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Label>ĐẾN:</Label>
+                                                        <input
+                                                            type="date"
+                                                            value={toDate}
+                                                            onChange={(e) => setToDate(e.target.value)}
+                                                            className="flex-1 border-2 border-blue-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-400 bg-white/80 backdrop-blur-sm shadow-sm"
+                                                        />
+                                                    </div>
+                                                    <ActionBtn
+                                                        color="green"
+                                                        onClick={handleExportExcelByRange}
+                                                        disabled={!fromDate || !toDate || loading}
+                                                    >
+                                                        <Download className="w-4 h-4 mr-2" />
+                                                        Xuất Excel theo khoảng ngày
+                                                    </ActionBtn>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2 pt-3 border-t border-blue-200">
+                                            <ActionBtn
+                                                color="blue"
+                                                onClick={handleApplyCustomRange}
+                                            >
+                                                ÁP DỤNG
+                                            </ActionBtn>
+                                            <ActionBtn
+                                                color="gray"
+                                                onClick={() => setFilterExpanded(false)}
+                                            >
+                                                ĐÓNG
+                                            </ActionBtn>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        {/* Table Section */}
+                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-blue-100 overflow-hidden">
+                            <div className="px-8 py-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-100 to-blue-50">
+                                <h4 className="text-xl font-bold text-blue-900 flex items-center gap-3">
+                                    <List className="w-6 h-6 text-blue-600" />
+                                    DANH SÁCH DOANH THU
+                                </h4>
+                            </div>
+                            <div className="p-8 overflow-x-auto">
+                                <div className="mb-6 flex gap-3">
+                                    <ActionBtn color="green" onClick={handleExportExcel}>
+                                        <Download className="w-4 h-4 mr-2" />
+                                        Xuất Excel
+                                    </ActionBtn>
+                                    <ActionBtn color="blue" onClick={() => window.print()}>
+                                        <FileText className="w-4 h-4 mr-2" />
+                                        In Báo Cáo
+                                    </ActionBtn>
+                                </div>
+                                <table className="w-full text-sm">
+                                    <thead className="bg-gradient-to-r from-blue-100 to-blue-50">
+                                    <tr>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Loại Người Hưởng</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID Người Hưởng</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Loại Nguồn</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">ID Nguồn</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Số Tiền</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Ngày</th>
+                                        <th className="px-4 py-2 text-left font-bold text-blue-800 border-b border-blue-200 text-xs">Mô Tả</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {revenues.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={8} className="text-center py-8 text-gray-500">Không có dữ liệu doanh thu để hiển thị</td>
+                                        </tr>
+                                    ) : (
+                                        revenues.map((revenue, idx) => (
+                                            <tr
+                                                key={revenue.revenueId}
+                                                className={`hover:bg-blue-50/50 border-b border-blue-200 transition-all duration-200 ${idx % 2 === 0 ? "bg-white/50" : "bg-blue-50/20"}`}
+                                            >
+                                                <td className="px-4 py-2">{revenue.revenueId}</td>
+                                                <td className="px-4 py-2">{revenue.beneficiaryType}</td>
+                                                <td className="px-4 py-2">{revenue.beneficiaryId}</td>
+                                                <td className="px-4 py-2">{revenue.sourceType}</td>
+                                                <td className="px-4 py-2">{revenue.sourceId}</td>
+                                                <td className="px-4 py-2 text-green-600 font-medium">{formatVND(revenue.amount)}</td>
+                                                <td className="px-4 py-2">{revenue.date ? new Date(revenue.date).toLocaleDateString() : 'N/A'}</td>
+                                                <td className="px-4 py-2">{revenue.description}</td>
+                                            </tr>
+                                        ))
+                                    )}
+                                    </tbody>
+                                </table>
+                                <div className="flex justify-center items-center gap-2 mt-4">
+                                    <ActionBtn color="gray" disabled={page === 0} onClick={() => setPage(page - 1)}>Trước</ActionBtn>
+                                    <span>Trang {page + 1} / {totalPages}</span>
+                                    <ActionBtn color="gray" disabled={page + 1 >= totalPages} onClick={() => setPage(page + 1)}>Sau</ActionBtn>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Success & Error Message */}
+                        {success && (
+                            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center">
+                                <CheckCircle className="w-5 h-5 mr-2" />
+                                {success}
+                                <button onClick={() => setSuccess(null)} className="ml-auto text-green-700 hover:text-green-900">
+                                    <XCircle className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                        {error && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
+                                <XCircle className="w-5 h-5 mr-2" />
+                                {error}
+                                <button onClick={() => setError(null)} className="ml-auto text-red-700 hover:text-red-900">
+                                    <XCircle className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
+                        {/* Loading Indicator */}
+                        {loading && (
+                            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                                <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-3">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                    <span className="text-gray-700">Đang xử lý...</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+            <Footer />
+        </RequireAuth>
     );
 };
 

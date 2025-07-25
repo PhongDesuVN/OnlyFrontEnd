@@ -1,40 +1,17 @@
-// Service để xử lý các API calls liên quan đến user management
-const API_BASE_URL = 'http://localhost:8083/api/users';
+import axiosInstance from '../utils/axiosInstance.js';
 
+// Service để xử lý các API calls liên quan đến user management
 class UserService {
     // Lấy tất cả users hoặc tìm kiếm theo query parameters
-    async getAllUsers(searchParams = {}, token = null) {
+    async getAllUsers(searchParams = {}) {
         try {
-            const queryString = new URLSearchParams();
-            
-            // Thêm các query parameters nếu có
-            if (searchParams.fullname) queryString.append('fullname', searchParams.fullname);
-            if (searchParams.email) queryString.append('email', searchParams.email);
-            if (searchParams.phone) queryString.append('phone', searchParams.phone);
-            if (searchParams.address) queryString.append('address', searchParams.address);
-
-            const url = queryString.toString() 
-                ? `${API_BASE_URL}?${queryString.toString()}`
-                : API_BASE_URL;
-
-            console.log('GET Request URL:', url);
-
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('GET Response data:', data);
-            return data;
+            const params = {};
+            if (searchParams.fullname) params.fullname = searchParams.fullname;
+            if (searchParams.email) params.email = searchParams.email;
+            if (searchParams.phone) params.phone = searchParams.phone;
+            if (searchParams.address) params.address = searchParams.address;
+            const response = await axiosInstance.get('/api/users', { params });
+            return response.data;
         } catch (error) {
             console.error('Error fetching users:', error);
             throw error;
@@ -42,25 +19,10 @@ class UserService {
     }
 
     // Lấy user theo ID
-    async getUserById(id, token = null) {
+    async getUserById(id) {
         try {
-            console.log('Getting user by ID:', id);
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${API_BASE_URL}/${id}`, {
-                method: 'GET',
-                headers,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log('GET by ID Response data:', data);
-            return data;
+            const response = await axiosInstance.get(`/api/users/${id}`);
+            return response.data;
         } catch (error) {
             console.error('Error fetching user by ID:', error);
             throw error;
@@ -68,28 +30,10 @@ class UserService {
     }
 
     // Tạo user mới
-    async createUser(userData, token = null) {
+    async createUser(userData) {
         try {
-            console.log('Creating user with data:', userData);
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(userData),
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Create user error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-            }
-
-            const data = await response.json();
-            console.log('POST Response data:', data);
-            return data;
+            const response = await axiosInstance.post('/api/users', userData);
+            return response.data;
         } catch (error) {
             console.error('Error creating user:', error);
             throw error;
@@ -97,30 +41,10 @@ class UserService {
     }
 
     // Cập nhật user
-    async updateUser(id, userData, token = null) {
+    async updateUser(id, userData) {
         try {
-            console.log('Updating user ID:', id, 'with data:', userData);
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${API_BASE_URL}/${id}`, {
-                method: 'PUT',
-                headers,
-                body: JSON.stringify(userData),
-            });
-
-            console.log('Update response status:', response.status);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Update user error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-            }
-
-            const data = await response.json();
-            console.log('PUT Response data:', data);
-            return data;
+            const response = await axiosInstance.put(`/api/users/${id}`, userData);
+            return response.data;
         } catch (error) {
             console.error('Error updating user:', error);
             throw error;
@@ -128,26 +52,9 @@ class UserService {
     }
 
     // Xóa user
-    async deleteUser(id, token = null) {
+    async deleteUser(id) {
         try {
-            console.log('Deleting user ID:', id);
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${API_BASE_URL}/${id}`, {
-                method: 'DELETE',
-                headers,
-            });
-
-            console.log('Delete response status:', response.status);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Delete user error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-            }
-
+            await axiosInstance.delete(`/api/users/${id}`);
             return true;
         } catch (error) {
             console.error('Error deleting user:', error);
@@ -156,26 +63,9 @@ class UserService {
     }
 
     // Thay đổi status user (block/unblock)
-    async changeUserStatus(id, token = null) {
+    async changeUserStatus(id) {
         try {
-            console.log('Changing status for user ID:', id);
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const response = await fetch(`${API_BASE_URL}/${id}/status`, {
-                method: 'PUT',
-                headers,
-            });
-
-            console.log('Change status response status:', response.status);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Change status error response:', errorText);
-                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-            }
-
+            await axiosInstance.put(`/api/users/${id}/status`);
             return true;
         } catch (error) {
             console.error('Error changing user status:', error);
@@ -184,11 +74,22 @@ class UserService {
     }
 
     // Tìm kiếm nâng cao
-    async advancedSearch(searchParams, token = null) {
-        return this.getAllUsers(searchParams, token);
+    async advancedSearch(searchParams) {
+        return this.getAllUsers(searchParams);
+    }
+
+    // Lấy profile user
+    async getProfile() {
+        const response = await axiosInstance.get('/api/users/profile');
+        return response.data;
+    }
+    //api get all staff
+    async getAllStaff() {
+        const response = await axiosInstance.get('/api/users/staff');
+        return response.data;
     }
 }
 
 // Export instance của service
 const userService = new UserService();
-export default userService; 
+export default userService;
