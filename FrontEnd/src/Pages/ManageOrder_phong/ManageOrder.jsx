@@ -198,6 +198,7 @@ const OrderForm = ({ order, onSave, onCancel, isEditing }) => {
                         <option value="Đang giao">Đang giao</option>
                         <option value="Hoàn thành">Hoàn thành</option>
                         <option value="Hủy">Hủy</option>
+                        <option value="Chưa Hoàn Thành">Chưa Hoàn Thành</option>
                     </select>
                 </div>
 
@@ -853,8 +854,8 @@ const Dashboard = () => {
         const token = localStorage.getItem('authToken');
         console.log('Token trong localStorage:', token); // Debug
         if (!token) {
-            setError('Không tìm thấy token. Vui lòng đăng nhập!');
-            console.error('Token không tồn tại. Chuyển hướng đến trang đăng nhập nếu cần.');
+            setError('');
+            console.error('');
             window.location.href = '/login';
             return;
         }
@@ -916,7 +917,7 @@ const Dashboard = () => {
     const updatePaymentStatus = async (orderId, newStatus) => {
         const token = localStorage.getItem('authToken');
         if (!token) {
-            setError('Token không tồn tại. Vui lòng đăng nhập!');
+            setError('');
             return;
         }
         setLoading(true);
@@ -943,7 +944,7 @@ const Dashboard = () => {
     const fetchOverview = async () => {
         const token = localStorage.getItem('authToken');
         if (!token) {
-            setError('Token không tồn tại. Vui lòng đăng nhập!');
+            setError('');
             return;
         }
         setLoading(true);

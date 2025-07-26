@@ -1,6 +1,6 @@
 // src/Routes/routes.jsx
 import React from 'react';
-import {Routes, Route, Navigate} from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '../Layouts/AppLayout';
 // --- Auth Pages ---
 import Signin from '../Pages/Login_Register_trung/Login.jsx';
@@ -58,18 +58,18 @@ export default function AppRoutes() {
     return (
         <Routes>
             {/* Auth routes */}
-            <Route path="/login" element={<Signin/>}/>
-            <Route path="/register" element={<Register/>}/>
-            <Route path="/forgot" element={<ForgotPassword/>}/>
-            <Route path="/otp" element={<Otp/>}/>
-            <Route path="/reset-password" element={<ResetPassword/>}/>
-            <Route path="/logout" element={<Logout/>}/>
+            <Route path="/login" element={<Signin />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot" element={<ForgotPassword />} />
+            <Route path="/otp" element={<Otp />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/logout" element={<Logout />} />
 
             {/* General pages */}
-            <Route path="/" element={<HomePage/>}/>
-            <Route path="/staff" element={<Staff/>}/>
-            <Route path="/dashboard" element={<Dashboard/>}/>
-            <Route path="/profile/main" element={<ProfileMainPage/>}/>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/staff" element={<Staff />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile/main" element={<ProfileMainPage />} />
 
 
             {/* Management - Protected routes */}
@@ -83,8 +83,8 @@ export default function AppRoutes() {
             <Route path="/managerstaff" element={<RequireAuth><RequireManagerRole><StaffManagement /></RequireManagerRole></RequireAuth>} />
             <Route path="/promotions" element={<RequireAuth><RequireManagerRole><PromotionManagement /></RequireManagerRole></RequireAuth>} />
             <Route path="/staffperformance" element={<RequireAuth><RequireManagerRole><StaffPerformance /></RequireManagerRole></RequireAuth>} />
-            <Route path="/stats" element={<PromotionStatisticsDashboard/>} />
-            <Route path="/report" element={<StaffReportPage/>} />
+            <Route path="/stats" element={<PromotionStatisticsDashboard />} />
+            <Route path="/report" element={<StaffReportPage />} />
             {/* Transport Unit - Manager only */}
             <Route path="/transport-units" element={
                 <RequireAuth>
@@ -101,17 +101,19 @@ export default function AppRoutes() {
 
             <Route path="/c_login" element={<CustomerLogin />} />
             <Route path="/c_register" element={<C_Register />} />
+            <Route path="/c_homepage" element={<C_HomePage />} />
+
 
             <Route element={<AppLayout />}>
                 <Route path="/c_homepage" element={<C_HomePage />} />
-                <Route path="/c_dashboard" element={<C_Dashboard />} />
+                <Route path="/c_dashboad" element={<C_Dashboard />} />
                 <Route path="/customer/booking/:bookingId" element={<C_BookingDetail />} />
             </Route>
 
-            <Route path="/schedule" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar/></ScheduleRouteProtection>}/>
-            <Route path="/schedule/calendar" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar/></ScheduleRouteProtection>}/>
-            <Route path="/schedule/shifts" element={<ScheduleRouteProtection requiredRole="MANAGER"><ShiftManagement/></ScheduleRouteProtection>}/>
-            <Route path="/schedule/timeoff" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><TimeOffRequests/></ScheduleRouteProtection>}/>
+            <Route path="/schedule" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar /></ScheduleRouteProtection>} />
+            <Route path="/schedule/calendar" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><ScheduleCalendar /></ScheduleRouteProtection>} />
+            <Route path="/schedule/shifts" element={<ScheduleRouteProtection requiredRole="MANAGER"><ShiftManagement /></ScheduleRouteProtection>} />
+            <Route path="/schedule/timeoff" element={<ScheduleRouteProtection allowedRoles={["STAFF", "MANAGER"]}><TimeOffRequests /></ScheduleRouteProtection>} />
 
 
 
