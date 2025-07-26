@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Mail, MapPin, Phone, Star, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import NotificationBell from '../../components/NotificationBell';
+import NotificationBell from '../../Components/NotificationBell';
+
 import Booking from './C_Booking';
 import { Home, Users } from 'lucide-react';
 import ChatboxAI from '../ChatboxAI_TrungTran/ChatboxAI';
