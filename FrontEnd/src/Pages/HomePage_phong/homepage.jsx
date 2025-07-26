@@ -290,6 +290,7 @@ const Header = ({ onCustomizeClick, settings }) => {
                         <a href="#about" className={`hover:text-${settings.theme.primary}-600 transition-colors`}>Giới Thiệu</a>
 
                     </nav>
+
                     <div className="flex space-x-3">
                         <button
                             onClick={onCustomizeClick}
@@ -308,7 +309,7 @@ const Header = ({ onCustomizeClick, settings }) => {
                                 Đăng Ký
                             </button>
                         </Link>
-                        <Link to="/c_homepage">
+                        <Link to="/c_login">
                             <button className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all">
                                 Customer
                             </button>

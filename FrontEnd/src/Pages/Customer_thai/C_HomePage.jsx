@@ -9,7 +9,7 @@ import ChatboxAI from '../ChatboxAI_TrungTran/ChatboxAI';
 const Header = ({ isLoggedIn, handleLogout }) => {
     const [isScrolled, setIsScrolled] = useState(false);
 
-    useEffect(() => {
+    useEffect(() => {x
         const handleScroll = () => setIsScrolled(window.scrollY > 50);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);

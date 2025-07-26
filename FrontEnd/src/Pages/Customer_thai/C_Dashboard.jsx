@@ -375,7 +375,7 @@ const C_Dashboard = () => {
     const handleLogout = () => {
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('isLoggedIn');
-        window.location.href = '/c_homepage';
+        window.location.href = '/homepage';
     };
 
     const openFeedbackModal = (booking) => {

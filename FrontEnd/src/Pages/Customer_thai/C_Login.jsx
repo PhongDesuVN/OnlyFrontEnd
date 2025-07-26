@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../Components/FormLogin_yen/Header.jsx';
 import Footer from '../../Components/FormLogin_yen/Footer.jsx';
@@ -6,12 +6,17 @@ import { apiCall } from '../../utils/api';
 import Cookies from 'js-cookie';
 
 const C_Login = () => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-    });
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
+
+    // ✨ Xóa tất cả token cũ khi vào trang login
+    useEffect(() => {
+        Cookies.remove("authToken");
+        sessionStorage.removeItem("authToken");
+        localStorage.removeItem("authToken");
+        sessionStorage.removeItem("isLoggedIn");
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -22,6 +27,12 @@ const C_Login = () => {
         e.preventDefault();
 
         try {
+            // Xóa tiếp lần nữa phòng trường hợp người dùng đang ở phiên khác
+            Cookies.remove("authToken");
+            sessionStorage.removeItem("authToken");
+            localStorage.removeItem("authToken");
+            sessionStorage.removeItem("isLoggedIn");
+
             const response = await apiCall('/api/auth/customer/login', {
                 method: 'POST',
                 body: JSON.stringify(formData),
@@ -34,27 +45,26 @@ const C_Login = () => {
                 try {
                     const errorData = JSON.parse(text);
                     message = errorData.message || message;
-                } catch (err) {
-                    // Ignore parse error
-                }
+                } catch (err) {}
                 throw new Error(message);
             }
 
             const data = JSON.parse(text);
             console.log('Đăng nhập thành công:', data);
-            setErrorMessage('');
-            sessionStorage.setItem("isLoggedIn", "true");
-            // Lưu token vào cookie, sessionStorage, localStorage
+
+            // ✅ Lưu lại token mới
             Cookies.set("authToken", data.accessToken, { expires: 7 });
             sessionStorage.setItem("authToken", data.accessToken);
             localStorage.setItem("authToken", data.accessToken);
+            sessionStorage.setItem("isLoggedIn", "true");
+
+            setErrorMessage('');
             navigate('/c_dashboard');
         } catch (error) {
             console.error('Đăng nhập thất bại:', error.message);
             setErrorMessage(error.message);
         }
     };
-
 
     const handleGoToRegister = () => {
         navigate('/c_register');
